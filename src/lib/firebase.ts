@@ -1,7 +1,7 @@
 "use client";
 
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
-import { type Auth, GoogleAuthProvider, getAuth } from "firebase/auth";
+import { type Auth, getAuth } from "firebase/auth";
 import { type Firestore, getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -39,8 +39,6 @@ export function getFirebaseDb(): Firestore {
   if (!db) db = getFirestore(ensureApp());
   return db;
 }
-
-export const googleProvider = new GoogleAuthProvider();
 
 export function isFirebaseConfigured(): boolean {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
