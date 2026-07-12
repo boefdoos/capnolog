@@ -6,6 +6,7 @@ import {
   type ChartDataset,
   Legend,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Tooltip,
@@ -15,7 +16,7 @@ import { useEffect, useRef } from "react";
 import { fmtTime } from "@/lib/format";
 import type { Entry } from "@/types/capnolog";
 
-Chart.register(LinearScale, CategoryScale, LineElement, PointElement, Tooltip, Legend);
+Chart.register(LinearScale, CategoryScale, LineController, LineElement, PointElement, Tooltip, Legend);
 
 interface Props {
   entries: Entry[];
