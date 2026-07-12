@@ -8,7 +8,7 @@ export default function AuthGate({
 }: {
   children: (user: User) => React.ReactNode;
 }) {
-  const { user, loading, configured, signIn } = useAuth();
+  const { user, loading, configured, error, signIn } = useAuth();
 
   if (!configured) {
     return (
@@ -32,6 +32,7 @@ export default function AuthGate({
         >
           Aanmelden met Google
         </button>
+        {error && <div className="max-w-xs text-center text-xs text-danger">{error}</div>}
       </div>
     );
   }
