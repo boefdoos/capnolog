@@ -1,0 +1,16 @@
+{
+  "name": "CapnoLog",
+  "short_name": "CapnoLog",
+  "description": "CO2-sessielog voor de EMMA capnograaf",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0E0D",
+  "theme_color": "#0A0E0D",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
