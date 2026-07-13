@@ -14,6 +14,8 @@ import { useAverages } from "@/lib/useAverages";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 
+type ViewMode = "idle" | "active";
+
 export default function SessionLogger({ uid }: { uid: string }) {
   const {
     meta,
@@ -28,6 +30,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
     startNewSession,
   } = useActiveSession(uid);
   const { week, month } = useAverages(uid);
+  const [viewMode, setViewMode] = useState<ViewMode>("idle");
 
   const [, forceTick] = useState(0);
   useEffect(() => {
@@ -38,6 +41,42 @@ export default function SessionLogger({ uid }: { uid: string }) {
 
   const duration = meta ? fmtTime((Date.now() - meta.createdAt) / 1000) : "00:00";
   const hasSession = Boolean(meta && entries.length > 0);
+
+  function endSession() {
+    startNewSession();
+    setViewMode("idle");
+  }
+
+  if (viewMode === "idle") {
+    return (
+      <div className="mx-auto max-w-2xl p-4 pb-10">
+        <header className="mb-4 border-b border-panel-border pb-3.5">
+          <h1 className="text-[19px] font-semibold tracking-wide">CapnoLog</h1>
+          <p className="text-[12.5px] text-muted">EMMA capnograaf &middot; CO2-sessies</p>
+        </header>
+
+        <div className="space-y-3.5">
+          <AveragesCard week={week} month={month} />
+
+          <button
+            onClick={() => setViewMode("active")}
+            className="w-full rounded-lg bg-trace py-4 text-base font-semibold text-[#06120B] active:scale-[0.99]"
+          >
+            Start nieuwe sessie
+          </button>
+
+          <div className="text-center">
+            <Link
+              href="/sessions"
+              className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+            >
+              Geschiedenis bekijken
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -51,14 +90,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
       </header>
 
-      {hasSession && (
-        <button
-          onClick={startNewSession}
-          className="mb-2.5 w-full rounded-lg border border-amber bg-amber/10 py-3 text-sm font-semibold text-amber active:scale-[0.99]"
-        >
-          Nieuwe sessie starten
-        </button>
-      )}
+      <button
+        onClick={endSession}
+        className="mb-2.5 w-full rounded-lg border border-amber bg-amber/10 py-3 text-sm font-semibold text-amber active:scale-[0.99]"
+      >
+        Beëindig sessie
+      </button>
 
       <nav className="mb-4 flex gap-3 text-xs text-muted">
         <Link href="/sessions" className="underline decoration-panel-border underline-offset-2 hover:text-text">
@@ -72,8 +109,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
       </nav>
 
       <div className="space-y-3.5">
-        <AveragesCard week={week} month={month} />
-
         <KpaInput onLog={logReading} />
         <EventButtons onMarkComplaint={markComplaint} onSigh={logSigh} />
 
