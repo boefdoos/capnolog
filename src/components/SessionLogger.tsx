@@ -37,10 +37,11 @@ export default function SessionLogger({ uid }: { uid: string }) {
   }, [meta]);
 
   const duration = meta ? fmtTime((Date.now() - meta.createdAt) / 1000) : "00:00";
+  const hasSession = Boolean(meta && entries.length > 0);
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
-      <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
+      <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">CO2-sessie</h1>
           <p className="text-[12.5px] text-muted">Live log per ademhaling &middot; EMMA capnograaf</p>
@@ -50,19 +51,23 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
       </header>
 
+      {hasSession && (
+        <button
+          onClick={startNewSession}
+          className="mb-2.5 w-full rounded-lg border border-amber bg-amber/10 py-3 text-sm font-semibold text-amber active:scale-[0.99]"
+        >
+          Nieuwe sessie starten
+        </button>
+      )}
+
       <nav className="mb-4 flex gap-3 text-xs text-muted">
         <Link href="/sessions" className="underline decoration-panel-border underline-offset-2 hover:text-text">
           Geschiedenis
         </Link>
-        {meta && entries.length > 0 && (
-          <>
-            <button onClick={() => exportSessionCsv(entries)} className="hover:text-text">
-              Exporteer CSV
-            </button>
-            <button onClick={startNewSession} className="hover:text-danger">
-              Nieuwe sessie
-            </button>
-          </>
+        {hasSession && (
+          <button onClick={() => exportSessionCsv(entries)} className="hover:text-text">
+            Exporteer CSV
+          </button>
         )}
       </nav>
 
