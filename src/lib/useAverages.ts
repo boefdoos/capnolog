@@ -4,6 +4,7 @@ import { collection, onSnapshot, orderBy, query, Timestamp, where } from "fireba
 import { useEffect, useMemo, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 import { parseSessionMeta } from "./format";
+import { backfillSessionAggregates } from "./sessionActions";
 import {
   DEFAULT_BAND_HIGH,
   DEFAULT_BAND_LOW,
@@ -87,6 +88,17 @@ export function useAverages(uid: string | null) {
       const all = snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>));
       setSessions(all);
       setLoading(false);
+
+      // Zelfherstel: sessies die aangemaakt zijn voor kpaSum/kpaSumSq
+      // bestonden hebben readingCount>0 maar kpaSum bleef op 0 staan, wat
+      // het gemiddelde en de referentieband vertekent. Stil herberekenen
+      // vanuit de echte entries; de listener hierboven pikt de correctie
+      // vanzelf weer op.
+      all.forEach((s) => {
+        if (s.readingCount > 0 && s.kpaSum === 0) {
+          backfillSessionAggregates(uid, s.id).catch(() => {});
+        }
+      });
     });
     return () => unsub();
   }, [uid]);

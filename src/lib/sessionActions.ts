@@ -1,6 +1,6 @@
 "use client";
 
-import { collection, deleteDoc, doc, getDocs, writeBatch } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, updateDoc, writeBatch } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
 
 /**
@@ -22,4 +22,34 @@ export async function deleteSessionCompletely(uid: string, sessionId: string): P
   }
 
   await deleteDoc(doc(db, "users", uid, "sessions", sessionId));
+}
+
+/**
+ * Herberekent readingCount/kpaSum/kpaSumSq vanuit de echte entries van een
+ * sessie en schrijft dat terug naar het sessiedocument. Nodig voor sessies
+ * die aangemaakt zijn voor kpaSum/kpaSumSq bestonden in het datamodel: die
+ * hebben een correcte readingCount maar een kpaSum die op 0 is blijven
+ * staan, wat het week/maandgemiddelde en de referentieband vertekent.
+ */
+export async function backfillSessionAggregates(uid: string, sessionId: string): Promise<void> {
+  const db = getFirebaseDb();
+  const entriesSnap = await getDocs(collection(db, "users", uid, "sessions", sessionId, "entries"));
+
+  let readingCount = 0;
+  let kpaSum = 0;
+  let kpaSumSq = 0;
+  entriesSnap.docs.forEach((d) => {
+    const data = d.data() as { type?: string; kpa?: number };
+    if (data.type === "reading" && typeof data.kpa === "number") {
+      readingCount += 1;
+      kpaSum += data.kpa;
+      kpaSumSq += data.kpa * data.kpa;
+    }
+  });
+
+  await updateDoc(doc(db, "users", uid, "sessions", sessionId), {
+    readingCount,
+    kpaSum,
+    kpaSumSq,
+  });
 }
