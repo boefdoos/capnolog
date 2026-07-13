@@ -162,6 +162,17 @@ export function useActiveSession(uid: string | null, baselineBand: BaselineBand)
     setRawEntries([]);
   }
 
+  async function setFeeling(feeling: SessionMeta["feeling"]) {
+    if (!uid) return;
+    const { id } = await ensureSession();
+    const db = getFirebaseDb();
+    await updateDoc(doc(db, "users", uid, "sessions", id), { feeling });
+    // meta wordt niet live gesynct (enkel entries), dus lokaal meenemen
+    // zodat de selector meteen de nieuwe keuze toont.
+    setMeta((m) => (m ? { ...m, feeling } : m));
+    if (metaRef.current) metaRef.current = { ...metaRef.current, feeling };
+  }
+
   return {
     sessionId,
     meta,
@@ -170,6 +181,7 @@ export function useActiveSession(uid: string | null, baselineBand: BaselineBand)
     markDisturbance,
     logSigh,
     deleteEntry,
+    setFeeling,
     startNewSession,
   };
 }

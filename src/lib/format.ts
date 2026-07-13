@@ -1,3 +1,5 @@
+import type { SessionMeta } from "@/types/capnolog";
+
 export const KPA_TO_MMHG = 7.50062;
 
 export function fmtTime(sec: number): string {
@@ -46,6 +48,7 @@ export function parseSessionMeta(id: string, data: Record<string, unknown>) {
     sighSuccessCount: (data.sighSuccessCount as number) ?? 0,
     sighTotalCount: (data.sighTotalCount as number) ?? 0,
     lastTSec: (data.lastTSec as number) ?? 0,
+    feeling: data.feeling as SessionMeta["feeling"],
   };
 }
 

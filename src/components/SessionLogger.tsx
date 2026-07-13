@@ -7,9 +7,11 @@ import BandInfo from "./BandInfo";
 import Co2Chart from "./Co2Chart";
 import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
+import FeelingSelector from "./FeelingSelector";
 import KpaInput from "./KpaInput";
 import StatsRow from "./StatsRow";
 import { useActiveSession } from "@/lib/useActiveSession";
+import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
@@ -25,8 +27,10 @@ export default function SessionLogger({ uid }: { uid: string }) {
     markDisturbance,
     logSigh,
     deleteEntry,
+    setFeeling,
     startNewSession,
   } = useActiveSession(uid, band);
+  const { logOut } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
 
   const [, forceTick] = useState(0);
@@ -72,6 +76,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
             </Link>
           </div>
         </div>
+
+        <div className="mt-10 text-center">
+          <button onClick={() => logOut()} className="text-xs text-muted hover:text-danger">
+            Uitloggen
+          </button>
+        </div>
       </div>
     );
   }
@@ -109,6 +119,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
       <div className="space-y-3.5">
         <KpaInput onLog={logReading} />
         <EventButtons onMarkDisturbance={markDisturbance} onSigh={logSigh} />
+        <FeelingSelector value={meta?.feeling} onChange={setFeeling} />
 
         <div className="panel">
           <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} />

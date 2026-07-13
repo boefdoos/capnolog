@@ -18,6 +18,16 @@ export interface Entry extends StoredEntry {
   idx?: number;
 }
 
+export type SessionFeeling = "slecht" | "eerder_slecht" | "ok" | "eerder_goed" | "goed";
+
+export const FEELING_LABELS: Record<SessionFeeling, string> = {
+  slecht: "Slecht",
+  eerder_slecht: "Eerder slecht",
+  ok: "OK",
+  eerder_goed: "Eerder goed",
+  goed: "Goed",
+};
+
 export interface SessionMeta {
   id: string;
   createdAt: number; // epoch ms
@@ -29,6 +39,7 @@ export interface SessionMeta {
   sighSuccessCount: number;
   sighTotalCount: number;
   lastTSec: number;
+  feeling?: SessionFeeling;
 }
 
 export const DEVICE_MIN_KPA = 0.0;
