@@ -31,7 +31,7 @@ function SessionsListInner({ uid }: { uid: string }) {
       <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">Geschiedenis</h1>
-          <p className="text-[12.5px] text-muted">Opgeslagen CO2-sessies</p>
+          <p className="text-[12.5px] text-muted">Opgeslagen ETCO2-sessies</p>
         </div>
         <Link href="/" className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
           &lsaquo; Terug

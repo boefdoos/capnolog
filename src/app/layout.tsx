@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CapnoLog",
-  description: "CO2-sessielog voor de EMMA capnograaf",
+  description: "ETCO2-sessielog voor de EMMA capnograaf",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

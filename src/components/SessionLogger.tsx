@@ -50,7 +50,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
       <div className="mx-auto max-w-2xl p-4 pb-10">
         <header className="mb-4 border-b border-panel-border pb-3.5">
           <h1 className="text-[19px] font-semibold tracking-wide">CapnoLog</h1>
-          <p className="text-[12.5px] text-muted">EMMA capnograaf &middot; CO2-sessies</p>
+          <p className="text-[12.5px] text-muted">EMMA capnograaf &middot; ETCO2-sessies</p>
         </header>
 
         <div className="space-y-3.5">
@@ -80,7 +80,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
-          <h1 className="text-[19px] font-semibold tracking-wide">CO2-sessie</h1>
+          <h1 className="text-[19px] font-semibold tracking-wide">ETCO2-sessie</h1>
           <p className="text-[12.5px] text-muted">Live log per ademhaling &middot; EMMA capnograaf</p>
         </div>
         <div className="font-mono text-2xl text-trace" style={{ textShadow: "0 0 14px rgba(94,234,160,0.35)" }}>

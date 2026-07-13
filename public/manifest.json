@@ -1,7 +1,7 @@
 {
   "name": "CapnoLog",
   "short_name": "CapnoLog",
-  "description": "CO2-sessielog voor de EMMA capnograaf",
+  "description": "ETCO2-sessielog voor de EMMA capnograaf",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0E0D",
