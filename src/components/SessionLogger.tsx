@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AveragesCard from "./AveragesCard";
 import BandInfo from "./BandInfo";
 import Co2Chart from "./Co2Chart";
+import DailyProgress from "./DailyProgress";
 import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
 import FeelingSelector from "./FeelingSelector";
@@ -15,11 +16,12 @@ import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
+import { CART_TARGET_MINUTES } from "@/types/capnolog";
 
 type ViewMode = "idle" | "active" | "review";
 
 export default function SessionLogger({ uid }: { uid: string }) {
-  const { week, month, band } = useAverages(uid);
+  const { week, month, band, sessionsToday } = useAverages(uid);
   const {
     meta,
     entries,
@@ -45,7 +47,9 @@ export default function SessionLogger({ uid }: { uid: string }) {
     return () => clearInterval(id);
   }, [meta]);
 
-  const duration = meta ? fmtTime((Date.now() - meta.createdAt) / 1000) : "00:00";
+  const durationSec = meta ? (Date.now() - meta.createdAt) / 1000 : 0;
+  const duration = fmtTime(durationSec);
+  const cartTargetReached = durationSec >= CART_TARGET_MINUTES * 60;
   const hasSession = Boolean(meta && entries.length > 0);
   const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
 
@@ -63,6 +67,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </header>
 
         <div className="space-y-3.5">
+          <DailyProgress sessionsToday={sessionsToday} />
           <AveragesCard week={week} month={month} />
 
           <button
@@ -145,8 +150,13 @@ export default function SessionLogger({ uid }: { uid: string }) {
           <h1 className="text-[19px] font-semibold tracking-wide">ETCO2-sessie</h1>
           <p className="text-[12.5px] text-muted">Live log per ademhaling &middot; EMMA capnograaf</p>
         </div>
-        <div className="font-mono text-2xl text-trace" style={{ textShadow: "0 0 14px rgba(94,234,160,0.35)" }}>
-          {duration}
+        <div className="text-right">
+          <div className="font-mono text-2xl text-trace" style={{ textShadow: "0 0 14px rgba(94,234,160,0.35)" }}>
+            {duration}
+          </div>
+          <div className="text-[10px] text-muted">
+            {cartTargetReached ? "\u2713 CART-doel (17:00) bereikt" : `doel ${CART_TARGET_MINUTES}:00`}
+          </div>
         </div>
       </header>
 

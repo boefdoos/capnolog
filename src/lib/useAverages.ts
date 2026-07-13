@@ -65,6 +65,13 @@ function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
   return { low: mean - sd, high: mean + sd, source: "baseline", readingCount: n };
 }
 
+/** Aantal voltooide sessies (met minstens 1 meting) sinds lokale middernacht. */
+function computeSessionsToday(sessions: SessionMeta[]): number {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  return sessions.filter((s) => s.createdAt >= startOfDay.getTime() && s.readingCount > 0).length;
+}
+
 export function useAverages(uid: string | null) {
   const [sessions, setSessions] = useState<SessionMeta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +110,7 @@ export function useAverages(uid: string | null) {
   const week = useMemo(() => computeWindow(sessions, Date.now() - 7 * DAY_MS), [sessions]);
   const month = useMemo(() => computeWindow(sessions, Date.now() - 30 * DAY_MS), [sessions]);
   const band = useMemo(() => computeBaselineBand(sessions), [sessions]);
+  const sessionsToday = useMemo(() => computeSessionsToday(sessions), [sessions]);
 
-  return { week, month, band, loading };
+  return { week, month, band, sessionsToday, loading };
 }

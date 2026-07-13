@@ -58,3 +58,8 @@ export const DEVICE_MAX_KPA = 9.9; // EMMA kPa-versie toont EtCO2 enkel binnen 0
 export const DEFAULT_BAND_LOW = 3.8;
 export const DEFAULT_BAND_HIGH = 4.9;
 export const MIN_READINGS_FOR_BASELINE = 20;
+
+// CART-protocol (Meuret et al. 2008): richtwaarden, geen harde grens. Meer
+// oefenen dan dit mag altijd; minder wordt gesignaleerd, niet geblokkeerd.
+export const CART_TARGET_MINUTES = 17;
+export const CART_TARGET_SESSIONS_PER_DAY = 2;
