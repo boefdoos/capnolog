@@ -1,13 +1,23 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { digitsFromInput, formatDigits } from "@/lib/format";
 import { DEVICE_MAX_KPA, DEVICE_MIN_KPA } from "@/types/capnolog";
 
-export default function KpaInput({ onLog }: { onLog: (kpa: number) => void }) {
+export default function KpaInput({
+  onLog,
+  refocusToken,
+}: {
+  onLog: (kpa: number) => void;
+  refocusToken?: number;
+}) {
   const [value, setValue] = useState("");
   const [invalid, setInvalid] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (refocusToken != null) inputRef.current?.focus();
+  }, [refocusToken]);
 
   function handleInput(raw: string) {
     const digits = digitsFromInput(raw);

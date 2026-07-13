@@ -32,6 +32,11 @@ export default function SessionLogger({ uid }: { uid: string }) {
   } = useActiveSession(uid, band);
   const { logOut } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
+  const [refocusToken, setRefocusToken] = useState(0);
+
+  function bumpRefocus() {
+    setRefocusToken((t) => t + 1);
+  }
 
   const [, forceTick] = useState(0);
   useEffect(() => {
@@ -117,9 +122,24 @@ export default function SessionLogger({ uid }: { uid: string }) {
       </nav>
 
       <div className="space-y-3.5">
-        <KpaInput onLog={logReading} />
-        <EventButtons onMarkDisturbance={markDisturbance} onSigh={logSigh} />
-        <FeelingSelector value={meta?.feeling} onChange={setFeeling} />
+        <KpaInput onLog={logReading} refocusToken={refocusToken} />
+        <EventButtons
+          onMarkDisturbance={() => {
+            markDisturbance();
+            bumpRefocus();
+          }}
+          onSigh={(subtype) => {
+            logSigh(subtype);
+            bumpRefocus();
+          }}
+        />
+        <FeelingSelector
+          value={meta?.feeling}
+          onChange={(feeling) => {
+            setFeeling(feeling);
+            bumpRefocus();
+          }}
+        />
 
         <div className="panel">
           <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} />
