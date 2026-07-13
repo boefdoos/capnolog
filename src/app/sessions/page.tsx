@@ -6,6 +6,7 @@ import AuthGate from "@/components/AuthGate";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { fmtTime } from "@/lib/format";
 import { deleteSessionCompletely } from "@/lib/sessionActions";
+import { FEELING_COLORS, FEELING_LABELS } from "@/types/capnolog";
 
 function SessionsListInner({ uid }: { uid: string }) {
   const { sessions, loading } = useSessionsList(uid);
@@ -51,15 +52,26 @@ function SessionsListInner({ uid }: { uid: string }) {
           return (
             <div key={s.id} className="panel flex items-center justify-between gap-3 hover:border-trace">
               <Link href={`/sessions/${s.id}`} className="min-w-0 flex-1">
-                <div className="text-sm text-text">
-                  {new Date(s.createdAt).toLocaleDateString("nl-BE", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}{" "}
-                  <span className="text-muted">
-                    {new Date(s.createdAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+                <div className="flex items-center gap-1.5 text-sm text-text">
+                  <span>
+                    {new Date(s.createdAt).toLocaleDateString("nl-BE", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}{" "}
+                    <span className="text-muted">
+                      {new Date(s.createdAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
                   </span>
+                  {s.feeling && (
+                    <span className="flex items-center gap-1 text-[11px] text-muted">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: FEELING_COLORS[s.feeling] }}
+                      />
+                      {FEELING_LABELS[s.feeling]}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 font-mono text-xs text-muted">
                   {s.readingCount} metingen &middot; {fmtTime(s.lastTSec)}

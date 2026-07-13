@@ -28,6 +28,16 @@ export const FEELING_LABELS: Record<SessionFeeling, string> = {
   goed: "Goed",
 };
 
+// Rood-naar-groen gradient zodat gevoel in de geschiedenislijst in één
+// oogopslag scanbaar is, zonder de tekst te moeten lezen.
+export const FEELING_COLORS: Record<SessionFeeling, string> = {
+  slecht: "#E5735A",
+  eerder_slecht: "#F2B84B",
+  ok: "#7C8C86",
+  eerder_goed: "#4FD1C5",
+  goed: "#5EEAA0",
+};
+
 export interface SessionMeta {
   id: string;
   createdAt: number; // epoch ms

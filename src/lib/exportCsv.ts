@@ -1,7 +1,12 @@
 import { fmtTime } from "./format";
-import type { Entry } from "@/types/capnolog";
+import { FEELING_LABELS, type Entry, type SessionFeeling } from "@/types/capnolog";
 
-export function exportSessionCsv(entries: Entry[], filenamePrefix = "co2-sessie") {
+export function exportSessionCsv(
+  entries: Entry[],
+  filenamePrefix = "co2-sessie",
+  feeling?: SessionFeeling
+) {
+  const feelingLine = feeling ? `# algemeen_gevoel: ${FEELING_LABELS[feeling]}\n` : "";
   const header = "idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa\n";
   const rows = [...entries]
     .sort((a, b) => a.tSec - b.tSec)
@@ -23,7 +28,7 @@ export function exportSessionCsv(entries: Entry[], filenamePrefix = "co2-sessie"
         e.delta ?? 0,
       ].join(",");
     });
-  const csv = header + rows.join("\n");
+  const csv = feelingLine + header + rows.join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

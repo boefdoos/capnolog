@@ -115,7 +115,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
           Geschiedenis
         </Link>
         {hasSession && (
-          <button onClick={() => exportSessionCsv(entries)} className="hover:text-text">
+          <button onClick={() => exportSessionCsv(entries, "co2-sessie", meta?.feeling)} className="hover:text-text">
             Exporteer CSV
           </button>
         )}
@@ -146,7 +146,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
 
         <div className="panel">
-          <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} />
+          <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} feeling={meta?.feeling} />
         </div>
 
         <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />

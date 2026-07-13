@@ -1,14 +1,17 @@
 "use client";
 
 import { fmtTime, KPA_TO_MMHG } from "@/lib/format";
+import { FEELING_COLORS, FEELING_LABELS, type SessionFeeling } from "@/types/capnolog";
 import type { Entry } from "@/types/capnolog";
 
 export default function StatsRow({
   entries,
   liveDurationFrom,
+  feeling,
 }: {
   entries: Entry[];
   liveDurationFrom?: number | null;
+  feeling?: SessionFeeling;
 }) {
   const readings = entries.filter((e) => e.type === "reading" && e.kpa != null);
   const sighs = entries.filter((e) => e.type === "sigh");
@@ -50,6 +53,15 @@ export default function StatsRow({
             <span className="text-sm text-muted">kPa</span>
           </div>
           <div className="mt-0.5 text-xs text-muted">{(avg * KPA_TO_MMHG).toFixed(0)} mmHg</div>
+          {feeling && (
+            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-panel-border px-2.5 py-1 text-[11px] text-muted">
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ backgroundColor: FEELING_COLORS[feeling] }}
+              />
+              Algemeen gevoel: {FEELING_LABELS[feeling]}
+            </div>
+          )}
         </div>
       )}
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
