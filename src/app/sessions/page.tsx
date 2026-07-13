@@ -6,6 +6,7 @@ import AuthGate from "@/components/AuthGate";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { fmtTime } from "@/lib/format";
 import { deleteSessionCompletely } from "@/lib/sessionActions";
+import { exportSessionsOverviewCsv } from "@/lib/exportCsv";
 import { FEELING_COLORS, FEELING_LABELS } from "@/types/capnolog";
 
 function SessionsListInner({ uid }: { uid: string }) {
@@ -42,6 +43,35 @@ function SessionsListInner({ uid }: { uid: string }) {
       {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
       {!loading && !sessions.length && (
         <div className="py-6 text-center text-xs text-muted">Nog geen sessies gelogd.</div>
+      )}
+
+      {!loading && sessions.length > 0 && (
+        <div className="mb-4 flex gap-3 text-xs text-muted">
+          <button
+            onClick={() => {
+              const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+              exportSessionsOverviewCsv(
+                sessions.filter((s) => s.createdAt >= weekAgo),
+                "etco2-overzicht-week"
+              );
+            }}
+            className="hover:text-text"
+          >
+            Exporteer week
+          </button>
+          <button
+            onClick={() => {
+              const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+              exportSessionsOverviewCsv(
+                sessions.filter((s) => s.createdAt >= monthAgo),
+                "etco2-overzicht-maand"
+              );
+            }}
+            className="hover:text-text"
+          >
+            Exporteer maand
+          </button>
+        </div>
       )}
 
       <div className="space-y-2">
