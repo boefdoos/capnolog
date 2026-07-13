@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AveragesCard from "./AveragesCard";
-import BandConfig from "./BandConfig";
+import BandInfo from "./BandInfo";
 import Co2Chart from "./Co2Chart";
 import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
@@ -17,19 +17,16 @@ import { exportSessionCsv } from "@/lib/exportCsv";
 type ViewMode = "idle" | "active";
 
 export default function SessionLogger({ uid }: { uid: string }) {
+  const { week, month, band } = useAverages(uid);
   const {
     meta,
     entries,
-    bandLow,
-    bandHigh,
     logReading,
     markDisturbance,
     logSigh,
     deleteEntry,
-    updateBand,
     startNewSession,
-  } = useActiveSession(uid);
-  const { week, month } = useAverages(uid);
+  } = useActiveSession(uid, band);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
 
   const [, forceTick] = useState(0);
@@ -41,6 +38,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
 
   const duration = meta ? fmtTime((Date.now() - meta.createdAt) / 1000) : "00:00";
   const hasSession = Boolean(meta && entries.length > 0);
+  const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
 
   function endSession() {
     startNewSession();
@@ -113,14 +111,14 @@ export default function SessionLogger({ uid }: { uid: string }) {
         <EventButtons onMarkDisturbance={markDisturbance} onSigh={logSigh} />
 
         <div className="panel">
-          <Co2Chart entries={entries} bandLow={bandLow} bandHigh={bandHigh} />
+          <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} />
         </div>
 
         <div className="panel">
           <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} />
         </div>
 
-        <BandConfig bandLow={bandLow} bandHigh={bandHigh} onChange={updateBand} />
+        <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />
 
         <div className="panel">
           <div className="mb-2.5 flex items-center justify-between">

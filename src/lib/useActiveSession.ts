@@ -16,23 +16,19 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 import { deriveEntries } from "./format";
+import type { BaselineBand } from "./useAverages";
 import type { SessionMeta, SighSubtype, StoredEntry } from "@/types/capnolog";
 
-const DEFAULT_BAND_LOW = 3.8;
-const DEFAULT_BAND_HIGH = 4.9;
-
-export function useActiveSession(uid: string | null) {
+export function useActiveSession(uid: string | null, baselineBand: BaselineBand) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [meta, setMeta] = useState<SessionMeta | null>(null);
   const [rawEntries, setRawEntries] = useState<StoredEntry[]>([]);
-  const [bandLow, setBandLow] = useState(DEFAULT_BAND_LOW);
-  const [bandHigh, setBandHigh] = useState(DEFAULT_BAND_HIGH);
   const sessionIdRef = useRef<string | null>(null);
   const metaRef = useRef<SessionMeta | null>(null);
-  const bandRef = useRef({ bandLow: DEFAULT_BAND_LOW, bandHigh: DEFAULT_BAND_HIGH });
+  const bandRef = useRef(baselineBand);
   sessionIdRef.current = sessionId;
   metaRef.current = meta;
-  bandRef.current = { bandLow, bandHigh };
+  bandRef.current = baselineBand;
 
   // Live-sync entries of the active session.
   useEffect(() => {
@@ -63,13 +59,17 @@ export function useActiveSession(uid: string | null) {
     const db = getFirebaseDb();
     const ref = doc(collection(db, "users", uid, "sessions"));
     const createdAt = Date.now();
+    // Referentieband wordt bevroren bij sessiestart (maandgemiddelde ± 1 SD,
+    // of de vaste terugvalband bij te weinig data), niet live herberekend
+    // terwijl je aan het loggen bent.
     const newMeta: SessionMeta = {
       id: ref.id,
       createdAt,
-      bandLow: bandRef.current.bandLow,
-      bandHigh: bandRef.current.bandHigh,
+      bandLow: bandRef.current.low,
+      bandHigh: bandRef.current.high,
       readingCount: 0,
       kpaSum: 0,
+      kpaSumSq: 0,
       sighSuccessCount: 0,
       sighTotalCount: 0,
       lastTSec: 0,
@@ -100,6 +100,7 @@ export function useActiveSession(uid: string | null) {
     await updateDoc(doc(db, "users", uid, "sessions", id), {
       readingCount: increment(1),
       kpaSum: increment(kpa),
+      kpaSumSq: increment(kpa * kpa),
       lastTSec: tSec,
     });
   }
@@ -141,8 +142,10 @@ export function useActiveSession(uid: string | null) {
     await deleteDoc(doc(db, "users", uid, "sessions", sessionId, "entries", entry.id));
     const patch: Record<string, unknown> = {};
     if (entry.type === "reading") {
+      const kpa = entry.kpa ?? 0;
       patch.readingCount = increment(-1);
-      patch.kpaSum = increment(-(entry.kpa ?? 0));
+      patch.kpaSum = increment(-kpa);
+      patch.kpaSumSq = increment(-(kpa * kpa));
     }
     if (entry.type === "sigh") {
       patch.sighTotalCount = increment(-1);
@@ -151,17 +154,6 @@ export function useActiveSession(uid: string | null) {
     if (Object.keys(patch).length) {
       await updateDoc(doc(db, "users", uid, "sessions", sessionId), patch);
     }
-  }
-
-  async function updateBand(low: number, high: number) {
-    setBandLow(low);
-    setBandHigh(high);
-    if (!uid || !sessionIdRef.current) return;
-    const db = getFirebaseDb();
-    await updateDoc(doc(db, "users", uid, "sessions", sessionIdRef.current), {
-      bandLow: low,
-      bandHigh: high,
-    });
   }
 
   function startNewSession() {
@@ -174,13 +166,10 @@ export function useActiveSession(uid: string | null) {
     sessionId,
     meta,
     entries,
-    bandLow,
-    bandHigh,
     logReading,
     markDisturbance,
     logSigh,
     deleteEntry,
-    updateBand,
     startNewSession,
   };
 }

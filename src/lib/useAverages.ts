@@ -4,7 +4,12 @@ import { collection, onSnapshot, orderBy, query, Timestamp, where } from "fireba
 import { useEffect, useMemo, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 import { parseSessionMeta } from "./format";
-import type { SessionMeta } from "@/types/capnolog";
+import {
+  DEFAULT_BAND_HIGH,
+  DEFAULT_BAND_LOW,
+  MIN_READINGS_FOR_BASELINE,
+  type SessionMeta,
+} from "@/types/capnolog";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -13,6 +18,13 @@ export interface WindowAverage {
   avgMmHg: number | null;
   readingCount: number;
   sessionCount: number;
+}
+
+export interface BaselineBand {
+  low: number;
+  high: number;
+  source: "baseline" | "default";
+  readingCount: number;
 }
 
 function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage {
@@ -29,6 +41,26 @@ function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage 
     readingCount,
     sessionCount: inWindow.length,
   };
+}
+
+/**
+ * Referentieband = maandgemiddelde ± 1 standaarddeviatie, berekend uit de
+ * per-sessie aggregaten (kpaSum, kpaSumSq) zodat geen individuele metingen
+ * herlezen moeten worden. Bij minder dan MIN_READINGS_FOR_BASELINE metingen
+ * in de laatste maand valt dit terug op de vaste 3.8-4.9 kPa band.
+ */
+function computeBaselineBand(monthSessions: SessionMeta[]): BaselineBand {
+  const inWindow = monthSessions.filter((s) => s.readingCount > 0);
+  const n = inWindow.reduce((sum, s) => sum + s.readingCount, 0);
+  if (n < MIN_READINGS_FOR_BASELINE) {
+    return { low: DEFAULT_BAND_LOW, high: DEFAULT_BAND_HIGH, source: "default", readingCount: n };
+  }
+  const sum = inWindow.reduce((s, x) => s + x.kpaSum, 0);
+  const sumSq = inWindow.reduce((s, x) => s + x.kpaSumSq, 0);
+  const mean = sum / n;
+  const variance = Math.max(0, sumSq / n - mean * mean);
+  const sd = Math.sqrt(variance);
+  return { low: mean - sd, high: mean + sd, source: "baseline", readingCount: n };
 }
 
 export function useAverages(uid: string | null) {
@@ -61,6 +93,7 @@ export function useAverages(uid: string | null) {
 
   const week = useMemo(() => computeWindow(sessions, Date.now() - 7 * DAY_MS), [sessions]);
   const month = useMemo(() => computeWindow(sessions, Date.now() - 30 * DAY_MS), [sessions]);
+  const band = useMemo(() => computeBaselineBand(sessions), [sessions]);
 
-  return { week, month, loading };
+  return { week, month, band, loading };
 }

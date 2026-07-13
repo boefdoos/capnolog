@@ -42,6 +42,7 @@ export function parseSessionMeta(id: string, data: Record<string, unknown>) {
     bandHigh: (data.bandHigh as number) ?? 4.9,
     readingCount: (data.readingCount as number) ?? 0,
     kpaSum: (data.kpaSum as number) ?? 0,
+    kpaSumSq: (data.kpaSumSq as number) ?? 0,
     sighSuccessCount: (data.sighSuccessCount as number) ?? 0,
     sighTotalCount: (data.sighTotalCount as number) ?? 0,
     lastTSec: (data.lastTSec as number) ?? 0,

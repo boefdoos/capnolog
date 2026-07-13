@@ -25,6 +25,7 @@ export interface SessionMeta {
   bandHigh: number;
   readingCount: number;
   kpaSum: number;
+  kpaSumSq: number;
   sighSuccessCount: number;
   sighTotalCount: number;
   lastTSec: number;
@@ -32,3 +33,7 @@ export interface SessionMeta {
 
 export const DEVICE_MIN_KPA = 0.0;
 export const DEVICE_MAX_KPA = 9.9; // EMMA kPa-versie toont EtCO2 enkel binnen 0.0-9.9 kPa (operator's manual)
+
+export const DEFAULT_BAND_LOW = 3.8;
+export const DEFAULT_BAND_HIGH = 4.9;
+export const MIN_READINGS_FOR_BASELINE = 20;
