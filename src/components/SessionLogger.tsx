@@ -16,7 +16,7 @@ import { useAverages } from "@/lib/useAverages";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 
-type ViewMode = "idle" | "active";
+type ViewMode = "idle" | "active" | "review";
 
 export default function SessionLogger({ uid }: { uid: string }) {
   const { week, month, band } = useAverages(uid);
@@ -49,7 +49,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
   const hasSession = Boolean(meta && entries.length > 0);
   const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
 
-  function endSession() {
+  function confirmEndSession() {
     startNewSession();
     setViewMode("idle");
   }
@@ -91,6 +91,53 @@ export default function SessionLogger({ uid }: { uid: string }) {
     );
   }
 
+  if (viewMode === "review") {
+    return (
+      <div className="mx-auto max-w-2xl p-4 pb-10">
+        <header className="mb-4 border-b border-panel-border pb-3.5">
+          <h1 className="text-[19px] font-semibold tracking-wide">Sessie afronden</h1>
+          <p className="text-[12.5px] text-muted">Laatste controle voor je afsluit</p>
+        </header>
+
+        <div className="space-y-3.5">
+          <FeelingSelector value={meta?.feeling} onChange={setFeeling} />
+
+          <div className="panel">
+            <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} />
+          </div>
+
+          <div className="panel">
+            <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} feeling={meta?.feeling} />
+          </div>
+
+          <div className="panel">
+            <div className="mb-2.5 flex items-center justify-between">
+              <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted">
+                Log &middot; verwijder eventuele anomalieën
+              </h2>
+            </div>
+            <EntryTable entries={entries} onDelete={deleteEntry} />
+          </div>
+
+          <div className="space-y-2">
+            <button
+              onClick={confirmEndSession}
+              className="w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
+            >
+              Bevestig en beëindig sessie
+            </button>
+            <button
+              onClick={() => setViewMode("active")}
+              className="w-full rounded-lg border border-panel-border py-3 text-sm font-semibold text-muted active:scale-[0.99]"
+            >
+              Terug naar sessie
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
@@ -104,7 +151,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
       </header>
 
       <button
-        onClick={endSession}
+        onClick={() => setViewMode("review")}
         className="mb-2.5 w-full rounded-lg border border-amber bg-amber/10 py-3 text-sm font-semibold text-amber active:scale-[0.99]"
       >
         Beëindig sessie
