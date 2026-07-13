@@ -35,7 +35,7 @@ export default function StatsRow({
 
   if (sighs.length) {
     const success = sighs.filter((s) => s.subtype === "success").length;
-    chips.push(["BSR", `${success}/${sighs.length}`]);
+    chips.push(["BSR", `${Math.round((success / sighs.length) * 100)}%`]);
   }
 
   return (

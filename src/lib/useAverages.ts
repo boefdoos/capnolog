@@ -1,6 +1,6 @@
 "use client";
 
-import { collection, onSnapshot, orderBy, query, Timestamp, where } from "firebase/firestore";
+import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 import { parseSessionMeta } from "./format";
@@ -45,13 +45,14 @@ function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage 
 }
 
 /**
- * Referentieband = maandgemiddelde ± 1 standaarddeviatie, berekend uit de
- * per-sessie aggregaten (kpaSum, kpaSumSq) zodat geen individuele metingen
- * herlezen moeten worden. Bij minder dan MIN_READINGS_FOR_BASELINE metingen
- * in de laatste maand valt dit terug op de vaste 3.8-4.9 kPa band.
+ * Referentieband = persoonlijke baseline (mean ± 1 SD), zoals gangbaar in
+ * biofeedback-apps (bv. Myndlift): een baseline die stabieler en preciezer
+ * wordt naarmate er meer data is, in plaats van een glijdend venster dat
+ * elke maand resette. Daarom over ALLE sessies ooit, niet enkel de laatste
+ * maand. Onder MIN_READINGS_FOR_BASELINE metingen: vaste terugvalband.
  */
-function computeBaselineBand(monthSessions: SessionMeta[]): BaselineBand {
-  const inWindow = monthSessions.filter((s) => s.readingCount > 0);
+function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
+  const inWindow = allSessions.filter((s) => s.readingCount > 0);
   const n = inWindow.reduce((sum, s) => sum + s.readingCount, 0);
   if (n < MIN_READINGS_FOR_BASELINE) {
     return { low: DEFAULT_BAND_LOW, high: DEFAULT_BAND_HIGH, source: "default", readingCount: n };
@@ -75,15 +76,11 @@ export function useAverages(uid: string | null) {
       return;
     }
     const db = getFirebaseDb();
-    const monthAgo = Date.now() - 30 * DAY_MS;
-    // Enkel sessies uit de laatste maand ophalen; week is daar client-side
-    // een subset van. Single-field range + orderBy op hetzelfde veld
-    // (createdAt) heeft geen samengesteld Firestore-index nodig.
-    const q = query(
-      collection(db, "users", uid, "sessions"),
-      where("createdAt", ">=", Timestamp.fromMillis(monthAgo)),
-      orderBy("createdAt", "desc")
-    );
+    // Alle sessies ophalen (geen datumfilter): week/maand worden hieruit
+    // client-side afgeleid, en de baseline-band gebruikt bewust de volledige
+    // geschiedenis. Een limiet van 1000 is een ruime veiligheidsmarge voor
+    // persoonlijk gebruik, geen praktische impact.
+    const q = query(collection(db, "users", uid, "sessions"), orderBy("createdAt", "desc"), limit(1000));
     const unsub = onSnapshot(q, (snap) => {
       const all = snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>));
       setSessions(all);
