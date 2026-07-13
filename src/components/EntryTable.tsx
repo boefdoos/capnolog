@@ -36,7 +36,7 @@ export default function EntryTable({
             return (
               <tr key={e.id} className="bg-amber/5">
                 <td colSpan={5} className="border-b border-[#1A2320] px-2 py-1.5 text-amber">
-                  &#9873; klacht gemarkeerd &middot; t+{fmtTime(e.tSec)}
+                  &#9873; verstoring gemarkeerd &middot; t+{fmtTime(e.tSec)}
                 </td>
                 {onDelete && (
                   <td className="border-b border-[#1A2320] px-2 py-1.5">

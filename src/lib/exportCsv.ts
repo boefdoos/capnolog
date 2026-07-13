@@ -7,7 +7,7 @@ export function exportSessionCsv(entries: Entry[], filenamePrefix = "co2-sessie"
     .sort((a, b) => a.tSec - b.tSec)
     .map((e) => {
       if (e.type === "marker") {
-        return ["", "markeer_klacht", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", ""].join(",");
+        return ["", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", ""].join(",");
       }
       if (e.type === "sigh") {
         return ["", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", ""].join(",");

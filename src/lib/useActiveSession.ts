@@ -104,7 +104,7 @@ export function useActiveSession(uid: string | null) {
     });
   }
 
-  async function markComplaint() {
+  async function markDisturbance() {
     if (!uid) return;
     const { id, createdAt } = await ensureSession();
     const tSec = nowTSec(createdAt);
@@ -177,7 +177,7 @@ export function useActiveSession(uid: string | null) {
     bandLow,
     bandHigh,
     logReading,
-    markComplaint,
+    markDisturbance,
     logSigh,
     deleteEntry,
     updateBand,

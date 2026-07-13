@@ -1,10 +1,10 @@
 "use client";
 
 export default function EventButtons({
-  onMarkComplaint,
+  onMarkDisturbance,
   onSigh,
 }: {
-  onMarkComplaint: () => void;
+  onMarkDisturbance: () => void;
   onSigh: (subtype: "success" | "fail") => void;
 }) {
   return (
@@ -12,10 +12,10 @@ export default function EventButtons({
       <label className="mb-2 block text-[11px] uppercase tracking-wide text-muted">Gebeurtenissen</label>
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={onMarkComplaint}
+          onClick={onMarkDisturbance}
           className="rounded-lg border border-amber px-3.5 py-2.5 text-sm font-semibold text-amber active:scale-95"
         >
-          Markeer klacht
+          Markeer verstoring
         </button>
         <button
           onClick={() => onSigh("success")}

@@ -23,7 +23,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
     bandLow,
     bandHigh,
     logReading,
-    markComplaint,
+    markDisturbance,
     logSigh,
     deleteEntry,
     updateBand,
@@ -110,7 +110,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
 
       <div className="space-y-3.5">
         <KpaInput onLog={logReading} />
-        <EventButtons onMarkComplaint={markComplaint} onSigh={logSigh} />
+        <EventButtons onMarkDisturbance={markDisturbance} onSigh={logSigh} />
 
         <div className="panel">
           <Co2Chart entries={entries} bandLow={bandLow} bandHigh={bandHigh} />
