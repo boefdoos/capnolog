@@ -34,7 +34,7 @@ function SessionsListInner({ uid }: { uid: string }) {
           <p className="text-[12.5px] text-muted">Opgeslagen CO2-sessies</p>
         </div>
         <Link href="/" className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
-          Nieuwe sessie
+          &lsaquo; Terug
         </Link>
       </header>
 
