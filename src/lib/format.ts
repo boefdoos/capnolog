@@ -29,6 +29,25 @@ export function digitsFromInput(value: string): string {
   return value.replace(/[^0-9]/g, "").slice(0, 3);
 }
 
+export function parseSessionMeta(id: string, data: Record<string, unknown>) {
+  const createdAt = data.createdAt;
+  const createdAtMs =
+    createdAt && typeof (createdAt as { toMillis?: () => number }).toMillis === "function"
+      ? (createdAt as { toMillis: () => number }).toMillis()
+      : Date.now();
+  return {
+    id,
+    createdAt: createdAtMs,
+    bandLow: (data.bandLow as number) ?? 3.8,
+    bandHigh: (data.bandHigh as number) ?? 4.9,
+    readingCount: (data.readingCount as number) ?? 0,
+    kpaSum: (data.kpaSum as number) ?? 0,
+    sighSuccessCount: (data.sighSuccessCount as number) ?? 0,
+    sighTotalCount: (data.sighTotalCount as number) ?? 0,
+    lastTSec: (data.lastTSec as number) ?? 0,
+  };
+}
+
 export function deriveEntries<T extends { type: string; tSec: number; kpa?: number }>(
   stored: T[]
 ): (T & { mmHg?: number; delta?: number; idx?: number })[] {

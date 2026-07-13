@@ -69,6 +69,7 @@ export function useActiveSession(uid: string | null) {
       bandLow: bandRef.current.bandLow,
       bandHigh: bandRef.current.bandHigh,
       readingCount: 0,
+      kpaSum: 0,
       sighSuccessCount: 0,
       sighTotalCount: 0,
       lastTSec: 0,
@@ -98,6 +99,7 @@ export function useActiveSession(uid: string | null) {
     });
     await updateDoc(doc(db, "users", uid, "sessions", id), {
       readingCount: increment(1),
+      kpaSum: increment(kpa),
       lastTSec: tSec,
     });
   }
@@ -138,7 +140,10 @@ export function useActiveSession(uid: string | null) {
     const db = getFirebaseDb();
     await deleteDoc(doc(db, "users", uid, "sessions", sessionId, "entries", entry.id));
     const patch: Record<string, unknown> = {};
-    if (entry.type === "reading") patch.readingCount = increment(-1);
+    if (entry.type === "reading") {
+      patch.readingCount = increment(-1);
+      patch.kpaSum = increment(-(entry.kpa ?? 0));
+    }
     if (entry.type === "sigh") {
       patch.sighTotalCount = increment(-1);
       if (entry.subtype === "success") patch.sighSuccessCount = increment(-1);

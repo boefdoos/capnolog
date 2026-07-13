@@ -24,6 +24,7 @@ export interface SessionMeta {
   bandLow: number;
   bandHigh: number;
   readingCount: number;
+  kpaSum: number;
   sighSuccessCount: number;
   sighTotalCount: number;
   lastTSec: number;

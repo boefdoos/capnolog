@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import AveragesCard from "./AveragesCard";
 import BandConfig from "./BandConfig";
 import Co2Chart from "./Co2Chart";
 import EntryTable from "./EntryTable";
@@ -9,6 +10,7 @@ import EventButtons from "./EventButtons";
 import KpaInput from "./KpaInput";
 import StatsRow from "./StatsRow";
 import { useActiveSession } from "@/lib/useActiveSession";
+import { useAverages } from "@/lib/useAverages";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 
@@ -25,6 +27,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
     updateBand,
     startNewSession,
   } = useActiveSession(uid);
+  const { week, month } = useAverages(uid);
 
   const [, forceTick] = useState(0);
   useEffect(() => {
@@ -64,6 +67,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
       </nav>
 
       <div className="space-y-3.5">
+        <AveragesCard week={week} month={month} />
+
         <KpaInput onLog={logReading} />
         <EventButtons onMarkComplaint={markComplaint} onSigh={logSigh} />
 
