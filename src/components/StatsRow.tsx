@@ -1,6 +1,6 @@
 "use client";
 
-import { fmtTime, KPA_TO_MMHG } from "@/lib/format";
+import { computeAvgRR, fmtTime, KPA_TO_MMHG } from "@/lib/format";
 import { FEELING_COLORS, FEELING_LABELS, type SessionFeeling } from "@/types/capnolog";
 import type { Entry } from "@/types/capnolog";
 
@@ -35,6 +35,11 @@ export default function StatsRow({
   const lastTSec = Math.max(0, ...entries.map((e) => e.tSec));
   const durationSec = liveDurationFrom ? (Date.now() - liveDurationFrom) / 1000 : lastTSec;
   chips.push(["Duur", fmtTime(durationSec)]);
+
+  const avgRR = computeAvgRR(readings);
+  if (avgRR != null) {
+    chips.push(["RR gem.", `${avgRR.toFixed(0)}/min`]);
+  }
 
   if (sighs.length) {
     const success = sighs.filter((s) => s.subtype === "success").length;

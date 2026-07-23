@@ -16,6 +16,7 @@ export interface Entry extends StoredEntry {
   mmHg?: number;
   delta?: number;
   idx?: number;
+  rr?: number;
 }
 
 export type SessionFeeling = "slecht" | "eerder_slecht" | "ok" | "eerder_goed" | "goed";

@@ -103,6 +103,9 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
                 if (typeof raw.delta === "number" && raw.delta !== 0) {
                   lines.push((raw.delta > 0 ? "+" : "") + raw.delta.toFixed(1) + " kPa t.o.v. vorige");
                 }
+                if (typeof raw.rr === "number") {
+                  lines.push("RR \u2248 " + raw.rr.toFixed(0) + "/min");
+                }
                 return lines;
               },
             },
@@ -119,6 +122,12 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
             title: { display: true, text: "kPa", color: "#7C8C86", font: { size: 11 } },
             ticks: { color: "#7C8C86" },
             grid: { color: "rgba(255,255,255,0.04)" },
+          },
+          y1: {
+            position: "right",
+            title: { display: true, text: "RR (/min)", color: "#8B93F0", font: { size: 11 } },
+            ticks: { color: "#8B93F0" },
+            grid: { display: false },
           },
         },
       },
@@ -181,8 +190,27 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
       fill: false,
       order: 1,
     };
+    const rrReadings = readings.filter((r) => typeof r.rr === "number");
+    const rrTrace: ChartDataset<"line"> = {
+      label: "RR",
+      yAxisID: "y1",
+      data: rrReadings.map((r) => ({ x: r.tSec, y: r.rr as number, ...r })) as unknown as {
+        x: number;
+        y: number;
+      }[],
+      borderColor: "#8B93F0",
+      backgroundColor: "rgba(139,147,240,0.12)",
+      borderWidth: 1.5,
+      borderDash: [2, 2],
+      pointRadius: 2,
+      pointHoverRadius: 5,
+      pointBackgroundColor: "#8B93F0",
+      tension: 0.3,
+      fill: false,
+      order: 0,
+    };
 
-    chart.data.datasets = [bandTop, bandBottom, trace];
+    chart.data.datasets = [bandTop, bandBottom, trace, rrTrace];
     if (chart.options.scales?.x) {
       (chart.options.scales.x as { max?: number }).max = maxT;
     }

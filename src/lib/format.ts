@@ -54,17 +54,37 @@ export function parseSessionMeta(id: string, data: Record<string, unknown>) {
 
 export function deriveEntries<T extends { type: string; tSec: number; kpa?: number }>(
   stored: T[]
-): (T & { mmHg?: number; delta?: number; idx?: number })[] {
+): (T & { mmHg?: number; delta?: number; idx?: number; rr?: number })[] {
   const sorted = [...stored].sort((a, b) => a.tSec - b.tSec);
   let n = 0;
   let prevKpa: number | null = null;
+  let prevTSec: number | null = null;
   return sorted.map((e) => {
     if (e.type === "reading" && typeof e.kpa === "number") {
       n += 1;
       const delta = prevKpa === null ? 0 : +(e.kpa - prevKpa).toFixed(2);
+      // Afgeleide ademfrequentie uit het tijdsinterval tussen twee
+      // opeenvolgende metingen. Enkel geldig als er na elke ademhaling
+      // gelogd wordt; bij een breath hold of overgeslagen ademhaling
+      // toont dit net dat langere interval, geen fysiologische RR-meting.
+      const interval = prevTSec === null ? null : e.tSec - prevTSec;
+      const rr = interval && interval > 0 ? Math.round((60 / interval) * 10) / 10 : undefined;
       prevKpa = e.kpa;
-      return { ...e, mmHg: e.kpa * KPA_TO_MMHG, delta, idx: n };
+      prevTSec = e.tSec;
+      return { ...e, mmHg: e.kpa * KPA_TO_MMHG, delta, idx: n, rr };
     }
     return { ...e };
   });
+}
+
+/** Sessiegemiddelde ademfrequentie: totaal aantal ademhalingen gedeeld door
+ * de totale tijd tussen de eerste en de laatste, dit is stabieler dan het
+ * gemiddelde nemen van de per-ademhaling schommelingen (die door één lange
+ * breath hold sterk vertekend zouden worden). */
+export function computeAvgRR(readings: { tSec: number }[]): number | null {
+  if (readings.length < 2) return null;
+  const sorted = [...readings].sort((a, b) => a.tSec - b.tSec);
+  const totalSec = sorted[sorted.length - 1].tSec - sorted[0].tSec;
+  if (totalSec <= 0) return null;
+  return Math.round(((sorted.length - 1) / totalSec) * 60 * 10) / 10;
 }

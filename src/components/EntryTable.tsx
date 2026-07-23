@@ -20,7 +20,7 @@ export default function EntryTable({
     <table className="w-full border-collapse text-xs">
       <thead>
         <tr>
-          {["#", "Tijd", "kPa", "mmHg", "\u0394", ""].map((h) => (
+          {["#", "Tijd", "kPa", "mmHg", "\u0394", "RR", ""].map((h) => (
             <th
               key={h}
               className="border-b border-panel-border px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-muted"
@@ -35,7 +35,7 @@ export default function EntryTable({
           if (e.type === "marker") {
             return (
               <tr key={e.id} className="bg-amber/5">
-                <td colSpan={5} className="border-b border-[#1A2320] px-2 py-1.5 text-amber">
+                <td colSpan={6} className="border-b border-[#1A2320] px-2 py-1.5 text-amber">
                   &#9873; verstoring gemarkeerd &middot; t+{fmtTime(e.tSec)}
                 </td>
                 {onDelete && (
@@ -53,7 +53,7 @@ export default function EntryTable({
             return (
               <tr key={e.id} className={success ? "bg-teal/5" : "bg-danger/5"}>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className={
                     "border-b border-[#1A2320] px-2 py-1.5 " + (success ? "text-teal" : "text-danger")
                   }
@@ -79,6 +79,9 @@ export default function EntryTable({
               <td className="border-b border-[#1A2320] px-2 py-1.5">{(e.mmHg ?? 0).toFixed(0)}</td>
               <td className="border-b border-[#1A2320] px-2 py-1.5">
                 {delta ? (delta > 0 ? "+" : "") + delta.toFixed(1) : "\u2014"}
+              </td>
+              <td className="border-b border-[#1A2320] px-2 py-1.5">
+                {typeof e.rr === "number" ? e.rr.toFixed(0) : "\u2014"}
               </td>
               {onDelete && (
                 <td className="border-b border-[#1A2320] px-2 py-1.5">

@@ -20,15 +20,15 @@ export function exportSessionCsv(
   feeling?: SessionFeeling
 ) {
   const feelingLine = feeling ? `# algemeen_gevoel: ${FEELING_LABELS[feeling]}\n` : "";
-  const header = "idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa\n";
+  const header = "idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min\n";
   const rows = [...entries]
     .sort((a, b) => a.tSec - b.tSec)
     .map((e) => {
       if (e.type === "marker") {
-        return ["", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", ""].join(",");
+        return ["", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
       }
       if (e.type === "sigh") {
-        return ["", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", ""].join(",");
+        return ["", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
       }
       return [
         e.idx ?? "",
@@ -39,6 +39,7 @@ export function exportSessionCsv(
         (e.kpa ?? 0).toFixed(2),
         (e.mmHg ?? 0).toFixed(1),
         e.delta ?? 0,
+        typeof e.rr === "number" ? e.rr.toFixed(1) : "",
       ].join(",");
     });
   downloadCsv(feelingLine + header + rows.join("\n"), filenamePrefix);
