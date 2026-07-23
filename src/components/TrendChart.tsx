@@ -30,6 +30,7 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
         animation: { duration: 200 },
         interaction: { mode: "nearest", intersect: false },
         plugins: {
+          legend: { display: false },
           tooltip: {
             backgroundColor: "#0D1210",
             borderColor: "#223028",
