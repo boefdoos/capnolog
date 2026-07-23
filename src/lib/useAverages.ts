@@ -65,6 +65,21 @@ function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
   return { low: mean - sd, high: mean + sd, source: "baseline", readingCount: n };
 }
 
+export interface TrendPoint {
+  date: number; // epoch ms (session createdAt)
+  avgKpa: number;
+}
+
+/** Eén punt per sessie (datum + sessiegemiddelde), laatste 30 dagen,
+ * chronologisch, voor een evolutie-grafiek op het startscherm. */
+function computeTrend(sessions: SessionMeta[]): TrendPoint[] {
+  const monthAgo = Date.now() - 30 * DAY_MS;
+  return sessions
+    .filter((s) => s.createdAt >= monthAgo && s.readingCount > 0)
+    .map((s) => ({ date: s.createdAt, avgKpa: s.kpaSum / s.readingCount }))
+    .sort((a, b) => a.date - b.date);
+}
+
 /** Aantal voltooide sessies (met minstens 1 meting) sinds lokale middernacht. */
 function computeSessionsToday(sessions: SessionMeta[]): number {
   const startOfDay = new Date();
@@ -94,12 +109,13 @@ export function useAverages(uid: string | null) {
       setLoading(false);
 
       // Zelfherstel: sessies die aangemaakt zijn voor kpaSum/kpaSumSq
-      // bestonden hebben readingCount>0 maar kpaSum bleef op 0 staan, wat
-      // het gemiddelde en de referentieband vertekent. Stil herberekenen
-      // vanuit de echte entries; de listener hierboven pikt de correctie
-      // vanzelf weer op.
+      // bestonden hebben readingCount>0 maar kpaSum en/of kpaSumSq bleven
+      // op 0 staan, wat het gemiddelde en vooral de referentieband (die op
+      // kpaSumSq steunt voor de standaarddeviatie) vertekent. Stil
+      // herberekenen vanuit de echte entries; de listener hierboven pikt
+      // de correctie vanzelf weer op.
       all.forEach((s) => {
-        if (s.readingCount > 0 && s.kpaSum === 0) {
+        if (s.readingCount > 0 && (s.kpaSum === 0 || s.kpaSumSq === 0)) {
           backfillSessionAggregates(uid, s.id).catch(() => {});
         }
       });
@@ -111,6 +127,7 @@ export function useAverages(uid: string | null) {
   const month = useMemo(() => computeWindow(sessions, Date.now() - 30 * DAY_MS), [sessions]);
   const band = useMemo(() => computeBaselineBand(sessions), [sessions]);
   const sessionsToday = useMemo(() => computeSessionsToday(sessions), [sessions]);
+  const trend = useMemo(() => computeTrend(sessions), [sessions]);
 
-  return { week, month, band, sessionsToday, loading };
+  return { week, month, band, sessionsToday, trend, loading };
 }

@@ -11,6 +11,7 @@ import EventButtons from "./EventButtons";
 import FeelingSelector from "./FeelingSelector";
 import KpaInput from "./KpaInput";
 import StatsRow from "./StatsRow";
+import TrendChart from "./TrendChart";
 import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
@@ -21,7 +22,7 @@ import { CART_TARGET_MINUTES } from "@/types/capnolog";
 type ViewMode = "idle" | "active" | "review";
 
 export default function SessionLogger({ uid }: { uid: string }) {
-  const { week, month, band, sessionsToday } = useAverages(uid);
+  const { week, month, band, sessionsToday, trend } = useAverages(uid);
   const {
     meta,
     entries,
@@ -69,6 +70,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         <div className="space-y-3.5">
           <DailyProgress sessionsToday={sessionsToday} />
           <AveragesCard week={week} month={month} />
+          <TrendChart trend={trend} band={band} />
 
           <button
             onClick={() => setViewMode("active")}
