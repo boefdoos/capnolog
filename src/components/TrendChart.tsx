@@ -121,22 +121,16 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
     chart.update();
   }, [trend, band]);
 
-  if (trend.length < 2) {
-    return (
-      <div className="panel">
-        <div className="mb-1 text-[11px] uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
-        <div className="py-4 text-center text-xs text-muted">
-          Nog te weinig sessies voor een evolutiebeeld.
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="panel">
       <div className="mb-1 text-[11px] uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
       <div className="relative h-40 w-full">
         <canvas ref={canvasRef} />
+        {trend.length < 2 && (
+          <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-muted">
+            Nog te weinig sessies voor een evolutiebeeld.
+          </div>
+        )}
       </div>
     </div>
   );
