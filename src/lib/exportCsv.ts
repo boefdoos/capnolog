@@ -1,5 +1,13 @@
-import { fmtTime } from "./format";
-import { FEELING_LABELS, type Entry, type SessionFeeling, type SessionMeta } from "@/types/capnolog";
+import { collection, getDocs } from "firebase/firestore";
+import { deriveEntries, fmtTime } from "./format";
+import { getFirebaseDb } from "./firebase";
+import {
+  FEELING_LABELS,
+  type Entry,
+  type SessionFeeling,
+  type SessionMeta,
+  type StoredEntry,
+} from "@/types/capnolog";
 
 function downloadCsv(csv: string, filenamePrefix: string) {
   const blob = new Blob([csv], { type: "text/csv" });
@@ -71,5 +79,78 @@ export function exportSessionsOverviewCsv(sessions: SessionMeta[], filenamePrefi
         s.feeling ? FEELING_LABELS[s.feeling] : "",
       ].join(",");
     });
+  downloadCsv(header + rows.join("\n"), filenamePrefix);
+}
+
+/**
+ * Volledige export: één rij per individueel datapunt (meting, verstoring,
+ * zucht) over alle sessies in een periode, elk verrijkt met sessiecontext
+ * (datum, gevoel, band) zodat het bestand op zichzelf staat, geen join met
+ * een apart sessieoverzicht nodig voor grondige analyse. Leest voor elke
+ * sessie in de periode de entries-subcollectie op, dus dit kost N+1
+ * Firestore-reads (N = aantal sessies), aanvaardbaar op persoonlijke schaal.
+ */
+export async function exportFullPeriodCsv(
+  uid: string,
+  sessions: SessionMeta[],
+  filenamePrefix: string
+): Promise<void> {
+  const db = getFirebaseDb();
+  const header =
+    "sessie_datum,sessie_tijd,sessie_id,sessie_gevoel,band_onder_kpa,band_boven_kpa,absoluut_tijdstip,idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min\n";
+  const sorted = [...sessions].sort((a, b) => a.createdAt - b.createdAt);
+  const rows: string[] = [];
+
+  for (const s of sorted) {
+    const snap = await getDocs(collection(db, "users", uid, "sessions", s.id, "entries"));
+    const rawEntries: StoredEntry[] = snap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as Omit<StoredEntry, "id">),
+    }));
+    const derived = deriveEntries(rawEntries).sort((a, b) => a.tSec - b.tSec);
+
+    const d = new Date(s.createdAt);
+    const sessieDatum = d.toLocaleDateString("nl-BE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const sessieTijd = d.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
+    const gevoel = s.feeling ? FEELING_LABELS[s.feeling] : "";
+
+    derived.forEach((e) => {
+      const absoluutTijdstip = new Date(s.createdAt + e.tSec * 1000).toISOString();
+      const gedeeld = [
+        sessieDatum,
+        sessieTijd,
+        s.id,
+        gevoel,
+        s.bandLow.toFixed(2),
+        s.bandHigh.toFixed(2),
+        absoluutTijdstip,
+      ];
+      if (e.type === "marker") {
+        rows.push([...gedeeld, "", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(","));
+        return;
+      }
+      if (e.type === "sigh") {
+        rows.push(
+          [...gedeeld, "", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",")
+        );
+        return;
+      }
+      rows.push(
+        [
+          ...gedeeld,
+          e.idx ?? "",
+          "meting",
+          "",
+          e.tSec.toFixed(1),
+          fmtTime(e.tSec),
+          (e.kpa ?? 0).toFixed(2),
+          (e.mmHg ?? 0).toFixed(1),
+          e.delta ?? 0,
+          typeof e.rr === "number" ? e.rr.toFixed(1) : "",
+        ].join(",")
+      );
+    });
+  }
+
   downloadCsv(header + rows.join("\n"), filenamePrefix);
 }

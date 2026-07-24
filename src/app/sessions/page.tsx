@@ -6,12 +6,26 @@ import AuthGate from "@/components/AuthGate";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { fmtTime } from "@/lib/format";
 import { deleteSessionCompletely } from "@/lib/sessionActions";
-import { exportSessionsOverviewCsv } from "@/lib/exportCsv";
+import { exportFullPeriodCsv, exportSessionsOverviewCsv } from "@/lib/exportCsv";
 import { FEELING_COLORS, FEELING_LABELS } from "@/types/capnolog";
 
 function SessionsListInner({ uid }: { uid: string }) {
   const { sessions, loading } = useSessionsList(uid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [exportingFull, setExportingFull] = useState<"week" | "month" | null>(null);
+
+  async function handleFullExport(period: "week" | "month") {
+    setExportingFull(period);
+    try {
+      const sinceMs = Date.now() - (period === "week" ? 7 : 30) * 24 * 60 * 60 * 1000;
+      const inPeriod = sessions.filter((s) => s.createdAt >= sinceMs);
+      await exportFullPeriodCsv(uid, inPeriod, `etco2-volledig-${period === "week" ? "week" : "maand"}`);
+    } catch {
+      window.alert("Exporteren mislukt, probeer opnieuw.");
+    } finally {
+      setExportingFull(null);
+    }
+  }
 
   async function handleDelete(sessionId: string) {
     const ok = window.confirm(
@@ -46,31 +60,51 @@ function SessionsListInner({ uid }: { uid: string }) {
       )}
 
       {!loading && sessions.length > 0 && (
-        <div className="mb-4 flex gap-3 text-xs text-muted">
-          <button
-            onClick={() => {
-              const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-              exportSessionsOverviewCsv(
-                sessions.filter((s) => s.createdAt >= weekAgo),
-                "etco2-overzicht-week"
-              );
-            }}
-            className="hover:text-text"
-          >
-            Exporteer week
-          </button>
-          <button
-            onClick={() => {
-              const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-              exportSessionsOverviewCsv(
-                sessions.filter((s) => s.createdAt >= monthAgo),
-                "etco2-overzicht-maand"
-              );
-            }}
-            className="hover:text-text"
-          >
-            Exporteer maand
-          </button>
+        <div className="mb-4 space-y-1.5 text-xs text-muted">
+          <div className="flex gap-3">
+            <span className="text-[10px] uppercase tracking-wide">Overzicht:</span>
+            <button
+              onClick={() => {
+                const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                exportSessionsOverviewCsv(
+                  sessions.filter((s) => s.createdAt >= weekAgo),
+                  "etco2-overzicht-week"
+                );
+              }}
+              className="hover:text-text"
+            >
+              week
+            </button>
+            <button
+              onClick={() => {
+                const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+                exportSessionsOverviewCsv(
+                  sessions.filter((s) => s.createdAt >= monthAgo),
+                  "etco2-overzicht-maand"
+                );
+              }}
+              className="hover:text-text"
+            >
+              maand
+            </button>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-[10px] uppercase tracking-wide">Volledig (alle datapunten):</span>
+            <button
+              onClick={() => handleFullExport("week")}
+              disabled={exportingFull !== null}
+              className="hover:text-text disabled:opacity-50"
+            >
+              {exportingFull === "week" ? "bezig..." : "week"}
+            </button>
+            <button
+              onClick={() => handleFullExport("month")}
+              disabled={exportingFull !== null}
+              className="hover:text-text disabled:opacity-50"
+            >
+              {exportingFull === "month" ? "bezig..." : "maand"}
+            </button>
+          </div>
         </div>
       )}
 
