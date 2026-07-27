@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import AveragesCard from "./AveragesCard";
 import BandInfo from "./BandInfo";
+import CartWeekBadge from "./CartWeekBadge";
 import Co2Chart from "./Co2Chart";
 import DailyProgress from "./DailyProgress";
 import EntryTable from "./EntryTable";
@@ -15,6 +16,7 @@ import TrendChart from "./TrendChart";
 import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
+import { useCartProtocol } from "@/lib/useCartProtocol";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { CART_TARGET_MINUTES } from "@/types/capnolog";
@@ -34,6 +36,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
     startNewSession,
   } = useActiveSession(uid, band);
   const { logOut } = useAuth();
+  const { target: cartTarget, activate: activateCartProtocol } = useCartProtocol(uid);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
 
@@ -82,11 +85,37 @@ export default function SessionLogger({ uid }: { uid: string }) {
           <div className="text-center">
             <Link
               href="/sessions"
+              prefetch={false}
               className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
             >
               Geschiedenis bekijken
             </Link>
           </div>
+        </div>
+
+        <div className="mt-6 text-center text-xs text-muted">
+          {cartTarget ? (
+            <>
+              CART-protocol: week {cartTarget.week} &middot; doel {cartTarget.targetRR}/min &middot;{" "}
+              <button
+                onClick={() => {
+                  if (window.confirm("Protocol herstarten vanaf vandaag (terug naar week 1)?")) {
+                    activateCartProtocol();
+                  }
+                }}
+                className="underline decoration-panel-border underline-offset-2 hover:text-text"
+              >
+                herstart
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => activateCartProtocol()}
+              className="underline decoration-panel-border underline-offset-2 hover:text-text"
+            >
+              CART-protocol starten (week 1 vanaf vandaag)
+            </button>
+          )}
         </div>
 
         <div className="mt-10 text-center">
@@ -162,6 +191,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
       </header>
 
+      {cartTarget && <div className="mb-2.5"><CartWeekBadge target={cartTarget} /></div>}
+
       <button
         onClick={() => setViewMode("review")}
         className="mb-2.5 w-full rounded-lg border border-amber bg-amber/10 py-3 text-sm font-semibold text-amber active:scale-[0.99]"
@@ -170,11 +201,11 @@ export default function SessionLogger({ uid }: { uid: string }) {
       </button>
 
       <nav className="mb-4 flex gap-3 text-xs text-muted">
-        <Link href="/sessions" className="underline decoration-panel-border underline-offset-2 hover:text-text">
+        <Link href="/sessions" prefetch={false} className="underline decoration-panel-border underline-offset-2 hover:text-text">
           Geschiedenis
         </Link>
         {hasSession && (
-          <button onClick={() => exportSessionCsv(entries, "co2-sessie", meta?.feeling)} className="hover:text-text">
+          <button onClick={() => exportSessionCsv(entries, meta?.createdAt ?? Date.now(), "co2-sessie", meta?.feeling)} className="hover:text-text">
             Exporteer CSV
           </button>
         )}

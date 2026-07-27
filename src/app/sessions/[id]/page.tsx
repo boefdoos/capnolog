@@ -35,7 +35,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
-          <Link href="/sessions" className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
+          <Link href="/sessions" prefetch={false} className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
             &lsaquo; Geschiedenis
           </Link>
           <h1 className="mt-1 text-[19px] font-semibold tracking-wide">
@@ -44,7 +44,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
         </div>
         <div className="flex items-center gap-3">
           {entries.length > 0 && (
-            <button onClick={() => exportSessionCsv(entries, "co2-sessie", meta?.feeling)} className="text-xs text-muted hover:text-text">
+            <button onClick={() => exportSessionCsv(entries, meta?.createdAt ?? Date.now(), "co2-sessie", meta?.feeling)} className="text-xs text-muted hover:text-text">
               Exporteer CSV
             </button>
           )}

@@ -49,7 +49,7 @@ function SessionsListInner({ uid }: { uid: string }) {
           <h1 className="text-[19px] font-semibold tracking-wide">Geschiedenis</h1>
           <p className="text-[12.5px] text-muted">Opgeslagen ETCO2-sessies</p>
         </div>
-        <Link href="/" className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
+        <Link href="/" prefetch={false} className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
           &lsaquo; Terug
         </Link>
       </header>
@@ -115,7 +115,7 @@ function SessionsListInner({ uid }: { uid: string }) {
             s.sighTotalCount > 0 ? Math.round((s.sighSuccessCount / s.sighTotalCount) * 100) : null;
           return (
             <div key={s.id} className="panel flex items-center justify-between gap-3 hover:border-trace">
-              <Link href={`/sessions/${s.id}`} className="min-w-0 flex-1">
+              <Link href={`/sessions/${s.id}`} prefetch={false} className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 text-sm text-text">
                   <span>
                     {new Date(s.createdAt).toLocaleDateString("nl-BE", {

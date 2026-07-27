@@ -24,21 +24,29 @@ function downloadCsv(csv: string, filenamePrefix: string) {
 
 export function exportSessionCsv(
   entries: Entry[],
+  sessionCreatedAt: number,
   filenamePrefix = "co2-sessie",
   feeling?: SessionFeeling
 ) {
+  const sessionDate = new Date(sessionCreatedAt);
+  const sessieDatum = sessionDate.toLocaleDateString("nl-BE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const sessieTijd = sessionDate.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
   const feelingLine = feeling ? `# algemeen_gevoel: ${FEELING_LABELS[feeling]}\n` : "";
-  const header = "idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min\n";
+  const header =
+    "sessie_datum,sessie_tijd,absoluut_tijdstip,idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min\n";
   const rows = [...entries]
     .sort((a, b) => a.tSec - b.tSec)
     .map((e) => {
+      const absoluutTijdstip = new Date(sessionCreatedAt + e.tSec * 1000).toISOString();
+      const gedeeld = [sessieDatum, sessieTijd, absoluutTijdstip];
       if (e.type === "marker") {
-        return ["", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
+        return [...gedeeld, "", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
       }
       if (e.type === "sigh") {
-        return ["", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
+        return [...gedeeld, "", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
       }
       return [
+        ...gedeeld,
         e.idx ?? "",
         "meting",
         "",
