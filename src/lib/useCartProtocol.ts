@@ -11,14 +11,25 @@ export interface CartWeekTarget {
   targetRR: number; // ademhalingen/min
 }
 
+function startOfDay(ms: number): number {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
 /**
  * Gegradueerd CART-doel (vergelijkend onderzoek capnometry-assisted
  * respiratory training bij paniekstoornis, Matig bewijsniveau, real-time
  * geverifieerd in eerder gesprek): dalend RR-doel per week, verzadigt op
  * week 4 en blijft daar staan, geen verdere automatische verlaging.
+ *
+ * Telt in kalenderdagen (middernacht tot middernacht), niet in exacte
+ * 24-uursblokken vanaf het activatie-tijdstip: anders zou "week 2" pas
+ * beginnen op het uur-exacte moment van activeren, dagen later dan wat een
+ * gebruiker intu\u00eftief als "week 2" beschouwt.
  */
 export function computeCartWeekTarget(startDate: number): CartWeekTarget {
-  const daysSince = Math.max(0, Math.floor((Date.now() - startDate) / DAY_MS));
+  const daysSince = Math.max(0, Math.round((startOfDay(Date.now()) - startOfDay(startDate)) / DAY_MS));
   if (daysSince < 7) return { week: 1, targetRR: 13 };
   if (daysSince < 14) return { week: 2, targetRR: 11 };
   if (daysSince < 21) return { week: 3, targetRR: 9 };
