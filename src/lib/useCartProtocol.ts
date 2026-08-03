@@ -28,6 +28,7 @@ export function computeCartWeekTarget(startDate: number): CartWeekTarget {
 export function useCartProtocol(uid: string | null) {
   const [startDate, setStartDate] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, forceTick] = useState(0);
 
   useEffect(() => {
     if (!uid) {
@@ -44,6 +45,15 @@ export function useCartProtocol(uid: string | null) {
     });
     return () => unsub();
   }, [uid]);
+
+  // computeCartWeekTarget leest Date.now() enkel op het moment van
+  // renderen. Zonder deze eigen klok blijft de week hangen op de laatste
+  // toevallige render (bv. wanneer de app dagenlang openstaat zonder
+  // herlaad), ook al is de echte datum intussen een week verder.
+  useEffect(() => {
+    const id = setInterval(() => forceTick((n) => n + 1), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   async function activate() {
     if (!uid) return;
