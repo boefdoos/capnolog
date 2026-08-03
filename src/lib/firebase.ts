@@ -40,6 +40,16 @@ export function getFirebaseDb(): Firestore {
   return db;
 }
 
+// Debug-haakje voor de browserconsole: gebruikt de instanties die de app
+// zelf al initialiseerde, dus geen aparte/niet-ingelogde SDK-kopie zoals bij
+// een los CDN-import. Firebase-webconfig is niet geheim, dit lekt niets.
+if (typeof window !== "undefined") {
+  (window as unknown as { __capnolog: unknown }).__capnolog = {
+    getAuth: getFirebaseAuth,
+    getDb: getFirebaseDb,
+  };
+}
+
 export function isFirebaseConfigured(): boolean {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 }
