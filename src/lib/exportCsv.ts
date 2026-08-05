@@ -1,5 +1,5 @@
-import { collection, getDocs } from "firebase/firestore";
-import { deriveEntries, fmtTime } from "./format";
+import { collection, getDocs, limit, orderBy, query, Timestamp, where } from "firebase/firestore";
+import { deriveEntries, fmtTime, parseSessionMeta } from "./format";
 import { getFirebaseDb } from "./firebase";
 import {
   FEELING_LABELS,
@@ -20,6 +20,24 @@ function downloadCsv(csv: string, filenamePrefix: string) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Haalt sessies rechtstreeks op voor een export, los van `useSessionsList`
+ * (die een limit(50) heeft, bedoeld voor de schermlijst). Zonder deze eigen
+ * query zou een export bij >50 sessies in de gekozen periode stilzwijgend
+ * een deel ervan missen, ongeacht het datumfilter erna.
+ */
+export async function fetchSessionsInPeriod(uid: string, sinceMs: number): Promise<SessionMeta[]> {
+  const db = getFirebaseDb();
+  const q = query(
+    collection(db, "users", uid, "sessions"),
+    where("createdAt", ">=", Timestamp.fromMillis(sinceMs)),
+    orderBy("createdAt", "desc"),
+    limit(1000)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>));
 }
 
 export function exportSessionCsv(

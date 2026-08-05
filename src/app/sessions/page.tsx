@@ -6,19 +6,33 @@ import AuthGate from "@/components/AuthGate";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { fmtTime } from "@/lib/format";
 import { deleteSessionCompletely } from "@/lib/sessionActions";
-import { exportFullPeriodCsv, exportSessionsOverviewCsv } from "@/lib/exportCsv";
+import { exportFullPeriodCsv, exportSessionsOverviewCsv, fetchSessionsInPeriod } from "@/lib/exportCsv";
 import { FEELING_COLORS, FEELING_LABELS } from "@/types/capnolog";
 
 function SessionsListInner({ uid }: { uid: string }) {
   const { sessions, loading } = useSessionsList(uid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportingFull, setExportingFull] = useState<"week" | "month" | null>(null);
+  const [exportingOverview, setExportingOverview] = useState<"week" | "month" | null>(null);
+
+  async function handleOverviewExport(period: "week" | "month") {
+    setExportingOverview(period);
+    try {
+      const sinceMs = Date.now() - (period === "week" ? 7 : 30) * 24 * 60 * 60 * 1000;
+      const inPeriod = await fetchSessionsInPeriod(uid, sinceMs);
+      exportSessionsOverviewCsv(inPeriod, `etco2-overzicht-${period === "week" ? "week" : "maand"}`);
+    } catch {
+      window.alert("Exporteren mislukt, probeer opnieuw.");
+    } finally {
+      setExportingOverview(null);
+    }
+  }
 
   async function handleFullExport(period: "week" | "month") {
     setExportingFull(period);
     try {
       const sinceMs = Date.now() - (period === "week" ? 7 : 30) * 24 * 60 * 60 * 1000;
-      const inPeriod = sessions.filter((s) => s.createdAt >= sinceMs);
+      const inPeriod = await fetchSessionsInPeriod(uid, sinceMs);
       await exportFullPeriodCsv(uid, inPeriod, `etco2-volledig-${period === "week" ? "week" : "maand"}`);
     } catch {
       window.alert("Exporteren mislukt, probeer opnieuw.");
@@ -64,28 +78,18 @@ function SessionsListInner({ uid }: { uid: string }) {
           <div className="flex gap-3">
             <span className="text-[10px] uppercase tracking-wide">Overzicht:</span>
             <button
-              onClick={() => {
-                const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-                exportSessionsOverviewCsv(
-                  sessions.filter((s) => s.createdAt >= weekAgo),
-                  "etco2-overzicht-week"
-                );
-              }}
-              className="hover:text-text"
+              onClick={() => handleOverviewExport("week")}
+              disabled={exportingOverview !== null}
+              className="hover:text-text disabled:opacity-50"
             >
-              week
+              {exportingOverview === "week" ? "bezig..." : "week"}
             </button>
             <button
-              onClick={() => {
-                const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-                exportSessionsOverviewCsv(
-                  sessions.filter((s) => s.createdAt >= monthAgo),
-                  "etco2-overzicht-maand"
-                );
-              }}
-              className="hover:text-text"
+              onClick={() => handleOverviewExport("month")}
+              disabled={exportingOverview !== null}
+              className="hover:text-text disabled:opacity-50"
             >
-              maand
+              {exportingOverview === "month" ? "bezig..." : "maand"}
             </button>
           </div>
           <div className="flex gap-3">
