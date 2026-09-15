@@ -91,3 +91,9 @@ export function computeAvgRR(readings: { tSec: number }[]): number | null {
   if (totalSec <= 0) return null;
   return Math.round(((sorted.length - 1) / totalSec) * 60 * 10) / 10;
 }
+
+export function computeAvgKpa(readings: { kpa?: number }[]): number | null {
+  const vals = readings.map((r) => r.kpa).filter((v): v is number => typeof v === "number");
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}

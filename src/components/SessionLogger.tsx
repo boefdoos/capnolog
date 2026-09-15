@@ -6,6 +6,7 @@ import AveragesCard from "./AveragesCard";
 import BandInfo from "./BandInfo";
 import CartWeekBadge from "./CartWeekBadge";
 import Co2Chart from "./Co2Chart";
+import CompensationNote from "./CompensationNote";
 import DailyProgress from "./DailyProgress";
 import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
@@ -14,12 +15,13 @@ import KpaInput from "./KpaInput";
 import RustcontroleLogger from "./RustcontroleLogger";
 import StatsRow from "./StatsRow";
 import TrendChart from "./TrendChart";
+import { checkCompensation } from "@/lib/compensation";
 import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useRustcontrole } from "@/lib/useRustcontrole";
-import { fmtTime } from "@/lib/format";
+import { computeAvgKpa, computeAvgRR, fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { CART_TARGET_MINUTES } from "@/types/capnolog";
 
@@ -59,6 +61,16 @@ export default function SessionLogger({ uid }: { uid: string }) {
   const cartTargetReached = durationSec >= CART_TARGET_MINUTES * 60;
   const hasSession = Boolean(meta && entries.length > 0);
   const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
+
+  // meta.readingCount/kpaSum/lastTSec worden nooit live bijgewerkt (P11), dus
+  // voor de huidige sessie uit de gesynchroniseerde entries herrekenen i.p.v.
+  // uit meta te lezen. priorCartSessions sluit de huidige sessie uit: die
+  // staat, eenmaal er iets gelogd is, ook al in `sessions` uit useAverages.
+  const currentReadings = entries.filter((e) => e.type === "reading" && e.kpa != null);
+  const compensation = checkCompensation(
+    { avgRR: computeAvgRR(currentReadings), avgKpa: computeAvgKpa(currentReadings) },
+    sessions.filter((s) => s.id !== meta?.id)
+  );
 
   function confirmEndSession() {
     startNewSession();
@@ -164,6 +176,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
           <div className="panel">
             <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} feeling={meta?.feeling} />
           </div>
+
+          <CompensationNote check={compensation} />
 
           <div className="panel">
             <div className="mb-2.5 flex items-center justify-between">
