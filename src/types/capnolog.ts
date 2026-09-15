@@ -39,9 +39,12 @@ export const FEELING_COLORS: Record<SessionFeeling, string> = {
   goed: "#5EEAA0",
 };
 
+export type SessionType = "cart" | "rustcontrole";
+
 export interface SessionMeta {
   id: string;
   createdAt: number; // epoch ms
+  sessionType: SessionType;
   bandLow: number;
   bandHigh: number;
   readingCount: number;

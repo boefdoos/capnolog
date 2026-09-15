@@ -11,20 +11,22 @@ import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
 import FeelingSelector from "./FeelingSelector";
 import KpaInput from "./KpaInput";
+import RustcontroleLogger from "./RustcontroleLogger";
 import StatsRow from "./StatsRow";
 import TrendChart from "./TrendChart";
 import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
+import { useRustcontrole } from "@/lib/useRustcontrole";
 import { fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { CART_TARGET_MINUTES } from "@/types/capnolog";
 
-type ViewMode = "idle" | "active" | "review";
+type ViewMode = "idle" | "active" | "review" | "rustcontrole";
 
 export default function SessionLogger({ uid }: { uid: string }) {
-  const { week, month, band, sessionsToday, trend } = useAverages(uid);
+  const { week, month, band, sessionsToday, trend, sessions } = useAverages(uid);
   const {
     meta,
     entries,
@@ -36,7 +38,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
     startNewSession,
   } = useActiveSession(uid, band);
   const { logOut } = useAuth();
-  const { target: cartTarget, activate: activateCartProtocol } = useCartProtocol(uid);
+  const { startDate: cartStartDate, target: cartTarget, activate: activateCartProtocol } = useCartProtocol(uid);
+  const rustcontrole = useRustcontrole(cartStartDate, sessions);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
 
@@ -60,6 +63,10 @@ export default function SessionLogger({ uid }: { uid: string }) {
   function confirmEndSession() {
     startNewSession();
     setViewMode("idle");
+  }
+
+  if (viewMode === "rustcontrole") {
+    return <RustcontroleLogger uid={uid} band={band} onDone={() => setViewMode("idle")} />;
   }
 
   if (viewMode === "idle") {
@@ -117,6 +124,18 @@ export default function SessionLogger({ uid }: { uid: string }) {
             </button>
           )}
         </div>
+
+        {rustcontrole.availableNow && (
+          <div className="mt-2 text-center text-xs text-muted">
+            Rustcontrole deze week beschikbaar &middot;{" "}
+            <button
+              onClick={() => setViewMode("rustcontrole")}
+              className="underline decoration-panel-border underline-offset-2 hover:text-text"
+            >
+              start
+            </button>
+          </div>
+        )}
 
         <div className="mt-10 text-center">
           <button onClick={() => logOut()} className="text-xs text-muted hover:text-danger">

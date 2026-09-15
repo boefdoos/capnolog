@@ -129,5 +129,5 @@ export function useAverages(uid: string | null) {
   const sessionsToday = useMemo(() => computeSessionsToday(sessions), [sessions]);
   const trend = useMemo(() => computeTrend(sessions), [sessions]);
 
-  return { week, month, band, sessionsToday, trend, loading };
+  return { week, month, band, sessionsToday, trend, sessions, loading };
 }

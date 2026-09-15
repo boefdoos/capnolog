@@ -1,4 +1,4 @@
-import type { SessionMeta } from "@/types/capnolog";
+import type { SessionMeta, SessionType } from "@/types/capnolog";
 
 export const KPA_TO_MMHG = 7.50062;
 
@@ -40,6 +40,9 @@ export function parseSessionMeta(id: string, data: Record<string, unknown>) {
   return {
     id,
     createdAt: createdAtMs,
+    // Bestaande sessies van voor sessionType bestond hebben het veld niet in
+    // Firestore staan; die lezen hier als 'cart', zonder migratie.
+    sessionType: (data.sessionType as SessionType) ?? "cart",
     bandLow: (data.bandLow as number) ?? 3.8,
     bandHigh: (data.bandHigh as number) ?? 4.9,
     readingCount: (data.readingCount as number) ?? 0,

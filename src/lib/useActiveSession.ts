@@ -17,9 +17,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 import { deriveEntries } from "./format";
 import type { BaselineBand } from "./useAverages";
-import type { SessionMeta, SighSubtype, StoredEntry } from "@/types/capnolog";
+import type { SessionMeta, SessionType, SighSubtype, StoredEntry } from "@/types/capnolog";
 
-export function useActiveSession(uid: string | null, baselineBand: BaselineBand) {
+export function useActiveSession(
+  uid: string | null,
+  baselineBand: BaselineBand,
+  sessionType: SessionType = "cart"
+) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [meta, setMeta] = useState<SessionMeta | null>(null);
   const [rawEntries, setRawEntries] = useState<StoredEntry[]>([]);
@@ -65,6 +69,7 @@ export function useActiveSession(uid: string | null, baselineBand: BaselineBand)
     const newMeta: SessionMeta = {
       id: ref.id,
       createdAt,
+      sessionType,
       bandLow: bandRef.current.low,
       bandHigh: bandRef.current.high,
       readingCount: 0,
