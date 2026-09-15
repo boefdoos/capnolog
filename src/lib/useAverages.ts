@@ -10,6 +10,7 @@ import {
   DEFAULT_BAND_LOW,
   MIN_READINGS_FOR_BASELINE,
   type SessionMeta,
+  type SessionType,
 } from "@/types/capnolog";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -28,8 +29,15 @@ export interface BaselineBand {
   readingCount: number;
 }
 
+/**
+ * Enkel CART-sessies: het week- en maandgemiddelde gaat over gestuurde
+ * oefendata, rustcontroles zijn bewust een aparte, ongestuurde reeks
+ * (docs/codeinstructies.md P2).
+ */
 function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage {
-  const inWindow = sessions.filter((s) => s.createdAt >= sinceMs && s.readingCount > 0);
+  const inWindow = sessions.filter(
+    (s) => s.sessionType === "cart" && s.createdAt >= sinceMs && s.readingCount > 0
+  );
   const readingCount = inWindow.reduce((sum, s) => sum + s.readingCount, 0);
   const kpaSum = inWindow.reduce((sum, s) => sum + s.kpaSum, 0);
   if (!readingCount) {
@@ -50,9 +58,11 @@ function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage 
  * wordt naarmate er meer data is, in plaats van een glijdend venster dat
  * elke maand resette. Daarom over ALLE sessies ooit, niet enkel de laatste
  * maand. Onder MIN_READINGS_FOR_BASELINE metingen: vaste terugvalband.
+ * Enkel CART-sessies (P2): rustcontroles zijn bewust ongestuurd en horen
+ * niet mee te wegen in een band die als oefendoel dient.
  */
 function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
-  const inWindow = allSessions.filter((s) => s.readingCount > 0);
+  const inWindow = allSessions.filter((s) => s.sessionType === "cart" && s.readingCount > 0);
   const n = inWindow.reduce((sum, s) => sum + s.readingCount, 0);
   if (n < MIN_READINGS_FOR_BASELINE) {
     return { low: DEFAULT_BAND_LOW, high: DEFAULT_BAND_HIGH, source: "default", readingCount: n };
@@ -70,21 +80,39 @@ export interface TrendPoint {
   avgKpa: number;
 }
 
-/** Eén punt per sessie (datum + sessiegemiddelde), laatste 30 dagen,
- * chronologisch, voor een evolutie-grafiek op het startscherm. */
-function computeTrend(sessions: SessionMeta[]): TrendPoint[] {
-  const monthAgo = Date.now() - 30 * DAY_MS;
+export interface Trend {
+  cart: TrendPoint[];
+  rustcontrole: TrendPoint[];
+}
+
+function trendPoints(sessions: SessionMeta[], type: SessionType, sinceMs: number): TrendPoint[] {
   return sessions
-    .filter((s) => s.createdAt >= monthAgo && s.readingCount > 0)
+    .filter((s) => s.sessionType === type && s.createdAt >= sinceMs && s.readingCount > 0)
     .map((s) => ({ date: s.createdAt, avgKpa: s.kpaSum / s.readingCount }))
     .sort((a, b) => a.date - b.date);
 }
 
-/** Aantal voltooide sessies (met minstens 1 meting) sinds lokale middernacht. */
+/** Eén punt per sessie (datum + sessiegemiddelde), laatste 30 dagen,
+ * chronologisch, voor een evolutie-grafiek op het startscherm. Twee aparte
+ * reeksen (P2): gestuurde CART-sessies en ongestuurde rustcontroles meten
+ * niet hetzelfde en horen niet in één lijn samengevoegd te worden. */
+function computeTrend(sessions: SessionMeta[]): Trend {
+  const monthAgo = Date.now() - 30 * DAY_MS;
+  return {
+    cart: trendPoints(sessions, "cart", monthAgo),
+    rustcontrole: trendPoints(sessions, "rustcontrole", monthAgo),
+  };
+}
+
+/** Aantal voltooide CART-sessies (met minstens 1 meting) sinds lokale
+ * middernacht. Het CART-doel van 2x/dag gaat over oefensessies, een
+ * rustcontrole telt daar niet in mee (P2). */
 function computeSessionsToday(sessions: SessionMeta[]): number {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
-  return sessions.filter((s) => s.createdAt >= startOfDay.getTime() && s.readingCount > 0).length;
+  return sessions.filter(
+    (s) => s.sessionType === "cart" && s.createdAt >= startOfDay.getTime() && s.readingCount > 0
+  ).length;
 }
 
 export function useAverages(uid: string | null) {

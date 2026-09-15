@@ -63,6 +63,12 @@ export const DEFAULT_BAND_LOW = 3.8;
 export const DEFAULT_BAND_HIGH = 4.9;
 export const MIN_READINGS_FOR_BASELINE = 20;
 
+// CART-doelbereik (Ritz et al., CHEST 2014, methodesectie): 40-42 mmHg.
+// Vast trajectdoel, in tegenstelling tot de meebewegende referentieband
+// hierboven: dit is normocapnie, geen persoonlijke baseline (P3).
+export const CART_GOAL_KPA_LOW = 5.33;
+export const CART_GOAL_KPA_HIGH = 5.6;
+
 // CART-protocol (Meuret et al. 2008): richtwaarden, geen harde grens. Meer
 // oefenen dan dit mag altijd; minder wordt gesignaleerd, niet geblokkeerd.
 export const CART_TARGET_MINUTES = 17;

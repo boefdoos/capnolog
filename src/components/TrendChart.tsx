@@ -11,11 +11,12 @@ import {
   Tooltip,
 } from "chart.js";
 import { useEffect, useRef } from "react";
-import type { BaselineBand, TrendPoint } from "@/lib/useAverages";
+import type { BaselineBand, Trend } from "@/lib/useAverages";
+import { CART_GOAL_KPA_HIGH, CART_GOAL_KPA_LOW } from "@/types/capnolog";
 
 Chart.register(LinearScale, CategoryScale, LineController, LineElement, PointElement, Tooltip);
 
-export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band: BaselineBand }) {
+export default function TrendChart({ trend, band }: { trend: Trend; band: BaselineBand }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
 
@@ -44,7 +45,12 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
                 const d = new Date(Number(items[0].parsed.x));
                 return d.toLocaleDateString("nl-BE", { day: "numeric", month: "short" });
               },
-              label: (item) => `${(item.parsed.y as number).toFixed(1)} kPa`,
+              label: (item) => {
+                const value = `${(item.parsed.y as number).toFixed(1)} kPa`;
+                if (item.dataset.label === "Rustcontrole") return `Rustcontrole · ${value}`;
+                if (item.dataset.label === "CART-doel") return `CART-doel · ${value}`;
+                return value;
+              },
             },
           },
         },
@@ -75,7 +81,7 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
-    const xs = trend.map((p) => p.date);
+    const xs = [...trend.cart, ...trend.rustcontrole].map((p) => p.date);
     const minX = xs.length ? Math.min(...xs) : Date.now() - 30 * 24 * 60 * 60 * 1000;
     const maxX = xs.length ? Math.max(...xs) : Date.now();
 
@@ -105,7 +111,8 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
       order: 2,
     };
     const trace: ChartDataset<"line"> = {
-      data: trend.map((p) => ({ x: p.date, y: p.avgKpa })),
+      label: "CART",
+      data: trend.cart.map((p) => ({ x: p.date, y: p.avgKpa })),
       borderColor: "#5EEAA0",
       backgroundColor: "rgba(94,234,160,0.15)",
       borderWidth: 2,
@@ -116,8 +123,50 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
       fill: false,
       order: 1,
     };
+    // Losse punten, geen lijn: enkele sporadische momenten over maanden
+    // verbinden zou een continu verloop suggereren dat er niet is.
+    const rustTrace: ChartDataset<"line"> = {
+      label: "Rustcontrole",
+      data: trend.rustcontrole.map((p) => ({ x: p.date, y: p.avgKpa })),
+      showLine: false,
+      borderColor: "transparent",
+      pointStyle: "rectRot",
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      pointBackgroundColor: "#F2B84B",
+      order: 0,
+    };
+    // Vast trajectdoel (P3), beweegt nooit mee met de data: normocapnie
+    // volgens het CART-protocol, niet Thomas' persoonlijke referentieband.
+    const goalTop: ChartDataset<"line"> = {
+      label: "CART-doel",
+      data: [
+        { x: minX, y: CART_GOAL_KPA_HIGH },
+        { x: maxX, y: CART_GOAL_KPA_HIGH },
+      ],
+      borderColor: "#4FD1C5",
+      borderDash: [2, 3],
+      borderWidth: 1,
+      pointRadius: 0,
+      fill: false,
+      order: 5,
+    };
+    const goalBottom: ChartDataset<"line"> = {
+      label: "CART-doel",
+      data: [
+        { x: minX, y: CART_GOAL_KPA_LOW },
+        { x: maxX, y: CART_GOAL_KPA_LOW },
+      ],
+      borderColor: "#4FD1C5",
+      borderDash: [2, 3],
+      borderWidth: 1,
+      pointRadius: 0,
+      fill: "-1",
+      backgroundColor: "rgba(79,209,197,0.07)",
+      order: 4,
+    };
 
-    chart.data.datasets = [bandTop, bandBottom, trace];
+    chart.data.datasets = [goalTop, goalBottom, bandTop, bandBottom, trace, rustTrace];
     chart.update();
   }, [trend, band]);
 
@@ -126,7 +175,7 @@ export default function TrendChart({ trend, band }: { trend: TrendPoint[]; band:
       <div className="mb-1 text-[11px] uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
       <div className="relative h-40 w-full">
         <canvas ref={canvasRef} />
-        {trend.length < 2 && (
+        {trend.cart.length < 2 && trend.rustcontrole.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-muted">
             Nog te weinig sessies voor een evolutiebeeld.
           </div>
