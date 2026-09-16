@@ -16,7 +16,9 @@ Vraag Thomas welk punt hij wil aanpakken voor je begint. Bouw niet de hele lijst
 
 **Projectgegevens.** Repo `boefdoos/capnolog`, branch `main`. Next.js 14 App Router, TypeScript, Tailwind 3, Firebase Auth en Firestore, Chart.js 4. Buildcheck: `npx next build`. Deployment via Vercel op elke push naar `main`.
 
-**Datamodel.** `users/{uid}/sessions/{sessionId}` met metadata en aggregaten, subcollectie `entries/{entryId}` met `type`, `subtype`, `tSec`, `kpa`. De velden `idx`, `delta`, `mmHg` en `rr` worden client-side afgeleid in `deriveEntries` en nooit opgeslagen. Protocolinstellingen staan in `users/{uid}/settings/protocol`.
+**Datamodel.** `users/{uid}/sessions/{sessionId}` met metadata en aggregaten, subcollectie `entries/{entryId}` met `type` ("reading" | "marker" | "sigh"), `subtype`, `tSec`, `kpa`. De velden `idx`, `delta`, `mmHg` en `rr` worden client-side afgeleid in `deriveEntries` en nooit opgeslagen. Protocolinstellingen staan in `users/{uid}/settings/protocol`.
+
+P1 voegt `sessionType` toe op het sessiedocument, P1b en P10 voegen een entry-type `"rr"` toe met een veld `rrValue` en een sessieveld `logEveryNthBreath`.
 
 ---
 
@@ -118,7 +120,17 @@ Samen vijfentwintig tot dertig waarden per sessie in plaats van ongeveer tweehon
 
 **Wat hierdoor stilzwijgend breekt en meteen mee moet.**
 
-`computeAvgRR` en de `rr`-afleiding in `deriveEntries` berekenen de ademfrequentie uit het interval tussen twee opeenvolgende gelogde metingen. Bij loggen per zevende adem rapporteren die een zevende van de werkelijke frequentie, zonder foutmelding. Dat moet ofwel de bemonsteringsfactor kennen, ofwel verdwijnen. Zie ook P10.
+`computeAvgRR` en de `rr`-afleiding in `deriveEntries` berekenen de ademfrequentie uit het interval tussen twee opeenvolgende gelogde metingen. Bij loggen per zevende adem rapporteren die een zevende van de werkelijke frequentie, zonder foutmelding. Niet irrelevant dus, maar fout, en dat is erger.
+
+Rekenkundig is dat exact te corrigeren, want het interval tussen twee logs overspant precies N ademhalingen: werkelijke frequentie is N maal 60 gedeeld door het interval. Maar voor je dat bouwt, kijk eerst naar wat die RR nog moet doen, want de rol verandert per fase.
+
+*Tijdens de gepacede fase is RR geen meting meer.* De app dicteert het tempo, dus er valt niets te meten wat niet al vastligt. Wat daar wel telt is of de gebruiker de pacer volgt: bij doel 13/min en loggen per zevende adem hoort een interval van 32 seconden, dus structureel 40 seconden betekent trager ademen dan gevraagd. Dat is een nalevingscontrole, en P4 heeft ze nodig om te kunnen zeggen "tempo gehaald, CO2-respons uitgebleven". Behoud de afleiding dus, met de N-correctie, maar label ze als naleving en niet als meting.
+
+*In de ongestuurde fasen is RR wel een echte meting, en daar sloopt bemonstering ze.* De eerste twee minuten stille rust en de rustcontroles uit P1 zijn precies waar spontane ademfrequentie inhoudelijk interessant is, en met drie of vier waarden over twee minuten valt daar niets zinnigs uit af te leiden.
+
+*De oplossing is niet corrigeren maar rechtstreeks meten.* De EMMA toont naast EtCO2 ook de ademfrequentie. Laat de gebruiker die waarde aflezen en één keer per fase intoetsen als een eigen entry-type, bijvoorbeeld `type: "rr"` met een veld `rrValue`. Dan staat er een gemeten waarde in de data in plaats van een afgeleide uit loggedrag. Dat is ook los van deze wijziging een verbetering: de huidige afleiding halveert al bij één overgeslagen log.
+
+Let op dat `deriveEntries`, `StatsRow` en de aggregaten in `useActiveSession` filteren op `type === "reading"`, dus een nieuw entry-type verstoort `kpaSum` en `readingCount` niet. Controleer dat wel expliciet.
 
 Sessiegemiddelden blijven vergelijkbaar met de oudere per-adem data, want beide zijn zuivere schattingen van hetzelfde gemiddelde. Wat wel verandert is de snelheid waarmee de referentieband aan metingen komt: `MIN_READINGS_FOR_BASELINE` van 20 wordt nu binnen één sessie gehaald in plaats van binnen enkele. Kijk na of die drempel nog zinvol is.
 
@@ -129,8 +141,6 @@ Sla de gebruikte bemonstering per sessie op, bijvoorbeeld `logEveryNthBreath`, z
 **Dit punt absorbeert P7 en P8.** Die staan hieronder nog apart voor de details, maar ze zijn onderdeel van dit werk geworden.
 
 ### P2. De twee reeksen overal scheiden
-
-**Status: uitgevoerd op 14 september 2026.** `computeWindow`, `computeBaselineBand` en `computeSessionsToday` in `src/lib/useAverages.ts` filteren nu op `sessionType === "cart"`. `computeTrend` geeft een `Trend`-object `{ cart, rustcontrole }` terug; `TrendChart` toont de rustcontroles als losse, niet-verbonden punten (geen lijn, om geen continu verloop te suggereren over enkele sporadische momenten). Getest in Chrome: een testrustcontrole liet "vandaag", weekgemiddelde en trend ongemoeid en verscheen enkel als apart punt op de grafiek.
 
 Zodra P1 bestaat, vervuilen rustcontroles de CART-cijfers en omgekeerd. `src/lib/useAverages.ts` berekent nu alles over alle sessies zonder filter: `computeWindow`, `computeBaselineBand`, `computeTrend` en `computeSessionsToday`.
 
@@ -144,8 +154,6 @@ Alle vier moeten filteren op `sessionType`. Concreet:
 De trendgrafiek op het startscherm moet beide tonen, met de rustcontroles duidelijk onderscheiden. Dat is de grafiek die het verschil tussen gestuurd en spontaan zichtbaar maakt, en dat is de hele reden dat dit gebouwd wordt.
 
 ### P3. Absoluut trajectdoel toevoegen
-
-**Status: uitgevoerd op 14 september 2026.** `CART_GOAL_KPA_LOW`/`CART_GOAL_KPA_HIGH` (5.33-5.60 kPa) staan in `src/types/capnolog.ts`. `TrendChart` toont ze als vaste, teal gestippelde horizontale lijnen die nooit meebewegen met de data, los van de meebewegende referentieband. Getest in Chrome: de zone staat op de juiste hoogte (5,33/5,60 op de as) en blijft onafhankelijk van de sessiedata.
 
 Er staat nergens in de code wat normocapnie is. Er is geen enkele vaste referentie.
 
@@ -164,12 +172,6 @@ Toon dat als een vaste horizontale zone op `TrendChart`, die nooit meebeweegt. D
 Ter oriëntatie: `DEFAULT_BAND_LOW` staat op 3,8 en `DEFAULT_BAND_HIGH` op 4,9 kPa, dus 28,5 tot 36,8 mmHg. De bovengrens van de terugvalband ligt onder de ondergrens van het CART-doel. Voor een terugvalwaarde bij te weinig data is dat verdedigbaar, maar het maakt duidelijk waarom een absoluut anker apart nodig is.
 
 ### P4. Compensatiedetectie
-
-**Status: uitgevoerd op 14 september 2026.** `src/lib/compensation.ts` (`checkCompensation`) vergelijkt de huidige sessie met het gemiddelde van de laatste 5 eerdere CART-sessies (minstens 3 nodig, anders geen uitspraak): RR-daling van minstens 5% zonder dat de gemiddelde kPa meestijgt → gevlagd. `CompensationNote.tsx` toont dat enkel op het "Sessie afronden"-scherm, neutrale toon, geen alarmkleur.
-
-Belangrijke valkuil vermeden: `meta.readingCount`/`kpaSum`/`lastTSec` uit `useActiveSession` worden nooit live bijgewerkt (P11) en staan dus altijd op 0. De huidige sessie wordt daarom herrekend uit de wél live gesynchroniseerde `entries`, niet uit `meta`. De historische baseline gebruikt wel de opgeslagen sessie-aggregaten (`readingCount`, `lastTSec`, `kpaSum`), zonder de entries van oude sessies te moeten ophalen.
-
-Logica geverifieerd met synthetische testcases (RR daalt zonder kPa-stijging → gevlagd; RR daalt mét kPa-stijging → niet gevlagd; RR ongewijzigd → niet gevlagd; te weinig historiek of enkel rustcontroles in de baseline → niet gevlagd). In Chrome getest op een korte testsessie: geen console-fouten, geen vals-positieve melding tegenover Thomas' echte recente data.
 
 Dit is de kernfaalmodus van het protocol en de app kan hem niet zien.
 
@@ -231,13 +233,15 @@ De laatste vijf minuten zonder pacing zijn de transferfase. Therapeutisch is dat
 
 Twee keer één waarde intikken haalt dus het dagdoel. Voor persoonlijk gebruik is dat hooguit vervelend, voor een programma waarin adherentie een uitkomstmaat is, is het onbruikbaar. Voeg een minimumduur of een minimumaantal metingen toe voor een sessie meetelt. Na P1b is een minimumduur logischer dan een minimumaantal metingen.
 
-### P10. RR eerlijk benoemen
+### P10. RR gemeten in plaats van afgeleid
 
-`deriveEntries` leidt de ademfrequentie af uit het interval tussen twee opeenvolgende **gelogde** metingen. Het codecommentaar erkent dit al. Bij manuele invoer is dat de logfrequentie, niet de ademfrequentie: één overgeslagen log verdubbelt het interval en halveert de schijnbare RR.
+`deriveEntries` leidt de ademfrequentie af uit het interval tussen twee opeenvolgende **gelogde** metingen. Het codecommentaar erkent dit al. Bij manuele invoer is dat de logfrequentie, niet de ademfrequentie: één overgeslagen log verdubbelt het interval en halveert de schijnbare RR. `StatsRow` toont dat als "RR gem." met nul decimalen, wat als een meting oogt.
 
-`StatsRow` toont dat als "RR gem." met nul decimalen, wat als een meting oogt. Label het zo dat duidelijk is dat het een afleiding uit de invoer is.
+De EMMA meet en toont zelf de ademfrequentie. Die aflezen en intoetsen als een eigen entry-type (`type: "rr"`, veld `rrValue`) levert een echte waarde op, een keer per sessiefase, in plaats van een reconstructie uit loggedrag. Dat is de eigenlijke oplossing.
 
-Na P1b wordt dit dwingend in plaats van cosmetisch: bij bemonsterd loggen klopt de afgeleide RR gewoon niet meer zonder correctie met de bemonsteringsfactor.
+Wat er dan van de afleiding overblijft is de nalevingscontrole uit P1b: wijkt het loginterval af van wat bij de doelfrequentie hoort, dan volgt de gebruiker de pacer niet. Behoud die berekening met de bemonsteringsfactor, maar label ze als naleving en niet als gemeten ademfrequentie.
+
+Dit hangt samen met P1b en hoort in dezelfde wijziging thuis: bij bemonsterd loggen klopt de huidige afgeleide RR sowieso niet meer.
 
 ### P11. Kleiner spul
 
@@ -280,6 +284,7 @@ Zodat een volgende sessie deze keuzes niet terugdraait zonder de reden te kennen
 |---|---|---|
 | Ritz T, Rosenfield D, Steele AM, Millard MW, Meuret AE. Controlling Asthma by Training of Capnometry-Assisted Hypoventilation (CATCH) vs Slow Breathing. CHEST 2014;146(5):1237-1247 | Sessiestructuur 2/10/5, doel 40-42 mmHg, audio-gestuurde tonen, RR-progressie 13-11-9-6, het bewijs dat traag ademen zonder CO2-feedback de CO2 niet duurzaam verhoogt, en het gegeven dat de capnometer in de trial zelf registreerde zodat deelnemers niets manueel logden | Volledige tekst gelezen op 14 september 2026. Eindcontrole door Thomas conform projectprotocol nog nodig |
 | Eigen N=1-analyse, zie `plan_post_trial_rustcontroles.md` | Sessiegemiddelde stijgt (p=0,038), baseline-proxy niet (p=0,94) | Eigen data van Thomas |
+| Masimo, productpagina EMMA capnograaf | Het toestel meet en toont naast EtCO2 ook de ademfrequentie, wat de rechtstreekse RR-invoer uit P10 mogelijk maakt | Opgehaald op 14 september 2026, productpagina en niet de handleiding. Te bevestigen tegen de operator's manual |
 | Meuret AE, Rosenfield D, Seidel A, et al. J Consult Clin Psychol 2010;78(5):691-704 | Mediatie-analyse: draagt de CO2-verandering het klinische effect? Rechtstreeks relevant voor P4 en P6 | Bestaan geverifieerd via bronnenlijst CATCH. Inhoud niet gelezen |
 | Meuret AE, Wilhelm FH, Ritz T, et al. J Psychiatr Res 2008;42(7):560-568 | Oorspronkelijk CART-protocol bij paniekstoornis | Bestaan geverifieerd via bronnenlijst CATCH. Inhoud niet gelezen |
 | Projectprotocol CHV | Terughoudende UI, spanning onderzoeker versus herstel | Eigen document |
