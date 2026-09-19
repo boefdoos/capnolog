@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AveragesCard from "./AveragesCard";
 import BandInfo from "./BandInfo";
 import CartWeekBadge from "./CartWeekBadge";
@@ -73,6 +73,18 @@ export default function SessionLogger({ uid }: { uid: string }) {
   const duration = fmtTime(durationSec);
   const cartTargetReached = durationSec >= CART_TARGET_MINUTES * 60;
   const hasSession = Boolean(meta && entries.length > 0);
+
+  // Bij het bereiken van het CART-doel automatisch naar het afrondingsscherm,
+  // maar hoogstens één keer per sessie: wie via "Terug naar sessie" verder
+  // oefent, mag dat doen zonder meteen weer teruggeduwd te worden.
+  const autoStoppedSessionIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!meta || autoStoppedSessionIdRef.current === meta.id) return;
+    if (viewMode === "active" && cartTargetReached) {
+      autoStoppedSessionIdRef.current = meta.id;
+      setViewMode("review");
+    }
+  }, [viewMode, cartTargetReached, meta]);
   const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
 
   // meta.readingCount/kpaSum/lastTSec worden nooit live bijgewerkt (P11), dus
