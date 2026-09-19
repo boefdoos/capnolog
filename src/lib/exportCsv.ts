@@ -51,17 +51,32 @@ export function exportSessionCsv(
   const sessieTijd = sessionDate.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
   const feelingLine = feeling ? `# algemeen_gevoel: ${FEELING_LABELS[feeling]}\n` : "";
   const header =
-    "sessie_datum,sessie_tijd,absoluut_tijdstip,idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min\n";
+    "sessie_datum,sessie_tijd,absoluut_tijdstip,fase,idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min,rr_gemeten_per_min\n";
   const rows = [...entries]
     .sort((a, b) => a.tSec - b.tSec)
     .map((e) => {
       const absoluutTijdstip = new Date(sessionCreatedAt + e.tSec * 1000).toISOString();
-      const gedeeld = [sessieDatum, sessieTijd, absoluutTijdstip];
+      const gedeeld = [sessieDatum, sessieTijd, absoluutTijdstip, e.phase ?? ""];
       if (e.type === "marker") {
-        return [...gedeeld, "", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
+        return [...gedeeld, "", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", "", ""].join(",");
       }
       if (e.type === "sigh") {
-        return [...gedeeld, "", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",");
+        return [...gedeeld, "", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", "", ""].join(",");
+      }
+      if (e.type === "rr") {
+        return [
+          ...gedeeld,
+          "",
+          "rr_gemeten",
+          "",
+          e.tSec.toFixed(1),
+          fmtTime(e.tSec),
+          "",
+          "",
+          "",
+          "",
+          typeof e.rrValue === "number" ? e.rrValue.toFixed(0) : "",
+        ].join(",");
       }
       return [
         ...gedeeld,
@@ -74,6 +89,7 @@ export function exportSessionCsv(
         (e.mmHg ?? 0).toFixed(1),
         e.delta ?? 0,
         typeof e.rr === "number" ? e.rr.toFixed(1) : "",
+        "",
       ].join(",");
     });
   downloadCsv(feelingLine + header + rows.join("\n"), filenamePrefix);
@@ -123,7 +139,7 @@ export async function exportFullPeriodCsv(
 ): Promise<void> {
   const db = getFirebaseDb();
   const header =
-    "sessie_datum,sessie_tijd,sessie_id,sessie_gevoel,band_onder_kpa,band_boven_kpa,absoluut_tijdstip,idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min\n";
+    "sessie_datum,sessie_tijd,sessie_id,sessie_gevoel,band_onder_kpa,band_boven_kpa,absoluut_tijdstip,fase,idx,type,subtype,tijd_s,tijd_mmss,kpa,mmHg,delta_kpa,rr_per_min,rr_gemeten_per_min\n";
   const sorted = [...sessions].sort((a, b) => a.createdAt - b.createdAt);
   const rows: string[] = [];
 
@@ -133,7 +149,7 @@ export async function exportFullPeriodCsv(
       id: d.id,
       ...(d.data() as Omit<StoredEntry, "id">),
     }));
-    const derived = deriveEntries(rawEntries).sort((a, b) => a.tSec - b.tSec);
+    const derived = deriveEntries(rawEntries, s.logEveryNthBreath ?? 1).sort((a, b) => a.tSec - b.tSec);
 
     const d = new Date(s.createdAt);
     const sessieDatum = d.toLocaleDateString("nl-BE", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -150,14 +166,35 @@ export async function exportFullPeriodCsv(
         s.bandLow.toFixed(2),
         s.bandHigh.toFixed(2),
         absoluutTijdstip,
+        e.phase ?? "",
       ];
       if (e.type === "marker") {
-        rows.push([...gedeeld, "", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(","));
+        rows.push(
+          [...gedeeld, "", "markeer_verstoring", "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", "", ""].join(",")
+        );
         return;
       }
       if (e.type === "sigh") {
         rows.push(
-          [...gedeeld, "", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", ""].join(",")
+          [...gedeeld, "", "zucht", e.subtype ?? "", e.tSec.toFixed(1), fmtTime(e.tSec), "", "", "", "", ""].join(",")
+        );
+        return;
+      }
+      if (e.type === "rr") {
+        rows.push(
+          [
+            ...gedeeld,
+            "",
+            "rr_gemeten",
+            "",
+            e.tSec.toFixed(1),
+            fmtTime(e.tSec),
+            "",
+            "",
+            "",
+            "",
+            typeof e.rrValue === "number" ? e.rrValue.toFixed(0) : "",
+          ].join(",")
         );
         return;
       }
@@ -173,6 +210,7 @@ export async function exportFullPeriodCsv(
           (e.mmHg ?? 0).toFixed(1),
           e.delta ?? 0,
           typeof e.rr === "number" ? e.rr.toFixed(1) : "",
+          "",
         ].join(",")
       );
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { computeAvgRR, fmtTime, KPA_TO_MMHG } from "@/lib/format";
+import { computeAvgMeasuredRR, computeAvgRR, fmtTime, KPA_TO_MMHG } from "@/lib/format";
 import { FEELING_COLORS, FEELING_LABELS, type SessionFeeling } from "@/types/capnolog";
 import type { Entry } from "@/types/capnolog";
 
@@ -8,15 +8,18 @@ export default function StatsRow({
   entries,
   liveDurationFrom,
   feeling,
+  sampleN = 1,
 }: {
   entries: Entry[];
   liveDurationFrom?: number | null;
   feeling?: SessionFeeling;
+  sampleN?: number;
 }) {
   const readings = entries.filter((e) => e.type === "reading" && e.kpa != null);
   const sighs = entries.filter((e) => e.type === "sigh");
+  const rrMeasurements = entries.filter((e) => e.type === "rr");
 
-  if (!readings.length && !sighs.length) return null;
+  if (!readings.length && !sighs.length && !rrMeasurements.length) return null;
 
   const vals = readings.map((r) => r.kpa as number);
   const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
@@ -36,9 +39,17 @@ export default function StatsRow({
   const durationSec = liveDurationFrom ? (Date.now() - liveDurationFrom) / 1000 : lastTSec;
   chips.push(["Duur", fmtTime(durationSec)]);
 
-  const avgRR = computeAvgRR(readings);
+  // Bij bemonsterde logging (sampleN > 1) is dit geen RR-meting meer maar
+  // een nalevingscontrole op het pacer-tempo (P10), vandaar het andere
+  // label. De echte, van het EMMA-scherm afgelezen RR staat apart hieronder.
+  const avgRR = computeAvgRR(readings, sampleN);
   if (avgRR != null) {
-    chips.push(["RR gem.", `${avgRR.toFixed(0)}/min`]);
+    chips.push([sampleN > 1 ? "Tempo (afgeleid)" : "RR gem.", `${avgRR.toFixed(0)}/min`]);
+  }
+
+  const avgMeasuredRR = computeAvgMeasuredRR(rrMeasurements);
+  if (avgMeasuredRR != null) {
+    chips.push(["RR gemeten", `${avgMeasuredRR.toFixed(0)}/min`]);
   }
 
   if (sighs.length) {

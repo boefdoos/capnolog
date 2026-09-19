@@ -27,6 +27,7 @@ interface Props {
 function eventColor(e: Entry): string {
   if (e.type === "marker") return "#F2B84B";
   if (e.type === "sigh") return e.subtype === "success" ? "#4FD1C5" : "#E5735A";
+  if (e.type === "rr") return "#8B93F0";
   return "#F2B84B";
 }
 
@@ -42,7 +43,9 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
     const markerLinePlugin: Plugin = {
       id: "markerLines",
       afterDatasetsDraw(chart) {
-        const events = entriesRef.current.filter((e) => e.type === "marker" || e.type === "sigh");
+        const events = entriesRef.current.filter(
+          (e) => e.type === "marker" || e.type === "sigh" || e.type === "rr"
+        );
         if (!events.length) return;
         const { ctx, chartArea, scales } = chart;
         ctx.save();

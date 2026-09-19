@@ -18,12 +18,15 @@ export interface CompensationCheck {
  * lastTSec) i.p.v. de losse metingen: dezelfde formule als computeAvgRR in
  * format.ts, maar bruikbaar op afgesloten sessies zonder hun entries op te
  * hoeven halen. Benadering: neemt aan dat de eerste meting rond t=0 viel.
- * Enkel geldig bij per-ademhaling loggen; na P1b (bemonsterd loggen, zie
- * docs/codeinstructies.md) moet dit de bemonsteringsfactor verrekenen.
+ * Verrekent `logEveryNthBreath` (P1b): zonder correctie meet dit na
+ * bemonstering enkel de logfrequentie, niet de ademfrequentie.
  */
-function sessionAvgRR(session: Pick<SessionMeta, "readingCount" | "lastTSec">): number | null {
+function sessionAvgRR(
+  session: Pick<SessionMeta, "readingCount" | "lastTSec" | "logEveryNthBreath">
+): number | null {
   if (session.readingCount < 2 || session.lastTSec <= 0) return null;
-  return ((session.readingCount - 1) / session.lastTSec) * 60;
+  const sampleN = session.logEveryNthBreath ?? 1;
+  return ((session.readingCount - 1) / session.lastTSec) * 60 * sampleN;
 }
 
 function sessionAvgKpa(session: Pick<SessionMeta, "readingCount" | "kpaSum">): number | null {

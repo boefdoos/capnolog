@@ -52,11 +52,24 @@ export function parseSessionMeta(id: string, data: Record<string, unknown>) {
     sighTotalCount: (data.sighTotalCount as number) ?? 0,
     lastTSec: (data.lastTSec as number) ?? 0,
     feeling: data.feeling as SessionMeta["feeling"],
+    logEveryNthBreath: data.logEveryNthBreath as number | undefined,
   };
 }
 
+/**
+ * `sampleN` is de bemonsteringsfactor (`logEveryNthBreath`, P1b): het
+ * interval tussen twee logs overspant precies N ademhalingen, dus de
+ * werkelijke frequentie is N maal 60 gedeeld door het interval. Standaard 1
+ * voor per-adem sessies (van voor P1b) en rustcontroles.
+ *
+ * Bij gepacede logging (sampleN > 1) is dit geen RR-meting meer maar een
+ * nalevingscontrole: de app dicteert het tempo al, dit toont enkel of het
+ * werkelijke loginterval bij de doelfrequentie past (P10). De echte, van het
+ * EMMA-scherm afgelezen RR staat in aparte entries van `type: "rr"`.
+ */
 export function deriveEntries<T extends { type: string; tSec: number; kpa?: number }>(
-  stored: T[]
+  stored: T[],
+  sampleN = 1
 ): (T & { mmHg?: number; delta?: number; idx?: number; rr?: number })[] {
   const sorted = [...stored].sort((a, b) => a.tSec - b.tSec);
   let n = 0;
@@ -66,12 +79,8 @@ export function deriveEntries<T extends { type: string; tSec: number; kpa?: numb
     if (e.type === "reading" && typeof e.kpa === "number") {
       n += 1;
       const delta = prevKpa === null ? 0 : +(e.kpa - prevKpa).toFixed(2);
-      // Afgeleide ademfrequentie uit het tijdsinterval tussen twee
-      // opeenvolgende metingen. Enkel geldig als er na elke ademhaling
-      // gelogd wordt; bij een breath hold of overgeslagen ademhaling
-      // toont dit net dat langere interval, geen fysiologische RR-meting.
       const interval = prevTSec === null ? null : e.tSec - prevTSec;
-      const rr = interval && interval > 0 ? Math.round((60 / interval) * 10) / 10 : undefined;
+      const rr = interval && interval > 0 ? Math.round(((sampleN * 60) / interval) * 10) / 10 : undefined;
       prevKpa = e.kpa;
       prevTSec = e.tSec;
       return { ...e, mmHg: e.kpa * KPA_TO_MMHG, delta, idx: n, rr };
@@ -84,12 +93,19 @@ export function deriveEntries<T extends { type: string; tSec: number; kpa?: numb
  * de totale tijd tussen de eerste en de laatste, dit is stabieler dan het
  * gemiddelde nemen van de per-ademhaling schommelingen (die door één lange
  * breath hold sterk vertekend zouden worden). */
-export function computeAvgRR(readings: { tSec: number }[]): number | null {
+export function computeAvgRR(readings: { tSec: number }[], sampleN = 1): number | null {
   if (readings.length < 2) return null;
   const sorted = [...readings].sort((a, b) => a.tSec - b.tSec);
   const totalSec = sorted[sorted.length - 1].tSec - sorted[0].tSec;
   if (totalSec <= 0) return null;
-  return Math.round(((sorted.length - 1) / totalSec) * 60 * 10) / 10;
+  return Math.round(((sorted.length - 1) / totalSec) * 60 * sampleN * 10) / 10;
+}
+
+/** Gemiddelde van rechtstreeks van de EMMA afgelezen RR-waarden (type "rr", P10). */
+export function computeAvgMeasuredRR(rrEntries: { rrValue?: number }[]): number | null {
+  const vals = rrEntries.map((r) => r.rrValue).filter((v): v is number => typeof v === "number");
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
 }
 
 export function computeAvgKpa(readings: { kpa?: number }[]): number | null {

@@ -12,6 +12,8 @@ import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
 import FeelingSelector from "./FeelingSelector";
 import KpaInput from "./KpaInput";
+import PhaseBadge from "./PhaseBadge";
+import RRInput from "./RRInput";
 import RustcontroleLogger from "./RustcontroleLogger";
 import StatsRow from "./StatsRow";
 import TrendChart from "./TrendChart";
@@ -21,6 +23,9 @@ import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useRustcontrole } from "@/lib/useRustcontrole";
+import { useSessionCues } from "@/lib/useSessionCues";
+import { unlockAudioContext } from "@/lib/pacer";
+import { breathSamplingForTarget } from "@/lib/sessionPhase";
 import { computeAvgKpa, computeAvgRR, fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { CART_TARGET_MINUTES } from "@/types/capnolog";
@@ -29,21 +34,28 @@ type ViewMode = "idle" | "active" | "review" | "rustcontrole";
 
 export default function SessionLogger({ uid }: { uid: string }) {
   const { week, month, band, sessionsToday, trend, sessions } = useAverages(uid);
+  const { startDate: cartStartDate, target: cartTarget, activate: activateCartProtocol } = useCartProtocol(uid);
+  // Bemonstering (P1b) hangt af van de weekdoelfrequentie: zonder actief
+  // protocol is er geen doel, dus geen bemonstering, geen pacer, per-adem
+  // loggen zoals voorheen.
+  const sampling = breathSamplingForTarget(cartTarget?.targetRR ?? null);
+  const sampleN = sampling?.n ?? 1;
   const {
     meta,
     entries,
     logReading,
     markDisturbance,
     logSigh,
+    logRR,
     deleteEntry,
     setFeeling,
     startNewSession,
-  } = useActiveSession(uid, band);
+  } = useActiveSession(uid, band, "cart", sampling);
   const { logOut } = useAuth();
-  const { startDate: cartStartDate, target: cartTarget, activate: activateCartProtocol } = useCartProtocol(uid);
   const rustcontrole = useRustcontrole(cartStartDate, sessions);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
+  const cues = useSessionCues(viewMode === "active", meta?.createdAt ?? null, cartTarget?.targetRR ?? null);
 
   function bumpRefocus() {
     setRefocusToken((t) => t + 1);
@@ -68,7 +80,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
   // staat, eenmaal er iets gelogd is, ook al in `sessions` uit useAverages.
   const currentReadings = entries.filter((e) => e.type === "reading" && e.kpa != null);
   const compensation = checkCompensation(
-    { avgRR: computeAvgRR(currentReadings), avgKpa: computeAvgKpa(currentReadings) },
+    { avgRR: computeAvgRR(currentReadings, sampleN), avgKpa: computeAvgKpa(currentReadings) },
     sessions.filter((s) => s.id !== meta?.id)
   );
 
@@ -95,7 +107,10 @@ export default function SessionLogger({ uid }: { uid: string }) {
           <TrendChart trend={trend} band={band} />
 
           <button
-            onClick={() => setViewMode("active")}
+            onClick={() => {
+              unlockAudioContext();
+              setViewMode("active");
+            }}
             className="w-full rounded-lg bg-trace py-4 text-base font-semibold text-[#06120B] active:scale-[0.99]"
           >
             Start nieuwe sessie
@@ -174,7 +189,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
           </div>
 
           <div className="panel">
-            <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} feeling={meta?.feeling} />
+            <StatsRow
+              entries={entries}
+              liveDurationFrom={meta?.createdAt ?? null}
+              feeling={meta?.feeling}
+              sampleN={sampleN}
+            />
           </div>
 
           <CompensationNote check={compensation} />
@@ -212,19 +232,23 @@ export default function SessionLogger({ uid }: { uid: string }) {
       <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">ETCO2-sessie</h1>
-          <p className="text-[12.5px] text-muted">Live log per ademhaling &middot; EMMA capnograaf</p>
+          <p className="text-[12.5px] text-muted">
+            {sampleN > 1 ? `Bemonsterd loggen · elke ${sampleN}de adem` : "Live log per ademhaling"} &middot; EMMA
+            capnograaf
+          </p>
         </div>
         <div className="text-right">
           <div className="font-mono text-2xl text-trace" style={{ textShadow: "0 0 14px rgba(94,234,160,0.35)" }}>
             {duration}
           </div>
           <div className="text-[10px] text-muted">
-            {cartTargetReached ? "\u2713 CART-doel (17:00) bereikt" : `doel ${CART_TARGET_MINUTES}:00`}
+            {cartTargetReached ? "✓ CART-doel (17:00) bereikt" : `doel ${CART_TARGET_MINUTES}:00`}
           </div>
         </div>
       </header>
 
       {cartTarget && <div className="mb-2.5"><CartWeekBadge target={cartTarget} /></div>}
+      {cues.phase && <div className="mb-2.5"><PhaseBadge cues={cues} /></div>}
 
       <button
         onClick={() => setViewMode("review")}
@@ -256,6 +280,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
             bumpRefocus();
           }}
         />
+        <RRInput onLog={(rrValue) => logRR(rrValue)} />
         <FeelingSelector
           value={meta?.feeling}
           onChange={(feeling) => {
@@ -269,7 +294,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
 
         <div className="panel">
-          <StatsRow entries={entries} liveDurationFrom={meta?.createdAt ?? null} feeling={meta?.feeling} />
+          <StatsRow
+            entries={entries}
+            liveDurationFrom={meta?.createdAt ?? null}
+            feeling={meta?.feeling}
+            sampleN={sampleN}
+          />
         </div>
 
         <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />

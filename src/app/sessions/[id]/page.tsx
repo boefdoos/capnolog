@@ -66,7 +66,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
             <Co2Chart entries={entries} bandLow={meta?.bandLow ?? 3.8} bandHigh={meta?.bandHigh ?? 4.9} />
           </div>
           <div className="panel">
-            <StatsRow entries={entries} feeling={meta?.feeling} />
+            <StatsRow entries={entries} feeling={meta?.feeling} sampleN={meta?.logEveryNthBreath ?? 1} />
           </div>
           <div className="panel">
             <h2 className="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Log</h2>

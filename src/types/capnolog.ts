@@ -1,5 +1,10 @@
-export type EntryType = "reading" | "marker" | "sigh";
+export type EntryType = "reading" | "marker" | "sigh" | "rr";
 export type SighSubtype = "success" | "fail";
+
+// Driedelige CART-sessiestructuur (Ritz et al., CHEST 2014, methodesectie):
+// 2 min stille rust, 10 min gepaced ademen, 5 min transfer zonder pacing
+// (docs/codeinstructies.md P8). Enkel van toepassing op sessionType "cart".
+export type SessionPhase = "rest" | "paced" | "transfer";
 
 /** What actually gets written to Firestore for one logged event. */
 export interface StoredEntry {
@@ -8,6 +13,13 @@ export interface StoredEntry {
   subtype?: SighSubtype;
   tSec: number;
   kpa?: number;
+  // Rechtstreeks van het EMMA-scherm afgelezen ademfrequentie, enkel bij
+  // type "rr" (P10). Vervangt de uit het loginterval afgeleide waarde als
+  // eigenlijke meting; die afleiding blijft bestaan maar dient voortaan als
+  // nalevingscontrole, geen meting (zie deriveEntries in format.ts).
+  rrValue?: number;
+  // Ontbreekt bij rustcontroles en bij sessies van voor P8.
+  phase?: SessionPhase;
   createdAt?: number; // epoch ms, client-set for stable ordering
 }
 
@@ -54,6 +66,9 @@ export interface SessionMeta {
   sighTotalCount: number;
   lastTSec: number;
   feeling?: SessionFeeling;
+  // Bemonsteringsfactor: hoeveelste adem er gelogd werd (P1b). Ontbreekt bij
+  // sessies van voor P1b en bij rustcontroles, die lezen als per-adem (1).
+  logEveryNthBreath?: number;
 }
 
 export const DEVICE_MIN_KPA = 0.0;
@@ -73,3 +88,30 @@ export const CART_GOAL_KPA_HIGH = 5.6;
 // oefenen dan dit mag altijd; minder wordt gesignaleerd, niet geblokkeerd.
 export const CART_TARGET_MINUTES = 17;
 export const CART_TARGET_SESSIONS_PER_DAY = 2;
+
+// Driedelige sessiestructuur uit CATCH (docs/codeinstructies.md P8): 2 min
+// stille rust (baseline-proxy), 10 min gepaced, 5 min transfer zonder
+// pacing. Som is exact CART_TARGET_MINUTES, geen toeval.
+export const CART_REST_SEC = 2 * 60;
+export const CART_PACED_SEC = 10 * 60;
+export const CART_TRANSFER_SEC = 5 * 60;
+
+export interface BreathSampling {
+  n: number; // elke hoeveelste adem loggen
+  intervalSec: number; // bijhorend logsignaal-interval
+}
+
+// Elke hoeveelste adem loggen per doelfrequentie (docs/codeinstructies.md
+// P1b): logmoment hangt aan de ademcyclus, niet aan de klok, zodat elk
+// meetpunt op hetzelfde punt in de cyclus valt.
+export const BREATH_SAMPLING: Record<number, BreathSampling> = {
+  13: { n: 7, intervalSec: 32 },
+  11: { n: 6, intervalSec: 33 },
+  9: { n: 5, intervalSec: 33 },
+  6: { n: 3, intervalSec: 30 },
+};
+
+// Vaste, tijdsgebaseerde cue tijdens de ongestuurde rustfase: geen pacer om
+// op te tellen, dus geen ademcyclus-interval beschikbaar. Levert drie tot
+// vier waarden over twee minuten (P1b).
+export const REST_LOG_INTERVAL_SEC = 35;

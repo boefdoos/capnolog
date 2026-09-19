@@ -16,13 +16,25 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 import { deriveEntries } from "./format";
+import { phaseForElapsedSec } from "./sessionPhase";
 import type { BaselineBand } from "./useAverages";
-import type { SessionMeta, SessionType, SighSubtype, StoredEntry } from "@/types/capnolog";
+import type {
+  BreathSampling,
+  SessionMeta,
+  SessionPhase,
+  SessionType,
+  SighSubtype,
+  StoredEntry,
+} from "@/types/capnolog";
 
 export function useActiveSession(
   uid: string | null,
   baselineBand: BaselineBand,
-  sessionType: SessionType = "cart"
+  sessionType: SessionType = "cart",
+  // Enkel voor sessionType "cart" en enkel als het CART-protocol een
+  // doelfrequentie kent (P1b). Rustcontroles en sessies zonder actief
+  // protocol loggen per adem, zoals voorheen.
+  sampling: BreathSampling | null = null
 ) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [meta, setMeta] = useState<SessionMeta | null>(null);
@@ -53,7 +65,8 @@ export function useActiveSession(
     return () => unsub();
   }, [uid, sessionId]);
 
-  const entries = useMemo(() => deriveEntries(rawEntries), [rawEntries]);
+  const sampleN = sampling?.n ?? 1;
+  const entries = useMemo(() => deriveEntries(rawEntries, sampleN), [rawEntries, sampleN]);
 
   async function ensureSession(): Promise<{ id: string; createdAt: number }> {
     if (sessionIdRef.current && metaRef.current) {
@@ -78,6 +91,9 @@ export function useActiveSession(
       sighSuccessCount: 0,
       sighTotalCount: 0,
       lastTSec: 0,
+      // Enkel gezet als er effectief bemonsterd wordt (P1b); anders geen
+      // veld, wat als per-adem (1) leest via parseSessionMeta.
+      ...(sampling ? { logEveryNthBreath: sampling.n } : {}),
     };
     await setDoc(ref, { ...newMeta, createdAt: serverTimestamp() });
     sessionIdRef.current = ref.id;
@@ -91,6 +107,13 @@ export function useActiveSession(
     return Math.max(0, (Date.now() - createdAtMs) / 1000);
   }
 
+  // Fase-tag enkel zinvol voor cart-sessies (P8); rustcontroles hebben geen
+  // fasestructuur en blijven ongetagd. Firestore aanvaardt geen `undefined`
+  // veldwaarden, dus dit levert een leeg object i.p.v. `{ phase: undefined }`.
+  function phaseField(tSec: number): { phase: SessionPhase } | Record<string, never> {
+    return sessionType === "cart" ? { phase: phaseForElapsedSec(tSec) } : {};
+  }
+
   async function logReading(kpa: number) {
     if (!uid) return;
     const { id, createdAt } = await ensureSession();
@@ -100,6 +123,7 @@ export function useActiveSession(
       type: "reading",
       kpa,
       tSec,
+      ...phaseField(tSec),
       createdAt: Date.now(),
     });
     await updateDoc(doc(db, "users", uid, "sessions", id), {
@@ -118,6 +142,7 @@ export function useActiveSession(
     await addDoc(collection(db, "users", uid, "sessions", id, "entries"), {
       type: "marker",
       tSec,
+      ...phaseField(tSec),
       createdAt: Date.now(),
     });
     await updateDoc(doc(db, "users", uid, "sessions", id), { lastTSec: tSec });
@@ -132,6 +157,7 @@ export function useActiveSession(
       type: "sigh",
       subtype,
       tSec,
+      ...phaseField(tSec),
       createdAt: Date.now(),
     });
     await updateDoc(doc(db, "users", uid, "sessions", id), {
@@ -139,6 +165,26 @@ export function useActiveSession(
       sighSuccessCount: increment(subtype === "success" ? 1 : 0),
       lastTSec: tSec,
     });
+  }
+
+  /**
+   * Rechtstreeks van het EMMA-scherm afgelezen ademfrequentie (P10), een
+   * eigen entry-type los van `readingCount`/`kpaSum`: telt dus niet mee in
+   * de ETCO2-aggregaten, enkel `lastTSec` volgt mee voor de sessieduur.
+   */
+  async function logRR(rrValue: number) {
+    if (!uid) return;
+    const { id, createdAt } = await ensureSession();
+    const tSec = nowTSec(createdAt);
+    const db = getFirebaseDb();
+    await addDoc(collection(db, "users", uid, "sessions", id, "entries"), {
+      type: "rr",
+      rrValue,
+      tSec,
+      ...phaseField(tSec),
+      createdAt: Date.now(),
+    });
+    await updateDoc(doc(db, "users", uid, "sessions", id), { lastTSec: tSec });
   }
 
   async function deleteEntry(entry: StoredEntry) {
@@ -185,6 +231,7 @@ export function useActiveSession(
     logReading,
     markDisturbance,
     logSigh,
+    logRR,
     deleteEntry,
     setFeeling,
     startNewSession,

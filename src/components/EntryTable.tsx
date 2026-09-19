@@ -70,6 +70,22 @@ export default function EntryTable({
               </tr>
             );
           }
+          if (e.type === "rr") {
+            return (
+              <tr key={e.id} className="bg-[#8B93F0]/5">
+                <td colSpan={6} className="border-b border-[#1A2320] px-2 py-1.5 text-[#8B93F0]">
+                  RR van EMMA-scherm: {e.rrValue ?? "\u2014"}/min &middot; t+{fmtTime(e.tSec)}
+                </td>
+                {onDelete && (
+                  <td className="border-b border-[#1A2320] px-2 py-1.5">
+                    <button onClick={() => onDelete(e)} className="text-muted hover:text-danger">
+                      &times;
+                    </button>
+                  </td>
+                )}
+              </tr>
+            );
+          }
           const delta = typeof e.delta === "number" && e.delta !== 0 ? e.delta : null;
           return (
             <tr key={e.id} className="font-mono hover:bg-[#151D1A]">

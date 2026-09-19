@@ -36,7 +36,7 @@ export default function KpaInput({
       const ok = window.confirm(
         `${val.toFixed(1)} kPa ligt buiten het meetbereik van de EMMA (${DEVICE_MIN_KPA.toFixed(
           1
-        )}\u2013${DEVICE_MAX_KPA.toFixed(1)} kPa). Mogelijk een tikfout. Toch loggen?`
+        )}–${DEVICE_MAX_KPA.toFixed(1)} kPa). Mogelijk een tikfout. Toch loggen?`
       );
       if (!ok) {
         inputRef.current?.focus();
@@ -77,7 +77,7 @@ export default function KpaInput({
         />
         <button
           onClick={submit}
-          className="rounded-lg bg-trace px-4 text-sm font-semibold text-[#06120B] active:scale-95"
+          className="w-20 shrink-0 rounded-lg bg-trace text-sm font-semibold text-[#06120B] active:scale-95"
         >
           Log
         </button>

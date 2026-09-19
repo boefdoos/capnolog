@@ -41,7 +41,10 @@ export function useSessionDetail(uid: string | null, sessionId: string | null) {
     return () => unsub();
   }, [uid, sessionId]);
 
-  const entries = useMemo(() => deriveEntries(rawEntries), [rawEntries]);
+  const entries = useMemo(
+    () => deriveEntries(rawEntries, meta?.logEveryNthBreath ?? 1),
+    [rawEntries, meta]
+  );
 
   return { meta, entries, loading };
 }
