@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Rechtstreeks van het EMMA-scherm afgelezen ademfrequentie (P10), eenmalig
@@ -8,9 +8,23 @@ import { useState } from "react";
  * geen snelle herhaalinvoer tijdens een ademoefening, gewoon één getal
  * aflezen en intikken.
  */
-export default function RRInput({ onLog }: { onLog: (rrValue: number) => void }) {
+export default function RRInput({
+  onLog,
+  onLogged,
+  refocusToken,
+}: {
+  onLog: (rrValue: number) => void;
+  onLogged?: () => void;
+  refocusToken?: number;
+}) {
   const [value, setValue] = useState("");
   const [invalid, setInvalid] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const initialToken = useRef(refocusToken);
+
+  useEffect(() => {
+    if (refocusToken != null && refocusToken !== initialToken.current) inputRef.current?.focus();
+  }, [refocusToken]);
 
   function submit() {
     const digits = value.replace(/[^0-9]/g, "").slice(0, 2);
@@ -22,6 +36,7 @@ export default function RRInput({ onLog }: { onLog: (rrValue: number) => void })
     }
     onLog(val);
     setValue("");
+    onLogged?.();
   }
 
   return (
@@ -31,6 +46,7 @@ export default function RRInput({ onLog }: { onLog: (rrValue: number) => void })
       </label>
       <div className="flex gap-2">
         <input
+          ref={inputRef}
           id="rrInput"
           type="text"
           inputMode="numeric"

@@ -6,9 +6,11 @@ import { DEVICE_MAX_KPA, DEVICE_MIN_KPA } from "@/types/capnolog";
 
 export default function KpaInput({
   onLog,
+  onLogged,
   refocusToken,
 }: {
   onLog: (kpa: number) => void;
+  onLogged?: () => void;
   refocusToken?: number;
 }) {
   const [value, setValue] = useState("");
@@ -36,7 +38,7 @@ export default function KpaInput({
       const ok = window.confirm(
         `${val.toFixed(1)} kPa ligt buiten het meetbereik van de EMMA (${DEVICE_MIN_KPA.toFixed(
           1
-        )}–${DEVICE_MAX_KPA.toFixed(1)} kPa). Mogelijk een tikfout. Toch loggen?`
+        )}\u2013${DEVICE_MAX_KPA.toFixed(1)} kPa). Mogelijk een tikfout. Toch loggen?`
       );
       if (!ok) {
         inputRef.current?.focus();
@@ -45,7 +47,7 @@ export default function KpaInput({
     }
     onLog(val);
     setValue("");
-    inputRef.current?.focus();
+    onLogged?.();
   }
 
   return (

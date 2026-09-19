@@ -55,6 +55,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
   const rustcontrole = useRustcontrole(cartStartDate, sessions);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
+  const [rrFocusToken, setRrFocusToken] = useState(0);
   const cues = useSessionCues(viewMode === "active", meta?.createdAt ?? null, cartTarget?.targetRR ?? null);
 
   function bumpRefocus() {
@@ -233,7 +234,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">ETCO2-sessie</h1>
           <p className="text-[12.5px] text-muted">
-            {sampleN > 1 ? `Bemonsterd loggen · elke ${sampleN}de adem` : "Live log per ademhaling"} &middot; EMMA
+            {sampleN > 1 ? `Bemonsterd loggen \u00b7 elke ${sampleN}de adem` : "Live log per ademhaling"} &middot; EMMA
             capnograaf
           </p>
         </div>
@@ -242,7 +243,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
             {duration}
           </div>
           <div className="text-[10px] text-muted">
-            {cartTargetReached ? "✓ CART-doel (17:00) bereikt" : `doel ${CART_TARGET_MINUTES}:00`}
+            {cartTargetReached ? "\u2713 CART-doel (17:00) bereikt" : `doel ${CART_TARGET_MINUTES}:00`}
           </div>
         </div>
       </header>
@@ -269,7 +270,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
       </nav>
 
       <div className="space-y-3.5">
-        <KpaInput onLog={logReading} refocusToken={refocusToken} />
+        <KpaInput
+          onLog={logReading}
+          onLogged={() => setRrFocusToken((t) => t + 1)}
+          refocusToken={refocusToken}
+        />
+        <RRInput onLog={(rrValue) => logRR(rrValue)} onLogged={bumpRefocus} refocusToken={rrFocusToken} />
         <EventButtons
           onMarkDisturbance={() => {
             markDisturbance();
@@ -280,7 +286,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
             bumpRefocus();
           }}
         />
-        <RRInput onLog={(rrValue) => logRR(rrValue)} />
         <FeelingSelector
           value={meta?.feeling}
           onChange={(feeling) => {
