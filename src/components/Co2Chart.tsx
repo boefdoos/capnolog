@@ -22,6 +22,7 @@ interface Props {
   entries: Entry[];
   bandLow: number;
   bandHigh: number;
+  sampleN?: number;
 }
 
 function eventColor(e: Entry): string {
@@ -31,11 +32,13 @@ function eventColor(e: Entry): string {
   return "#F2B84B";
 }
 
-export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
+export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
   const entriesRef = useRef<Entry[]>(entries);
   entriesRef.current = entries;
+  const sampleNRef = useRef(sampleN);
+  sampleNRef.current = sampleN;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -94,11 +97,16 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
               title: (items) => {
                 if (!items.length) return "";
                 const raw = items[0].raw as Entry | undefined;
+                if (raw?.type === "rr") return "Ademfrequentie";
                 return raw && raw.idx ? "Ademhaling " + raw.idx : "";
               },
               label: (item) => {
                 const raw = item.raw as Entry | undefined;
-                if (!raw || raw.idx == null || raw.kpa == null || raw.mmHg == null) return "";
+                if (!raw) return "";
+                if (raw.type === "rr") {
+                  return ["RR gemeten: " + (raw.rrValue ?? "\u2014") + "/min", "t+" + fmtTime(raw.tSec)];
+                }
+                if (raw.idx == null || raw.kpa == null || raw.mmHg == null) return "";
                 const lines = [
                   raw.kpa.toFixed(1) + " kPa  \u00b7  " + raw.mmHg.toFixed(0) + " mmHg",
                   "t+" + fmtTime(raw.tSec),
@@ -107,7 +115,8 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
                   lines.push((raw.delta > 0 ? "+" : "") + raw.delta.toFixed(1) + " kPa t.o.v. vorige");
                 }
                 if (typeof raw.rr === "number") {
-                  lines.push("RR \u2248 " + raw.rr.toFixed(0) + "/min");
+                  const label = sampleNRef.current > 1 ? "Tempo (afgeleid) \u2248 " : "RR \u2248 ";
+                  lines.push(label + raw.rr.toFixed(0) + "/min");
                 }
                 return lines;
               },
@@ -193,9 +202,11 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
       fill: false,
       order: 1,
     };
+    // Afgeleide tempo-nalevingscontrole (P10): geen RR-meting bij bemonsterd
+    // loggen, dus altijd als gestippelde lijn getoond, nooit als "RR".
     const rrReadings = readings.filter((r) => typeof r.rr === "number");
     const rrTrace: ChartDataset<"line"> = {
-      label: "RR",
+      label: sampleN > 1 ? "Tempo (afgeleid)" : "RR",
       yAxisID: "y1",
       data: rrReadings.map((r) => ({ x: r.tSec, y: r.rr as number, ...r })) as unknown as {
         x: number;
@@ -213,12 +224,37 @@ export default function Co2Chart({ entries, bandLow, bandHigh }: Props) {
       order: 0,
     };
 
-    chart.data.datasets = [bandTop, bandBottom, trace, rrTrace];
+    // Echte, van het EMMA-scherm afgelezen RR (type "rr", P10): eigen
+    // datareeks met effectieve waarde, niet enkel de gebeurtenismarkering.
+    const rrMeasurements = entries.filter((e) => e.type === "rr" && typeof e.rrValue === "number");
+    const measuredRRTrace: ChartDataset<"line"> = {
+      label: "RR gemeten",
+      yAxisID: "y1",
+      data: rrMeasurements.map((r) => ({ x: r.tSec, y: r.rrValue as number, ...r })) as unknown as {
+        x: number;
+        y: number;
+      }[],
+      borderColor: "#8B93F0",
+      backgroundColor: "#8B93F0",
+      borderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointStyle: "rectRot",
+      pointBackgroundColor: "#8B93F0",
+      showLine: false,
+      order: -1,
+    };
+
+    chart.data.datasets = [bandTop, bandBottom, trace, rrTrace, measuredRRTrace];
     if (chart.options.scales?.x) {
       (chart.options.scales.x as { max?: number }).max = maxT;
     }
+    const y1 = chart.options.scales?.y1 as { title?: { text?: string } } | undefined;
+    if (y1?.title) {
+      y1.title.text = sampleN > 1 ? "Tempo (afgeleid) / RR (/min)" : "RR (/min)";
+    }
     chart.update();
-  }, [entries, bandLow, bandHigh]);
+  }, [entries, bandLow, bandHigh, sampleN]);
 
   return (
     <div className="relative h-56 w-full">

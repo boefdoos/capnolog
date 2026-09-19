@@ -186,7 +186,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
           <FeelingSelector value={meta?.feeling} onChange={setFeeling} />
 
           <div className="panel">
-            <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} />
+            <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
           </div>
 
           <div className="panel">
@@ -206,7 +206,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
                 Log &middot; verwijder eventuele anomalieën
               </h2>
             </div>
-            <EntryTable entries={entries} onDelete={deleteEntry} />
+            <EntryTable entries={entries} onDelete={deleteEntry} sampleN={sampleN} />
           </div>
 
           <div className="space-y-2">
@@ -295,7 +295,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         />
 
         <div className="panel">
-          <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} />
+          <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
         </div>
 
         <div className="panel">
@@ -313,7 +313,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
           <div className="mb-2.5 flex items-center justify-between">
             <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted">Log</h2>
           </div>
-          <EntryTable entries={entries} onDelete={deleteEntry} />
+          <EntryTable entries={entries} onDelete={deleteEntry} sampleN={sampleN} />
         </div>
       </div>
     </div>

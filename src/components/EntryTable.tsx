@@ -6,9 +6,11 @@ import type { Entry } from "@/types/capnolog";
 export default function EntryTable({
   entries,
   onDelete,
+  sampleN = 1,
 }: {
   entries: Entry[];
   onDelete?: (entry: Entry) => void;
+  sampleN?: number;
 }) {
   if (!entries.length) {
     return <div className="py-6 text-center text-xs text-muted">Nog geen metingen.</div>;
@@ -20,7 +22,10 @@ export default function EntryTable({
     <table className="w-full border-collapse text-xs">
       <thead>
         <tr>
-          {["#", "Tijd", "kPa", "mmHg", "\u0394", "RR", ""].map((h) => (
+          {/* Bij bemonsterd loggen is deze kolom geen RR-meting maar een
+              nalevingscontrole op het pacer-tempo (P10), vandaar het andere
+              label. */}
+          {["#", "Tijd", "kPa", "mmHg", "\u0394", sampleN > 1 ? "Tempo" : "RR", ""].map((h) => (
             <th
               key={h}
               className="border-b border-panel-border px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-muted"
