@@ -37,20 +37,37 @@ export function unlockAudioContext() {
   }
 }
 
+/**
+ * iOS Safari kent geen Vibration API (zie boven), dus daar draait alle
+ * logcuing op deze toon. Safari suspendt een AudioContext ook geruime tijd na
+ * de laatste user-gesture, dus tussen de "Start sessie"-tap en de eerste
+ * rustcue (tot ~35s later) kan hij alweer stil liggen. `resume()` teruggeven
+ * zonder te wachten plant de oscillator dan tegen een klok die nog niet
+ * loopt, en Safari laat die geluidloos wegvallen. Pas na een afgeronde
+ * `resume()` plannen voorkomt dat.
+ */
 function tone(freq: number, startOffsetSec: number, durationSec: number, peakGain: number) {
   const ctx = ensureAudioCtx();
   if (!ctx) return;
-  if (ctx.state === "suspended") void ctx.resume();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.frequency.value = freq;
-  const start = ctx.currentTime + startOffsetSec;
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(peakGain, start + Math.min(0.03, durationSec / 3));
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + durationSec);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(start);
-  osc.stop(start + durationSec + 0.02);
+  const play = () => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = freq;
+    const start = ctx.currentTime + startOffsetSec;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peakGain, start + Math.min(0.03, durationSec / 3));
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + durationSec);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + durationSec + 0.02);
+  };
+  if (ctx.state === "suspended") {
+    ctx.resume().then(play).catch(() => {
+      // Resume geweigerd (geen recente user-gesture), toon valt stil weg.
+    });
+  } else {
+    play();
+  }
 }
 
 /** Zacht toontje op het logmoment tijdens de gepacede fase. */
