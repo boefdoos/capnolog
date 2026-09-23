@@ -7,7 +7,10 @@ export default function BandInfo({ band }: { band: BaselineBand }) {
     <div className="panel text-xs text-muted">
       Referentieband: <span className="font-mono text-text">{band.low.toFixed(1)}&ndash;{band.high.toFixed(1)} kPa</span>{" "}
       {band.source === "baseline" ? (
-        <>(maandgemiddelde &plusmn; 1 SD, {band.readingCount} metingen)</>
+        <>
+          (laatste 4 weken, gemiddelde &plusmn; 1 SD
+          {band.floorApplied ? ", ondergrens op je beste niveau tot nu" : ""})
+        </>
       ) : (
         <>(standaard, nog te weinig data voor een eigen baseline)</>
       )}

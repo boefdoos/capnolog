@@ -64,8 +64,9 @@ op of na die datum, er is geen apart voortgangsveld (zie ook
 `docs/plan_post_trial_rustcontroles.md`).
 
 **Gemiddelden en referentieband** (`src/lib/useAverages.ts`) rekenen week-/
-maandgemiddelde en de referentieband (persoonlijk gemiddelde ± 1 SD over alle
-CART-sessies ooit, vaste terugvalband onder `MIN_READINGS_FOR_BASELINE`) uitsluitend
+maandgemiddelde en de referentieband (gemiddelde ± 1 SD over de CART-sessies van
+de laatste 4 weken, met een ondergrens die nooit daalt, P5; vaste terugvalband
+onder `MIN_READINGS_FOR_BASELINE`) uitsluitend
 uit sessies met `sessionType: "cart"`. Rustcontroles zijn bewust een aparte,
 ongestuurde reeks en wegen nergens in mee (P2, `docs/codeinstructies.md`). Dezelfde
 hook bevat de zelfherstellende backfill hierboven.

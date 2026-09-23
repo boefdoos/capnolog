@@ -8,6 +8,7 @@ import { backfillSessionAggregates } from "./sessionActions";
 import {
   DEFAULT_BAND_HIGH,
   DEFAULT_BAND_LOW,
+  DEVICE_MIN_KPA,
   MIN_READINGS_FOR_BASELINE,
   MIN_SESSION_SEC_FOR_DAILY_GOAL,
   type SessionMeta,
@@ -28,6 +29,8 @@ export interface BaselineBand {
   high: number;
   source: "baseline" | "default";
   readingCount: number;
+  // Ondergrens opgetrokken tot het beste eerder bereikte niveau (P5).
+  floorApplied: boolean;
 }
 
 /**
@@ -53,27 +56,64 @@ function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage 
   };
 }
 
+const BAND_WINDOW_DAYS = 28;
+// Een venster telt pas mee voor de vloer vanaf zoveel CART-sessies, zodat
+// één uitschieter in het begin niet voorgoed de ondergrens vastlegt.
+const MIN_SESSIONS_FOR_FLOOR = 6;
+
+interface RawBand {
+  low: number;
+  high: number;
+  readingCount: number;
+  sessionCount: number;
+}
+
+function bandFromSessions(sessions: SessionMeta[]): RawBand | null {
+  const n = sessions.reduce((sum, s) => sum + s.readingCount, 0);
+  if (n < MIN_READINGS_FOR_BASELINE) return null;
+  const sum = sessions.reduce((acc, s) => acc + s.kpaSum, 0);
+  const sumSq = sessions.reduce((acc, s) => acc + s.kpaSumSq, 0);
+  const mean = sum / n;
+  const sd = Math.sqrt(Math.max(0, sumSq / n - mean * mean));
+  return { low: mean - sd, high: mean + sd, readingCount: n, sessionCount: sessions.length };
+}
+
+function windowBand(cartSessions: SessionMeta[], endMs: number): RawBand | null {
+  const since = endMs - BAND_WINDOW_DAYS * DAY_MS;
+  return bandFromSessions(cartSessions.filter((s) => s.createdAt > since && s.createdAt <= endMs));
+}
+
 /**
- * Referentieband = persoonlijke baseline (mean ± 1 SD), zoals gangbaar in
- * biofeedback-apps (bv. Myndlift): een baseline die stabieler en preciezer
- * wordt naarmate er meer data is, in plaats van een glijdend venster dat
- * elke maand resette. Daarom over ALLE sessies ooit, niet enkel de laatste
- * maand. Onder MIN_READINGS_FOR_BASELINE metingen: vaste terugvalband.
- * Enkel CART-sessies (P2): rustcontroles zijn bewust ongestuurd en horen
- * niet mee te wegen in een band die als oefendoel dient.
+ * Referentieband = gemiddelde ± 1 SD over de CART-sessies van de laatste
+ * BAND_WINDOW_DAYS dagen, met een vloer die nooit daalt (P5). Een band over
+ * alle sessies ooit verstarde: data uit de slechtste beginperiode bleef even
+ * zwaar wegen, en wie verbeterde, sleepte de band nauwelijks mee. Het venster
+ * volgt verbetering; de vloer zorgt dat een slechte week de band niet mee naar
+ * beneden trekt. Je zit dan tijdelijk onder je band, dat is de bedoeling.
+ * De vloer is de hoogste ondergrens die ooit bereikt werd over een venster
+ * met minstens MIN_SESSIONS_FOR_FLOOR sessies.
+ * Zonder genoeg recente data: band over alle CART-sessies ooit, en daaronder
+ * de vaste terugvalband. Enkel CART-sessies (P2).
  */
 function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
-  const inWindow = allSessions.filter((s) => s.sessionType === "cart" && s.readingCount > 0);
-  const n = inWindow.reduce((sum, s) => sum + s.readingCount, 0);
-  if (n < MIN_READINGS_FOR_BASELINE) {
-    return { low: DEFAULT_BAND_LOW, high: DEFAULT_BAND_HIGH, source: "default", readingCount: n };
+  const cart = allSessions.filter((s) => s.sessionType === "cart" && s.readingCount > 0);
+  const raw = windowBand(cart, Date.now()) ?? bandFromSessions(cart);
+  if (!raw) {
+    const n = cart.reduce((sum, s) => sum + s.readingCount, 0);
+    return { low: DEFAULT_BAND_LOW, high: DEFAULT_BAND_HIGH, source: "default", readingCount: n, floorApplied: false };
   }
-  const sum = inWindow.reduce((s, x) => s + x.kpaSum, 0);
-  const sumSq = inWindow.reduce((s, x) => s + x.kpaSumSq, 0);
-  const mean = sum / n;
-  const variance = Math.max(0, sumSq / n - mean * mean);
-  const sd = Math.sqrt(variance);
-  return { low: mean - sd, high: mean + sd, source: "baseline", readingCount: n };
+
+  let floor = -Infinity;
+  for (const s of cart) {
+    const w = windowBand(cart, s.createdAt);
+    if (w && w.sessionCount >= MIN_SESSIONS_FOR_FLOOR) floor = Math.max(floor, w.low);
+  }
+
+  const width = raw.high - raw.low;
+  const floorApplied = floor > raw.low;
+  const low = Math.max(DEVICE_MIN_KPA, floorApplied ? floor : raw.low);
+  const high = Math.max(raw.high, low + width);
+  return { low, high, source: "baseline", readingCount: raw.readingCount, floorApplied };
 }
 
 export interface TrendPoint {

@@ -76,7 +76,7 @@ export function useActiveSession(
     const db = getFirebaseDb();
     const ref = doc(collection(db, "users", uid, "sessions"));
     const createdAt = Date.now();
-    // Referentieband wordt bevroren bij sessiestart (maandgemiddelde ± 1 SD,
+    // Referentieband wordt bevroren bij sessiestart (zie computeBaselineBand,
     // of de vaste terugvalband bij te weinig data), niet live herberekend
     // terwijl je aan het loggen bent.
     const newMeta: SessionMeta = {
