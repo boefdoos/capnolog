@@ -110,7 +110,8 @@ P1 tot P11, per punt de bestandsverwijzing en de bewijsbasis. Lees dat voor je a
 een van die punten begint, en werk het bij wanneer een punt af is.
 
 `docs/plan_post_trial_rustcontroles.md` is het oorspronkelijke plan voor de
-rustcontroles (werkpunt P1). Inhoudelijk nog geldig, alleen nog niet gebouwd.
+rustcontroles (werkpunt P1). Gebouwd, afwijkingen staan bij P1 in
+`docs/codeinstructies.md`.
 
 ## Git
 

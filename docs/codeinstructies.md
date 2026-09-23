@@ -1,7 +1,7 @@
 # CapnoLog: codeinstructies voor een volgende sessie
 
 **Status:** Werkdocument, opgesteld na volledige codereview
-**Datum:** 14 september 2026
+**Datum:** 14 september 2026, statusupdate 23 september 2026
 **Doel:** Een sessie die hier koud instapt moet zonder verdere uitleg kunnen beginnen bouwen
 
 ---
@@ -13,6 +13,25 @@ Lees eerst deel 1. Alles daarna volgt eruit.
 Volgorde van het werk: **P1 eerst**, want daar hangt een datum aan. **Daarna P1b**, want dat bepaalt of iemand anders dan Thomas dit programma kan volhouden. Pas dan de rest.
 
 Vraag Thomas welk punt hij wil aanpakken voor je begint. Bouw niet de hele lijst in één keer.
+
+**Stand van zaken op 23 september 2026.**
+
+| Punt | Status | Commits |
+|---|---|---|
+| P1 | Af. Beginscherm toont ook de datum van de volgende rustcontrole | `c97c493`, `6de544b` |
+| P1b | Af. Bemonstering, pacer, fasecues | `5a93169`, `c0cc35c`, `5a2dae1` |
+| P2 | Af | `654317c` |
+| P3 | Af | `654317c` |
+| P4 | Af, gebruikt de afgeleide RR met N-correctie | `f2efa30` |
+| P5 | Open, wacht op keuzes van Thomas (§6 vraag 2) | |
+| P6 | Open, wacht op akkoord van Thomas (§6 vraag 3) | |
+| P7 | Af, opgegaan in P1b | `5a93169` |
+| P8 | Af. Fasen, automatisch afronden na 17 min, stille rust zonder feedback | `5a93169`, `255171c`, `5a2dae1` |
+| P9 | Open, wacht op keuze van Thomas (§6 vraag 4) | |
+| P10 | Af. RR van de EMMA, enkel in rust en transfer, één waarde per fase | `93c6eae`, `724cac4`, `c41e292`, `9b11be9` |
+| P11 | Open. Enkel een commentaar bij de niet-gesyncte `meta` in `SessionLogger` | |
+
+De beschrijvingen hieronder zijn het oorspronkelijke reviewverslag. Waar de bouw ervan afweek, staat dat bij het punt onder **Gebouwd**.
 
 **Projectgegevens.** Repo `boefdoos/capnolog`, branch `main`. Next.js 14 App Router, TypeScript, Tailwind 3, Firebase Auth en Firestore, Chart.js 4. Buildcheck: `npx next build`. Deployment via Vercel op elke push naar `main`.
 
@@ -41,6 +60,8 @@ Ondersteunend bewijs uit de literatuur: de CATCH-trial (Ritz et al., CHEST 2014;
 ## 2. Status van het bestaande rustcontroleplan
 
 `plan_post_trial_rustcontroles.md` beschrijft precies de oplossing: een apart `sessionType`-veld met waarden `cart` en `rustcontrole`, een niet-gestuurd meetscherm van 90 seconden tot 3 minuten, en rustcontroles die geen invloed hebben op de band of het weekdoel.
+
+*Update 23/09: P1 is intussen gebouwd, zie de statustabel in deel 0. De paragrafen hieronder beschrijven de toestand op 14/09.*
 
 **Dat plan is niet uitgevoerd.** Geverifieerd in de code op 14 september 2026: `SessionMeta` in `src/types/capnolog.ts` heeft geen `sessionType`, `ensureSession` in `src/lib/useActiveSession.ts` schrijft het niet weg, en `parseSessionMeta` in `src/lib/format.ts` leest het niet.
 
@@ -84,6 +105,8 @@ Tijdgevoelig, zie deel 2.
 Voer uit wat in `plan_post_trial_rustcontroles.md` staat. Kort samengevat: veld `sessionType` op het sessiedocument met `'cart'` als standaard voor bestaand gedrag, een apart meetscherm zonder ademdoel en zonder live grafiek, en een veld `nextRustcontrole` op gebruikersniveau berekend uit `cartProtocolStartDate + 28 dagen` plus de offsets.
 
 Bestaande sessies zonder het veld moeten als `'cart'` gelezen worden. Zet die default in `parseSessionMeta`, niet in de queries, zodat oude data zonder migratie blijft werken.
+
+**Gebouwd.** Geen opgeslagen `nextRustcontrole`-veld: `computeRustcontroleSchedule` in `src/lib/useRustcontrole.ts` rekent de vier momenten uit `cartProtocolStartDate`, en een moment telt als voltooid zodra er op of na die datum een `rustcontrole`-sessie bestaat. Het beginscherm toont vanaf drie dagen voor een moment "Rustcontrole deze week beschikbaar · start", en daarvoor enkel de datum ("Volgende rustcontrole: woensdag 24 september"). Dat laatste wijkt bewust af van het plan, dat de regel enkel vlak voor het moment toonde: op vraag van Thomas, en een datum zonder "over X dagen" is geen countdown.
 
 ### P1b. Meetdichtheid verlagen, en de pacer die daarbij hoort
 
@@ -139,6 +162,14 @@ Sla de gebruikte bemonstering per sessie op, bijvoorbeeld `logEveryNthBreath`, z
 **Volgorde binnen dit punt.** Test eerst alleen het interval, zonder pacer en zonder fasestructuur, een week lang op Thomas zelf. Ontbreekt er daarna niets in de data, dan is het probleem opgelost voor een fractie van het werk. Pacer en fasestructuur komen daarna.
 
 **Dit punt absorbeert P7 en P8.** Die staan hieronder nog apart voor de details, maar ze zijn onderdeel van dit werk geworden.
+
+**Gebouwd.** De weektest op Thomas is gedaan, daarna zijn pacer en fasestructuur meteen mee gebouwd (`src/lib/pacer.ts`, `src/lib/sessionPhase.ts`, `src/lib/useSessionCues.ts`). Bemonstering volgens de tabel hierboven (`BREATH_SAMPLING`), opgeslagen als `logEveryNthBreath`. Afwijkingen van het ontwerp:
+
+- Stille rust heeft **twee meetpunten** in plaats van drie tot vier: de eerste log start de sessie (t=0), één zachte cue op 110 s vraagt het tweede, net voor het einde van de rust (`REST_LOG_INTERVAL_SEC`).
+- Tijdens stille rust zijn het streefdoel, de live grafiek, `StatsRow` en `BandInfo` verborgen, zodat de baseline-proxy niet gestuurd wordt.
+- De pacertoon valt samen met het logmoment in plaats van een tik per ademhaling, dat voelde over tien minuten te opdringerig aan.
+- Het streefdoel staat groot in de fasekaart (`PhaseBadge`), de aparte `CartWeekBadge` is weg.
+- `MIN_READINGS_FOR_BASELINE` staat nog op 20. Die drempel is nog niet herbekeken.
 
 ### P2. De twee reeksen overal scheiden
 
@@ -243,6 +274,8 @@ Wat er dan van de afleiding overblijft is de nalevingscontrole uit P1b: wijkt he
 
 Dit hangt samen met P1b en hoort in dezelfde wijziging thuis: bij bemonsterd loggen klopt de huidige afgeleide RR sowieso niet meer.
 
+**Gebouwd.** Entry-type `"rr"` met `rrValue`, afgelezen van de EMMA. Het RR-veld verschijnt enkel in stille rust en transfer, één waarde per fase, en verdwijnt daarna. Tijdens gepaced ademen is er geen RR-veld, want de pacer dicteert het tempo. De afgeleide RR blijft bestaan met de N-correctie en voedt P4. De ingevoerde RR wordt nog in geen enkele berekening gebruikt, enkel getoond en geëxporteerd.
+
 ### P11. Kleiner spul
 
 `meta` wordt niet live gesynct, alleen `entries`. `metaRef.current` wordt bij aanmaak gevuld met nullen en daarna nooit uit Firestore bijgewerkt. Wie later een feature bouwt die tijdens een sessie `meta.readingCount` uitleest, krijgt altijd nul. Zet daar een commentaar bij of sync meta alsnog.
@@ -268,7 +301,7 @@ Op langere termijn lost eigen hardware met een data-uitgang het probleem uit P1b
 
 ## 6. Open vragen voor Thomas
 
-1. P1b: is de bemonstering van ongeveer 30 seconden een week op jezelf getest, en ontbrak er iets in de data?
+1. ~~P1b: is de bemonstering van ongeveer 30 seconden een week op jezelf getest, en ontbrak er iets in de data?~~ Getest, P1b is gebouwd.
 2. P5: mag de bandvloer ratelen, dus nooit meer dalen? En blijft de band cumulatief of gaat hij naar een venster?
 3. P6: akkoord om de progressie te koppelen aan CO2-respons in plaats van aan de kalender?
 4. P9: wat telt als een voltooide sessie, een minimumduur of een minimumaantal metingen?
