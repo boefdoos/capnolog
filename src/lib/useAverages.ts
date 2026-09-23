@@ -9,6 +9,7 @@ import {
   DEFAULT_BAND_HIGH,
   DEFAULT_BAND_LOW,
   MIN_READINGS_FOR_BASELINE,
+  MIN_SESSION_SEC_FOR_DAILY_GOAL,
   type SessionMeta,
   type SessionType,
 } from "@/types/capnolog";
@@ -104,14 +105,19 @@ function computeTrend(sessions: SessionMeta[]): Trend {
   };
 }
 
-/** Aantal voltooide CART-sessies (met minstens 1 meting) sinds lokale
- * middernacht. Het CART-doel van 2x/dag gaat over oefensessies, een
- * rustcontrole telt daar niet in mee (P2). */
+/** Aantal voltooide CART-sessies sinds lokale middernacht. Voltooid = minstens
+ * MIN_SESSION_SEC_FOR_DAILY_GOAL tussen start en laatste log (P9). Het
+ * CART-doel van 2x/dag gaat over oefensessies, een rustcontrole telt daar
+ * niet in mee (P2). */
 function computeSessionsToday(sessions: SessionMeta[]): number {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   return sessions.filter(
-    (s) => s.sessionType === "cart" && s.createdAt >= startOfDay.getTime() && s.readingCount > 0
+    (s) =>
+      s.sessionType === "cart" &&
+      s.createdAt >= startOfDay.getTime() &&
+      s.readingCount > 0 &&
+      s.lastTSec >= MIN_SESSION_SEC_FOR_DAILY_GOAL
   ).length;
 }
 

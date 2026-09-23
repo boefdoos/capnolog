@@ -88,6 +88,9 @@ export const CART_GOAL_KPA_HIGH = 5.6;
 // oefenen dan dit mag altijd; minder wordt gesignaleerd, niet geblokkeerd.
 export const CART_TARGET_MINUTES = 17;
 export const CART_TARGET_SESSIONS_PER_DAY = 2;
+// Een sessie telt pas mee voor het dagdoel vanaf deze duur (P9): rust plus
+// het grootste deel van gepaced ademen. Twee losse waarden halen het niet.
+export const MIN_SESSION_SEC_FOR_DAILY_GOAL = 10 * 60;
 
 // Driedelige sessiestructuur uit CATCH (docs/codeinstructies.md P8): 2 min
 // stille rust (baseline-proxy), 10 min gepaced, 5 min transfer zonder
