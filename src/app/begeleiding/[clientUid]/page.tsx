@@ -8,6 +8,7 @@ import TrendChart from "@/components/TrendChart";
 import { fmtTime } from "@/lib/format";
 import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
+import { useClientName } from "@/lib/useCoachClients";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { NULMETING_TARGET_SESSIONS, type SessionType } from "@/types/capnolog";
 
@@ -26,6 +27,7 @@ function ClientInner({ clientUid }: { clientUid: string }) {
   const { target, nulmetingBaseline } = useCartProtocol(clientUid);
   const { sessions, loading } = useSessionsList(clientUid);
   const nulmetingNow = computeNulmetingSummary(allSessions);
+  const clientName = useClientName(clientUid);
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -34,7 +36,7 @@ function ClientInner({ clientUid }: { clientUid: string }) {
           <Link href="/begeleiding" prefetch={false} className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
             &lsaquo; Cliënten
           </Link>
-          <h1 className="mt-1 text-[19px] font-semibold tracking-wide">Cliëntoverzicht</h1>
+          <h1 className="mt-1 text-[19px] font-semibold tracking-wide">{clientName}</h1>
         </div>
       </header>
 

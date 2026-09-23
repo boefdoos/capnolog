@@ -49,3 +49,17 @@ export function useCoachClients(uid: string | null) {
 
   return { clients, loading };
 }
+
+/** Weergavenaam van één cliënt, met dezelfde terugval als in de lijst. */
+export function useClientName(clientUid: string): string {
+  const [name, setName] = useState(clientUid.slice(0, 6));
+  useEffect(() => {
+    getDoc(doc(getFirebaseDb(), "users", clientUid))
+      .then((snap) => {
+        const displayName = snap.data()?.displayName as string | undefined;
+        if (displayName) setName(displayName);
+      })
+      .catch(() => {});
+  }, [clientUid]);
+  return name;
+}

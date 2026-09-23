@@ -6,6 +6,7 @@ import AuthGate from "@/components/AuthGate";
 import Co2Chart from "@/components/Co2Chart";
 import EntryTable from "@/components/EntryTable";
 import StatsRow from "@/components/StatsRow";
+import { useClientName } from "@/lib/useCoachClients";
 import { useSessionDetail } from "@/lib/useSessionDetail";
 import { exportSessionCsv } from "@/lib/exportCsv";
 
@@ -14,6 +15,7 @@ import { exportSessionCsv } from "@/lib/exportCsv";
 function ClientSessionInner({ clientUid, sessionId }: { clientUid: string; sessionId: string }) {
   const { meta, entries, loading } = useSessionDetail(clientUid, sessionId);
   const sampleN = meta?.logEveryNthBreath ?? 1;
+  const clientName = useClientName(clientUid);
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -24,7 +26,7 @@ function ClientSessionInner({ clientUid, sessionId }: { clientUid: string; sessi
             prefetch={false}
             className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
           >
-            &lsaquo; Cliëntoverzicht
+            &lsaquo; {clientName}
           </Link>
           <h1 className="mt-1 text-[19px] font-semibold tracking-wide">
             {meta ? new Date(meta.createdAt).toLocaleString("nl-BE") : "..."}
