@@ -9,8 +9,8 @@ import {
   onSnapshot,
   orderBy,
   query,
-  serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
 } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -40,6 +40,9 @@ export function useActiveSession(
   const [meta, setMeta] = useState<SessionMeta | null>(null);
   const [rawEntries, setRawEntries] = useState<StoredEntry[]>([]);
   const sessionIdRef = useRef<string | null>(null);
+  // `meta` wordt enkel bij aanmaak gevuld en daarna niet uit Firestore
+  // gesynct (P11): readingCount, kpaSum, kpaSumSq en lastTSec blijven hier op
+  // nul staan. Tijdens een sessie herreken je die uit `entries`.
   const metaRef = useRef<SessionMeta | null>(null);
   const bandRef = useRef(baselineBand);
   sessionIdRef.current = sessionId;
@@ -95,7 +98,9 @@ export function useActiveSession(
       // veld, wat als per-adem (1) leest via parseSessionMeta.
       ...(sampling ? { logEveryNthBreath: sampling.n } : {}),
     };
-    await setDoc(ref, { ...newMeta, createdAt: serverTimestamp() });
+    // Zelfde klok als tSec (P11): met serverTimestamp() zou de opgeslagen
+    // starttijd bij klokverschil afwijken van de basis van alle tSec-waarden.
+    await setDoc(ref, { ...newMeta, createdAt: Timestamp.fromMillis(createdAt) });
     sessionIdRef.current = ref.id;
     metaRef.current = newMeta;
     setSessionId(ref.id);
