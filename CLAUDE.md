@@ -64,6 +64,11 @@ moment telt als voltooid zodra er een `rustcontrole`-sessie bestaat vanaf drie d
 voor die datum, er is geen apart voortgangsveld (zie ook
 `docs/plan_post_trial_rustcontroles.md`).
 
+**Beginscherm per fase** (`docs/ui_doorlichting.md`). `computeTrajectPhase`
+(`src/lib/traject.ts`) leidt uit de protocolstartdatum af of de nulmeting, het
+CART-protocol of de periode erna loopt. `NowCard` toont per fase één hoofdactie;
+protocol starten en herstarten gebeurt enkel op `/traject`.
+
 **Gemiddelden en referentieband** (`src/lib/useAverages.ts`) rekenen week-/
 maandgemiddelde en de referentieband (gemiddelde ± 1 SD over de CART-sessies van
 de laatste 4 weken, met een ondergrens die nooit daalt, P5; vaste terugvalband

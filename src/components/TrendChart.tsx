@@ -222,6 +222,35 @@ export default function TrendChart({
           </div>
         )}
       </div>
+      <Legend
+        items={[
+          trend.cart.length > 0 && { color: "#5EEAA0", label: "Oefensessie" },
+          trend.rustcontrole.length > 0 && { color: "#F2B84B", label: "Rustcontrole" },
+          (trend.nulmeting.length > 0 || nulmetingMeanKpa != null) && { color: "#8B93F0", label: "Nulmeting" },
+          { color: "#4FD1C5", label: "CART-doel", zone: true },
+          { color: "#5EEAA0", label: "Jouw band", zone: true },
+        ]}
+      />
+    </div>
+  );
+}
+
+type LegendItem = { color: string; label: string; zone?: boolean } | false;
+
+/** Legende onder de grafiek: zonder uitleg zijn de drie stippellijnen niet
+ * uit elkaar te houden (docs/ui_doorlichting.md B6). */
+function Legend({ items }: { items: LegendItem[] }) {
+  return (
+    <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1 text-[11px] text-muted">
+      {items.filter((i): i is Exclude<LegendItem, false> => Boolean(i)).map((i) => (
+        <span key={i.label} className="flex items-center gap-1.5">
+          <span
+            className={i.zone ? "inline-block h-2.5 w-3.5 rounded-sm border border-dashed" : "inline-block h-2 w-2 rounded-full"}
+            style={i.zone ? { borderColor: i.color, backgroundColor: i.color + "22" } : { backgroundColor: i.color }}
+          />
+          {i.label}
+        </span>
+      ))}
     </div>
   );
 }

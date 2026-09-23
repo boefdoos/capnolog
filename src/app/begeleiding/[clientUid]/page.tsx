@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import AuthGate from "@/components/AuthGate";
-import AveragesCard from "@/components/AveragesCard";
+import TrajectOverview from "@/components/TrajectOverview";
 import TrendChart from "@/components/TrendChart";
 import { fmtTime } from "@/lib/format";
-import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
+import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useClientName } from "@/lib/useCoachClients";
 import { useSessionsList } from "@/lib/useSessionsList";
-import { NULMETING_TARGET_SESSIONS, type SessionType } from "@/types/capnolog";
+import type { SessionType } from "@/types/capnolog";
 
 const TYPE_LABELS: Record<SessionType, string> = {
   cart: "CART",
@@ -24,9 +24,8 @@ const TYPE_LABELS: Record<SessionType, string> = {
  */
 function ClientInner({ clientUid }: { clientUid: string }) {
   const { week, month, band, trend, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
-  const { target, nulmetingBaseline } = useCartProtocol(clientUid);
+  const { startDate, nulmetingBaseline } = useCartProtocol(clientUid);
   const { sessions, loading } = useSessionsList(clientUid);
-  const nulmetingNow = computeNulmetingSummary(allSessions);
   const clientName = useClientName(clientUid);
 
   return (
@@ -41,29 +40,13 @@ function ClientInner({ clientUid }: { clientUid: string }) {
       </header>
 
       <div className="space-y-3.5">
-        <div className="panel text-xs text-muted">
-          {target ? (
-            <>
-              CART-protocol: week {target.week} &middot; doel {target.targetRR}/min
-            </>
-          ) : (
-            <>
-              Protocol nog niet gestart &middot; nulmeting {nulmetingNow?.sessionCount ?? 0} van{" "}
-              {NULMETING_TARGET_SESSIONS} metingen
-            </>
-          )}
-          {nulmetingBaseline && (
-            <div className="mt-1">
-              Nulmeting (bevroren):{" "}
-              <span className="font-mono text-text">
-                {nulmetingBaseline.meanKpa.toFixed(2)} &plusmn; {nulmetingBaseline.sdKpa.toFixed(2)} kPa
-              </span>{" "}
-              &middot; {nulmetingBaseline.sessionCount} metingen, {nulmetingBaseline.readingCount} waarden
-            </div>
-          )}
-        </div>
-
-        <AveragesCard week={week} month={month} />
+        <TrajectOverview
+          startDate={startDate}
+          sessions={allSessions}
+          nulmetingBaseline={nulmetingBaseline}
+          week={week}
+          month={month}
+        />
         <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
 
         {loading && <div className="py-6 text-center text-xs text-muted">...</div>}

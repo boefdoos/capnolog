@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import AveragesCard from "./AveragesCard";
 import BandInfo from "./BandInfo";
 import Co2Chart from "./Co2Chart";
 import CompensationNote from "./CompensationNote";
-import DailyProgress from "./DailyProgress";
 import EntryTable from "./EntryTable";
 import EventButtons from "./EventButtons";
 import FeelingSelector from "./FeelingSelector";
 import KpaInput from "./KpaInput";
+import NowCard from "./NowCard";
 import PhaseBadge from "./PhaseBadge";
 import RRInput from "./RRInput";
 import RustcontroleLogger from "./RustcontroleLogger";
@@ -22,32 +21,31 @@ import { useAuth } from "@/lib/useAuth";
 import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useCoachClients } from "@/lib/useCoachClients";
-import { formatRustcontroleDate, useRustcontrole } from "@/lib/useRustcontrole";
+import { useRustcontrole } from "@/lib/useRustcontrole";
+import { computeTrajectPhase } from "@/lib/traject";
 import { useSessionCues } from "@/lib/useSessionCues";
 import { unlockAudioContext } from "@/lib/pacer";
 import { breathSamplingForTarget } from "@/lib/sessionPhase";
 import { computeAvgKpa, computeAvgRR, fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
-import { CART_TARGET_MINUTES, NULMETING_TARGET_SESSIONS } from "@/types/capnolog";
+import { CART_TARGET_MINUTES } from "@/types/capnolog";
 
 type ViewMode = "idle" | "active" | "review" | "rustcontrole" | "nulmeting";
 
 export default function SessionLogger({ uid }: { uid: string }) {
-  const { week, month, band, sessionsToday, trend, sessions, loading: averagesLoading } = useAverages(uid);
+  const { band, sessionsToday, trend, sessions, loading: averagesLoading } = useAverages(uid);
   const {
     startDate: cartStartDate,
     target: cartTarget,
     nulmetingBaseline,
     loading: protocolLoading,
-    activate,
   } = useCartProtocol(uid);
+  const phase = computeTrajectPhase(cartStartDate);
   // Zolang protocol of sessies nog laden, geen protocol- of nulmetingregel:
   // anders staat er even "CART-protocol starten", en één tik daarop zou de
   // echte startdatum overschrijven.
   const protocolReady = !protocolLoading && !averagesLoading;
   const nulmetingSummary = computeNulmetingSummary(sessions);
-  // Bij de eerste protocolstart wordt de nulmeting tot nu bevroren (P12).
-  const activateCartProtocol = () => activate(nulmetingSummary);
   // Bemonstering (P1b) hangt af van de weekdoelfrequentie: zonder actief
   // protocol is er geen doel, dus geen bemonstering, geen pacer, per-adem
   // loggen zoals voorheen.
@@ -129,108 +127,50 @@ export default function SessionLogger({ uid }: { uid: string }) {
   }
 
   if (viewMode === "idle") {
+    const linkClass = "text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text";
     return (
       <div className="mx-auto max-w-2xl p-4 pb-10">
         <header className="mb-4 border-b border-panel-border pb-3.5">
           <h1 className="text-[19px] font-semibold tracking-wide">CapnoLog</h1>
-          <p className="text-[12.5px] text-muted">EMMA capnograaf &middot; ETCO2-sessies</p>
         </header>
 
+        {/* Fase-opbouw (docs/ui_doorlichting.md §3.1): één kaart met de fase
+            en de hoofdactie, daaronder de evolutie. Protocolbeheer en
+            gemiddelden staan op het Trajectscherm. */}
         <div className="space-y-3.5">
-          <DailyProgress sessionsToday={sessionsToday} />
-          <AveragesCard week={week} month={month} />
+          {protocolReady ? (
+            <NowCard
+              phase={phase}
+              nulmetingCount={nulmetingSummary?.sessionCount ?? 0}
+              sessionsToday={sessionsToday}
+              rustcontrole={rustcontrole}
+              onStartCart={() => {
+                unlockAudioContext();
+                setViewMode("active");
+              }}
+              onStartRustcontrole={() => setViewMode("rustcontrole")}
+              onStartNulmeting={() => setViewMode("nulmeting")}
+            />
+          ) : (
+            <div className="panel py-10 text-center text-xs text-muted">...</div>
+          )}
+
           <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
 
-          <button
-            onClick={() => {
-              unlockAudioContext();
-              setViewMode("active");
-            }}
-            className="w-full rounded-lg bg-trace py-4 text-base font-semibold text-[#06120B] active:scale-[0.99]"
-          >
-            Start nieuwe sessie
-          </button>
-
-          <div className="text-center">
-            <Link
-              href="/sessions"
-              prefetch={false}
-              className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
-            >
-              Geschiedenis bekijken
+          <nav className="flex justify-center gap-4 pt-1">
+            <Link href="/traject" prefetch={false} className={linkClass}>
+              Traject
+            </Link>
+            <Link href="/sessions" prefetch={false} className={linkClass}>
+              Geschiedenis
             </Link>
             {coachClients.length > 0 && (
-              <>
-                {" \u00b7 "}
-                <Link
-                  href="/begeleiding"
-                  prefetch={false}
-                  className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
-                >
-                  Begeleiding
-                </Link>
-              </>
+              <Link href="/begeleiding" prefetch={false} className={linkClass}>
+                Begeleiding
+              </Link>
             )}
-          </div>
+          </nav>
         </div>
-
-        <div className="mt-6 text-center text-xs text-muted">
-          {!protocolReady ? null : cartTarget ? (
-            <>
-              CART-protocol: week {cartTarget.week} &middot; doel {cartTarget.targetRR}/min &middot;{" "}
-              <button
-                onClick={() => {
-                  if (window.confirm("Protocol herstarten vanaf vandaag (terug naar week 1)?")) {
-                    activateCartProtocol();
-                  }
-                }}
-                className="underline decoration-panel-border underline-offset-2 hover:text-text"
-              >
-                herstart
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => activateCartProtocol()}
-              className="underline decoration-panel-border underline-offset-2 hover:text-text"
-            >
-              CART-protocol starten (week 1 vanaf vandaag)
-            </button>
-          )}
-        </div>
-
-        {protocolReady && !cartTarget && (
-          // Enkel zolang het protocol niet gestart is: daarna is de nulmeting
-          // bevroren en verdwijnt de teller (P12).
-          <div className="mt-2 text-center text-xs text-muted">
-            Nulmeting: {nulmetingSummary?.sessionCount ?? 0} van {NULMETING_TARGET_SESSIONS} metingen &middot;{" "}
-            <button
-              onClick={() => setViewMode("nulmeting")}
-              className="underline decoration-panel-border underline-offset-2 hover:text-text"
-            >
-              meet nu
-            </button>
-          </div>
-        )}
-
-        {rustcontrole.availableNow ? (
-          <div className="mt-2 text-center text-xs text-muted">
-            Rustcontrole deze week beschikbaar &middot;{" "}
-            <button
-              onClick={() => setViewMode("rustcontrole")}
-              className="underline decoration-panel-border underline-offset-2 hover:text-text"
-            >
-              start
-            </button>
-          </div>
-        ) : (
-          rustcontrole.nextDate != null && (
-            // Enkel een datum, geen "over X dagen": dat zou een countdown worden.
-            <div className="mt-2 text-center text-xs text-muted">
-              Volgende rustcontrole: {formatRustcontroleDate(rustcontrole.nextDate)}
-            </div>
-          )
-        )}
 
         <div className="mt-10 text-center">
           <button onClick={() => logOut()} className="text-xs text-muted hover:text-danger">

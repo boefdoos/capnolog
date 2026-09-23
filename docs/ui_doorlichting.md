@@ -2,7 +2,7 @@
 
 **Datum:** 23 september 2026
 **Basis:** alle schermen doorlopen in Chrome op telefoonbreedte (414 px), live versie, account van Thomas, naast de code
-**Status:** voorstel, nog niets van gebouwd
+**Status:** stap 1 (beginscherm per fase en Trajectscherm) gebouwd op 23/09, stap 2 en 3 open
 
 ---
 
@@ -127,8 +127,16 @@ Dit scherm is ook de plek voor de begeleider: per cliënt dezelfde tijdlijn.
 2. Sessiescherm (3.3). Lost S1 tot S7 en R1 op.
 3. Geschiedenis (3.4) en de doorlopende punten (3.5).
 
-## 5. Open vragen voor Thomas
+## 5. Beslissingen van Thomas (23/09)
 
-1. Moeten week- en maandgemiddelde op het beginscherm blijven (B5), of verhuizen ze naar het Trajectscherm en blijft enkel de evolutiegrafiek?
-2. Mag de begeleider de rustcontrole of nulmeting buiten het venster kunnen starten (R3), of blijft dat bewust dicht?
-3. Na het protocol: blijft oefenen zichtbaar als knop, of enkel via het Trajectscherm?
+1. Week- en maandgemiddelde verhuizen naar het Trajectscherm (B5). Op het beginscherm blijft enkel de evolutiegrafiek.
+2. Een losse rustcontrole of nulmeting buiten het venster mag (R3). Omdat de begeleidersweergave alleen-lezen is, staat die knop op het eigen Trajectscherm, bijvoorbeeld voor gebruik tijdens een afspraak op het toestel van de cliënt.
+3. Na het protocol blijft oefenen zichtbaar, als tweede knop onder de rustcontrole.
+
+## 6. Gebouwd in stap 1
+
+- `src/lib/traject.ts`: fase afgeleid uit de protocolstartdatum (nulmeting, CART week 1-4, na het protocol).
+- `NowCard`: bovenste kaart van het beginscherm met fase en hoofdactie. Dagteller zit erin tijdens CART, `DailyProgress` en de voetnootlinks zijn weg.
+- `/traject` met `TrajectOverview`: nulmeting, de vier CART-weken met datum, de vijf rustcontroles met datum en "gedaan", gemiddelden, losse meting, protocol starten of herstarten met bevestiging in het scherm zelf.
+- Begeleiding per cliënt gebruikt dezelfde `TrajectOverview` (C1).
+- Legende onder de evolutiegrafiek (B6).

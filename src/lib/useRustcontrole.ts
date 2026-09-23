@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { SessionMeta } from "@/types/capnolog";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CART_PROTOCOL_DAYS = 28;
+export const CART_PROTOCOL_DAYS = 28;
 const AVAILABLE_FROM_DAYS_BEFORE = 3;
 
 function startOfDay(ms: number): number {
@@ -47,7 +47,13 @@ export function formatRustcontroleDate(ms: number): string {
   });
 }
 
+export interface RustcontroleMoment {
+  date: number;
+  done: boolean;
+}
+
 export interface RustcontroleStatus {
+  moments: RustcontroleMoment[];
   nextDate: number | null;
   availableNow: boolean;
 }
@@ -59,24 +65,20 @@ export interface RustcontroleStatus {
  * gemist moment krijgt geen status, het blijft gewoon het eerstvolgende
  * moment staan totdat het gelogd wordt (docs/codeinstructies.md §3).
  */
-export function useRustcontrole(
-  startDate: number | null,
-  sessions: SessionMeta[]
-): RustcontroleStatus {
-  return useMemo(() => {
-    if (startDate == null) return { nextDate: null, availableNow: false };
-    const rustcontroleDates = sessions
-      .filter((s) => s.sessionType === "rustcontrole")
-      .map((s) => s.createdAt);
-    const schedule = computeRustcontroleSchedule(startDate);
-    // Een rustcontrole telt voor een moment vanaf het begin van het
-    // beschikbaarheidsvenster: wie op de aangeboden dag vóór het moment meet,
-    // heeft dat moment gedaan.
-    const nextDate =
-      schedule.find(
-        (moment) => !rustcontroleDates.some((d) => d >= moment - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS)
-      ) ?? null;
-    const availableNow = nextDate != null && Date.now() >= nextDate - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS;
-    return { nextDate, availableNow };
-  }, [startDate, sessions]);
+export function computeRustcontroleStatus(startDate: number | null, sessions: SessionMeta[]): RustcontroleStatus {
+  if (startDate == null) return { moments: [], nextDate: null, availableNow: false };
+  const rustcontroleDates = sessions.filter((s) => s.sessionType === "rustcontrole").map((s) => s.createdAt);
+  const moments = computeRustcontroleSchedule(startDate).map((date) => ({
+    date,
+    done: rustcontroleDates.some((d) => d >= date - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS),
+  }));
+  // Eerste moment dat nog niet gedaan is. Een latere meting telt ook voor een
+  // gemist vroeger moment, daarom "find" op de volgorde van het schema.
+  const nextDate = moments.find((m) => !m.done)?.date ?? null;
+  const availableNow = nextDate != null && Date.now() >= nextDate - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS;
+  return { moments, nextDate, availableNow };
+}
+
+export function useRustcontrole(startDate: number | null, sessions: SessionMeta[]): RustcontroleStatus {
+  return useMemo(() => computeRustcontroleStatus(startDate, sessions), [startDate, sessions]);
 }
