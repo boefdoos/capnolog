@@ -8,7 +8,7 @@ import type { BaselineBand } from "@/lib/useAverages";
 
 /**
  * Rustcontrole: kort, niet-gestuurd meetmoment na afloop van het actieve
- * CART-protocol. Bewust geen Co2Chart, geen StatsRow, geen CartWeekBadge,
+ * CART-protocol. Bewust geen Co2Chart, geen StatsRow, geen streefdoel,
  * geen FeelingSelector, geen zucht-oefening: alles wat tot sturen uitnodigt
  * hoort hier niet thuis (docs/plan_post_trial_rustcontroles.md).
  */

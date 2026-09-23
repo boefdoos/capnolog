@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import AveragesCard from "./AveragesCard";
 import BandInfo from "./BandInfo";
-import CartWeekBadge from "./CartWeekBadge";
 import Co2Chart from "./Co2Chart";
 import CompensationNote from "./CompensationNote";
 import DailyProgress from "./DailyProgress";
@@ -85,6 +84,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
       setViewMode("review");
     }
   }, [viewMode, cartTargetReached, meta]);
+  const inRestPhase = cues.phase === "rest";
   const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
 
   // meta.readingCount/kpaSum/lastTSec worden nooit live bijgewerkt (P11), dus
@@ -267,8 +267,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
       </header>
 
-      {cartTarget && <div className="mb-2.5"><CartWeekBadge target={cartTarget} /></div>}
-      {cues.phase && <div className="mb-2.5"><PhaseBadge cues={cues} /></div>}
+      {cues.phase && <div className="mb-2.5"><PhaseBadge cues={cues} target={cartTarget} /></div>}
 
       <button
         onClick={() => setViewMode("review")}
@@ -313,20 +312,26 @@ export default function SessionLogger({ uid }: { uid: string }) {
           }}
         />
 
-        <div className="panel">
-          <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
-        </div>
+        {/* Tijdens stille rust geen grafiek, statistieken of band: die fase is
+            de ongestuurde baseline-meting, en live feedback lokt sturen uit. */}
+        {!inRestPhase && (
+          <>
+            <div className="panel">
+              <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
+            </div>
 
-        <div className="panel">
-          <StatsRow
-            entries={entries}
-            liveDurationFrom={meta?.createdAt ?? null}
-            feeling={meta?.feeling}
-            sampleN={sampleN}
-          />
-        </div>
+            <div className="panel">
+              <StatsRow
+                entries={entries}
+                liveDurationFrom={meta?.createdAt ?? null}
+                feeling={meta?.feeling}
+                sampleN={sampleN}
+              />
+            </div>
 
-        <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />
+            <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />
+          </>
+        )}
 
         <div className="panel">
           <div className="mb-2.5 flex items-center justify-between">
