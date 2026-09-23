@@ -366,7 +366,7 @@ Op langere termijn lost eigen hardware met een data-uitgang het probleem uit P1b
 4. ~~P9: wat telt als een voltooide sessie?~~ Minimaal 10 minuten.
 5. P12: blijft twintig meetmomenten het streefaantal voor de nulmeting? Voorlopig wel. De banddrempel is los daarvan herbekeken: 4 CART-sessies in plaats van 20 metingen.
 6. ~~P13: waar komt de koppeling te staan?~~ Op het gebruikersdocument van de cliënt (`coachUids`), zie P13. Aan Thomas voorgelegd bij de oplevering.
-7. ~~Wat is de bron achter de vier follow-upmomenten in het rustcontroleplan?~~ Beantwoord op 23/09: de momenten komen uit een eerder gesprek met Claude, niet uit een trial. De verwijzing "2 en 12 maanden follow-up uit de trials" in het plan is dus ongeverifieerd, en CATCH meet op 1 en 6 maanden. Thomas houdt de vier momenten zoals ze zijn. Wie ze later wil onderbouwen, vertrekt van de follow-upmomenten in CATCH en Meuret 2008, niet van het plan.
+7. ~~Wat is de bron achter de vier follow-upmomenten in het rustcontroleplan?~~ Beantwoord op 23/09. De momenten kwamen uit een eerder gesprek met Claude, maar kloppen voor Meuret 2008: dat meet na de behandeling, op 2 en 12 maanden (abstract via PubMed, doi:10.1016/j.jpsychires.2007.06.005). CATCH meet op 1 en 6 maanden (doi:10.1378/chest.14-0665). Op vraag van Thomas is +6 maanden toegevoegd als vijfde moment, zodat beide trials gedekt zijn. Kanttekening: beide trials gaan over een andere doelgroep (paniekstoornis en astma), en daar gingen het om labmetingen door een geblindeerde beoordelaar.
 
 ---
 

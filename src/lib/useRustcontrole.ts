@@ -18,9 +18,10 @@ function addCalendarMonths(ms: number, months: number): number {
 }
 
 /**
- * Vier rustcontrolemomenten na protocol-einde (cartProtocolStartDate + 28
- * dagen), in lijn met docs/plan_post_trial_rustcontroles.md: +1 week,
- * +1 maand, +2 maanden, +12 maanden. De maandoffsets lopen via kalendermaand-
+ * Vijf rustcontrolemomenten na protocol-einde (cartProtocolStartDate + 28
+ * dagen), afgeleid van de follow-ups in de CART-trials: +1 week (benadert de
+ * meting direct na de behandeling), +1 en +6 maanden (CATCH, Ritz et al. 2014),
+ * +2 en +12 maanden (Meuret et al. 2008). De maandoffsets lopen via kalendermaand-
  * rekenen, niet via een vast aantal dagen, zodat "24/09" ook echt 24/09 is.
  */
 export function computeRustcontroleSchedule(startDate: number): number[] {
@@ -29,6 +30,7 @@ export function computeRustcontroleSchedule(startDate: number): number[] {
     protocolEnd + 7 * DAY_MS,
     addCalendarMonths(protocolEnd, 1),
     addCalendarMonths(protocolEnd, 2),
+    addCalendarMonths(protocolEnd, 6),
     addCalendarMonths(protocolEnd, 12),
   ];
 }

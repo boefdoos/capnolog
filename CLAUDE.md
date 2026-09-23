@@ -58,9 +58,10 @@ Het sessiedocument zelf wordt na aanmaak niet live gesynct (enkel de
 (`cartProtocolStartDate` in `settings/protocol`) waaruit het gegradueerde weekdoel
 volgt (13/11/9/6 ademhalingen per minuut, week 1 tot 4, verzadigt op week 4). Diezelfde
 startdatum drijft, via `computeRustcontroleSchedule` (`src/lib/useRustcontrole.ts`), de
-vier rustcontrolemomenten na het 28-dagen-protocol (+1 week, +1 maand, +2 maanden,
-+12 maanden). Een moment telt als voltooid zodra er een `rustcontrole`-sessie bestaat
-op of na die datum, er is geen apart voortgangsveld (zie ook
+vijf rustcontrolemomenten na het 28-dagen-protocol (+1 week, +1 maand, +2 maanden,
++6 maanden, +12 maanden, afgeleid van de follow-ups in CATCH en Meuret 2008). Een
+moment telt als voltooid zodra er een `rustcontrole`-sessie bestaat vanaf drie dagen
+voor die datum, er is geen apart voortgangsveld (zie ook
 `docs/plan_post_trial_rustcontroles.md`).
 
 **Gemiddelden en referentieband** (`src/lib/useAverages.ts`) rekenen week-/

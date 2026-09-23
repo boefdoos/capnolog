@@ -6,7 +6,7 @@ De retroactieve baseline-proxy (eerste 60s van elke sessie) toont nog geen trend
 terwijl het volledige sessiegemiddelde wel significant stijgt, p=0,038. De winst zit tot nu
 toe in het actief gestuurde deel van de sessie, niet in het meest spontane moment ervan.
 Om na te gaan of dat na afloop van het volledige protocol verandert, zijn losse, niet-actief
-gestuurde meetmomenten nodig, in lijn met hoe de CART-trials op 2 en 12 maanden follow-up meten. *(Noot 23/09: deze bewering komt uit een gesprek met Claude en is niet geverifieerd. CATCH meet op 1 en 6 maanden, zie `docs/codeinstructies.md` §6 vraag 7.)*
+gestuurde meetmomenten nodig, in lijn met hoe de CART-trials op 2 en 12 maanden follow-up meten. *(Noot 23/09: geverifieerd in de abstracts via PubMed. Meuret et al. 2008, J Psychiatr Res 42(7):560-8, meet na de behandeling, op 2 en 12 maanden. CATCH, Ritz et al. 2014, Chest 146(5):1237-47, meet na de behandeling, op 1 en 6 maanden. Het schema is daarom uitgebreid met +6 maanden, zie hieronder.)*
 
 ## Scope van dit plan
 
@@ -22,14 +22,17 @@ rustcontrole.
 
 ## Voorgesteld schema
 
-Vier momenten, gespreid, niet frequent:
+Vijf momenten, gespreid, niet frequent (aangepast 23/09, oorspronkelijk vier):
 
 1. **+1 week na protocol-einde** (~31/08): vroege consolidatiecheck
 2. **+1 maand** (~24/09): tussenpunt
-3. **+2 maanden** (~24/10): komt overeen met de 2-maanden follow-up uit de trials
-4. **+12 maanden** (~24/08/2027): komt overeen met de 12-maanden follow-up uit de trials
+3. **+2 maanden** (~24/10): komt overeen met de 2-maanden follow-up uit Meuret 2008
+4. **+6 maanden** (~24/02/2027): komt overeen met de 6-maanden follow-up uit CATCH, toegevoegd op 23/09
+5. **+12 maanden** (~24/08/2027): komt overeen met de 12-maanden follow-up uit Meuret 2008
 
-Vier momenten over een jaar, geen doorlopende herhaling daarna tenzij je dat zelf op dat moment
++1 maand valt samen met de 1-maand-follow-up uit CATCH, +1 week benadert de meting direct na de behandeling.
+
+Vijf momenten over een jaar, geen doorlopende herhaling daarna tenzij je dat zelf op dat moment
 beslist. Bewust laagfrequent: het doel is een vergelijkingspunt met de literatuur, niet een
 nieuw dagelijks ritueel.
 
@@ -71,12 +74,12 @@ sessiescherm bouwen (het niet-gestuurde meetscherm), `nextRustcontrole`-berekeni
 
 **Rond 24/08:** eerste keer dat de UI de eerste rustcontrole aankondigt, in de praktijk testen.
 
-**Daarna:** niets meer bouwen tot de vier momenten gepasseerd zijn en er voldoende rustcontrole-
+**Daarna:** niets meer bouwen tot de vijf momenten gepasseerd zijn en er voldoende rustcontrole-
 data is om zelf te evalueren of het schema zinvol blijkt of aanpassing verdient.
 
 ## Expliciet niet te doen
 
 Geen hergebruik van de volledige 17-minuten sessieflow voor rustcontroles. Geen RR-doel of live
-grafiek tijdens een rustcontrole. Geen automatische herhaling voorbij de vier voorgestelde
+grafiek tijdens een rustcontrole. Geen automatische herhaling voorbij de vijf voorgestelde
 momenten zonder jouw beslissing. Geen wijziging aan hoe bestaande CART-sessiedata of de
 gegradueerde RR-target-feature werkt.
