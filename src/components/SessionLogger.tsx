@@ -85,6 +85,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
     }
   }, [viewMode, cartTargetReached, meta]);
   const inRestPhase = cues.phase === "rest";
+  // RR van de EMMA enkel in de ongestuurde fasen, één waarde per fase (P10):
+  // tijdens gepaced ademen dicteert de pacer het tempo, daar valt niets te
+  // meten. Het veld verdwijnt zodra de waarde voor deze fase gelogd is.
+  const showRRInput =
+    (cues.phase === "rest" || cues.phase === "transfer") &&
+    !entries.some((e) => e.type === "rr" && e.phase === cues.phase);
   const chartBand = { low: meta?.bandLow ?? band.low, high: meta?.bandHigh ?? band.high };
 
   // meta.readingCount/kpaSum/lastTSec worden nooit live bijgewerkt (P11), dus
@@ -290,10 +296,14 @@ export default function SessionLogger({ uid }: { uid: string }) {
       <div className="space-y-3.5">
         <KpaInput
           onLog={logReading}
-          onLogged={() => setRrFocusToken((t) => t + 1)}
+          onLogged={() => {
+            if (showRRInput) setRrFocusToken((t) => t + 1);
+          }}
           refocusToken={refocusToken}
         />
-        <RRInput onLog={(rrValue) => logRR(rrValue)} onLogged={bumpRefocus} refocusToken={rrFocusToken} />
+        {showRRInput && (
+          <RRInput onLog={(rrValue) => logRR(rrValue)} onLogged={bumpRefocus} refocusToken={rrFocusToken} />
+        )}
         <EventButtons
           onMarkDisturbance={() => {
             markDisturbance();
