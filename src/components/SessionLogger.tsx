@@ -33,13 +33,18 @@ import { CART_TARGET_MINUTES, NULMETING_TARGET_SESSIONS } from "@/types/capnolog
 type ViewMode = "idle" | "active" | "review" | "rustcontrole" | "nulmeting";
 
 export default function SessionLogger({ uid }: { uid: string }) {
-  const { week, month, band, sessionsToday, trend, sessions } = useAverages(uid);
+  const { week, month, band, sessionsToday, trend, sessions, loading: averagesLoading } = useAverages(uid);
   const {
     startDate: cartStartDate,
     target: cartTarget,
     nulmetingBaseline,
+    loading: protocolLoading,
     activate,
   } = useCartProtocol(uid);
+  // Zolang protocol of sessies nog laden, geen protocol- of nulmetingregel:
+  // anders staat er even "CART-protocol starten", en één tik daarop zou de
+  // echte startdatum overschrijven.
+  const protocolReady = !protocolLoading && !averagesLoading;
   const nulmetingSummary = computeNulmetingSummary(sessions);
   // Bij de eerste protocolstart wordt de nulmeting tot nu bevroren (P12).
   const activateCartProtocol = () => activate(nulmetingSummary);
@@ -170,7 +175,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         </div>
 
         <div className="mt-6 text-center text-xs text-muted">
-          {cartTarget ? (
+          {!protocolReady ? null : cartTarget ? (
             <>
               CART-protocol: week {cartTarget.week} &middot; doel {cartTarget.targetRR}/min &middot;{" "}
               <button
@@ -194,7 +199,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
           )}
         </div>
 
-        {!cartTarget && (
+        {protocolReady && !cartTarget && (
           // Enkel zolang het protocol niet gestart is: daarna is de nulmeting
           // bevroren en verdwijnt de teller (P12).
           <div className="mt-2 text-center text-xs text-muted">
