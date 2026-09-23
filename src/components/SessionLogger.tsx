@@ -19,7 +19,7 @@ import TrendChart from "./TrendChart";
 import { checkCompensation } from "@/lib/compensation";
 import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
-import { useAverages } from "@/lib/useAverages";
+import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { formatRustcontroleDate, useRustcontrole } from "@/lib/useRustcontrole";
 import { useSessionCues } from "@/lib/useSessionCues";
@@ -27,13 +27,21 @@ import { unlockAudioContext } from "@/lib/pacer";
 import { breathSamplingForTarget } from "@/lib/sessionPhase";
 import { computeAvgKpa, computeAvgRR, fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
-import { CART_TARGET_MINUTES } from "@/types/capnolog";
+import { CART_TARGET_MINUTES, NULMETING_TARGET_SESSIONS } from "@/types/capnolog";
 
-type ViewMode = "idle" | "active" | "review" | "rustcontrole";
+type ViewMode = "idle" | "active" | "review" | "rustcontrole" | "nulmeting";
 
 export default function SessionLogger({ uid }: { uid: string }) {
   const { week, month, band, sessionsToday, trend, sessions } = useAverages(uid);
-  const { startDate: cartStartDate, target: cartTarget, activate: activateCartProtocol } = useCartProtocol(uid);
+  const {
+    startDate: cartStartDate,
+    target: cartTarget,
+    nulmetingBaseline,
+    activate,
+  } = useCartProtocol(uid);
+  const nulmetingSummary = computeNulmetingSummary(sessions);
+  // Bij de eerste protocolstart wordt de nulmeting tot nu bevroren (P12).
+  const activateCartProtocol = () => activate(nulmetingSummary);
   // Bemonstering (P1b) hangt af van de weekdoelfrequentie: zonder actief
   // protocol is er geen doel, dus geen bemonstering, geen pacer, per-adem
   // loggen zoals voorheen.
@@ -108,8 +116,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
     setViewMode("idle");
   }
 
-  if (viewMode === "rustcontrole") {
-    return <RustcontroleLogger uid={uid} band={band} onDone={() => setViewMode("idle")} />;
+  if (viewMode === "rustcontrole" || viewMode === "nulmeting") {
+    return <RustcontroleLogger uid={uid} band={band} kind={viewMode} onDone={() => setViewMode("idle")} />;
   }
 
   if (viewMode === "idle") {
@@ -123,7 +131,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
         <div className="space-y-3.5">
           <DailyProgress sessionsToday={sessionsToday} />
           <AveragesCard week={week} month={month} />
-          <TrendChart trend={trend} band={band} />
+          <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
 
           <button
             onClick={() => {
@@ -170,6 +178,20 @@ export default function SessionLogger({ uid }: { uid: string }) {
             </button>
           )}
         </div>
+
+        {!cartTarget && (
+          // Enkel zolang het protocol niet gestart is: daarna is de nulmeting
+          // bevroren en verdwijnt de teller (P12).
+          <div className="mt-2 text-center text-xs text-muted">
+            Nulmeting: {nulmetingSummary?.sessionCount ?? 0} van {NULMETING_TARGET_SESSIONS} metingen &middot;{" "}
+            <button
+              onClick={() => setViewMode("nulmeting")}
+              className="underline decoration-panel-border underline-offset-2 hover:text-text"
+            >
+              meet nu
+            </button>
+          </div>
+        )}
 
         {rustcontrole.availableNow ? (
           <div className="mt-2 text-center text-xs text-muted">

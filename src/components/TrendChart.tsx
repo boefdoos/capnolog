@@ -16,7 +16,17 @@ import { CART_GOAL_KPA_HIGH, CART_GOAL_KPA_LOW } from "@/types/capnolog";
 
 Chart.register(LinearScale, CategoryScale, LineController, LineElement, PointElement, Tooltip);
 
-export default function TrendChart({ trend, band }: { trend: Trend; band: BaselineBand }) {
+export default function TrendChart({
+  trend,
+  band,
+  nulmetingMeanKpa = null,
+}: {
+  trend: Trend;
+  band: BaselineBand;
+  // Bevroren nulmetingsgemiddelde (P12): het vertrekpunt, blijft zichtbaar
+  // ook als de nulmetingen zelf buiten het venster van 30 dagen vallen.
+  nulmetingMeanKpa?: number | null;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
 
@@ -48,6 +58,7 @@ export default function TrendChart({ trend, band }: { trend: Trend; band: Baseli
               label: (item) => {
                 const value = `${(item.parsed.y as number).toFixed(1)} kPa`;
                 if (item.dataset.label === "Rustcontrole") return `Rustcontrole · ${value}`;
+                if (item.dataset.label === "Nulmeting") return `Nulmeting · ${value}`;
                 if (item.dataset.label === "CART-doel") return `CART-doel · ${value}`;
                 return value;
               },
@@ -81,7 +92,7 @@ export default function TrendChart({ trend, band }: { trend: Trend; band: Baseli
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
-    const xs = [...trend.cart, ...trend.rustcontrole].map((p) => p.date);
+    const xs = [...trend.cart, ...trend.rustcontrole, ...trend.nulmeting].map((p) => p.date);
     const minX = xs.length ? Math.min(...xs) : Date.now() - 30 * 24 * 60 * 60 * 1000;
     const maxX = xs.length ? Math.max(...xs) : Date.now();
 
@@ -166,16 +177,44 @@ export default function TrendChart({ trend, band }: { trend: Trend; band: Baseli
       order: 4,
     };
 
-    chart.data.datasets = [goalTop, goalBottom, bandTop, bandBottom, trace, rustTrace];
+    const nulTrace: ChartDataset<"line"> = {
+      label: "Nulmeting",
+      data: trend.nulmeting.map((p) => ({ x: p.date, y: p.avgKpa })),
+      showLine: false,
+      borderColor: "transparent",
+      pointRadius: 3.5,
+      pointHoverRadius: 5,
+      pointBackgroundColor: "#8B93F0",
+      order: 0,
+    };
+    const nulLine: ChartDataset<"line"> | null =
+      nulmetingMeanKpa == null
+        ? null
+        : {
+            label: "Nulmeting",
+            data: [
+              { x: minX, y: nulmetingMeanKpa },
+              { x: maxX, y: nulmetingMeanKpa },
+            ],
+            borderColor: "#8B93F0",
+            borderDash: [6, 4],
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: false,
+            order: 6,
+          };
+
+    chart.data.datasets = [goalTop, goalBottom, bandTop, bandBottom, trace, rustTrace, nulTrace];
+    if (nulLine) chart.data.datasets.push(nulLine);
     chart.update();
-  }, [trend, band]);
+  }, [trend, band, nulmetingMeanKpa]);
 
   return (
     <div className="panel">
       <div className="mb-1 text-[11px] uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
       <div className="relative h-40 w-full">
         <canvas ref={canvasRef} />
-        {trend.cart.length < 2 && trend.rustcontrole.length === 0 && (
+        {trend.cart.length < 2 && trend.rustcontrole.length === 0 && trend.nulmeting.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-muted">
             Nog te weinig sessies voor een evolutiebeeld.
           </div>

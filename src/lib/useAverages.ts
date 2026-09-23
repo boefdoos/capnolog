@@ -11,6 +11,7 @@ import {
   DEVICE_MIN_KPA,
   MIN_READINGS_FOR_BASELINE,
   MIN_SESSION_SEC_FOR_DAILY_GOAL,
+  type NulmetingBaseline,
   type SessionMeta,
   type SessionType,
 } from "@/types/capnolog";
@@ -124,6 +125,7 @@ export interface TrendPoint {
 export interface Trend {
   cart: TrendPoint[];
   rustcontrole: TrendPoint[];
+  nulmeting: TrendPoint[];
 }
 
 function trendPoints(sessions: SessionMeta[], type: SessionType, sinceMs: number): TrendPoint[] {
@@ -142,6 +144,7 @@ function computeTrend(sessions: SessionMeta[]): Trend {
   return {
     cart: trendPoints(sessions, "cart", monthAgo),
     rustcontrole: trendPoints(sessions, "rustcontrole", monthAgo),
+    nulmeting: trendPoints(sessions, "nulmeting", monthAgo),
   };
 }
 
@@ -159,6 +162,24 @@ function computeSessionsToday(sessions: SessionMeta[]): number {
       s.readingCount > 0 &&
       s.lastTSec >= MIN_SESSION_SEC_FOR_DAILY_GOAL
   ).length;
+}
+
+/** Samenvatting van alle nulmetingen tot nu (P12). Bij de protocolstart wordt
+ * dit bevroren in settings/protocol; daarna telt enkel de bevroren waarde. */
+export function computeNulmetingSummary(
+  sessions: SessionMeta[]
+): Omit<NulmetingBaseline, "frozenAt"> | null {
+  const nul = sessions.filter((s) => s.sessionType === "nulmeting" && s.readingCount > 0);
+  const n = nul.reduce((sum, s) => sum + s.readingCount, 0);
+  if (!n) return null;
+  const mean = nul.reduce((sum, s) => sum + s.kpaSum, 0) / n;
+  const sumSq = nul.reduce((sum, s) => sum + s.kpaSumSq, 0);
+  return {
+    meanKpa: mean,
+    sdKpa: Math.sqrt(Math.max(0, sumSq / n - mean * mean)),
+    readingCount: n,
+    sessionCount: nul.length,
+  };
 }
 
 export function useAverages(uid: string | null) {

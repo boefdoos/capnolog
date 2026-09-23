@@ -8,24 +8,24 @@ import type { BaselineBand } from "@/lib/useAverages";
 
 /**
  * Rustcontrole: kort, niet-gestuurd meetmoment na afloop van het actieve
- * CART-protocol. Bewust geen Co2Chart, geen StatsRow, geen streefdoel,
+ * CART-protocol. Hetzelfde scherm dient voor de nulmeting vóór de start van
+ * het protocol (P12), enkel het sessietype en de titel verschillen. Bewust geen Co2Chart, geen StatsRow, geen streefdoel,
  * geen FeelingSelector, geen zucht-oefening: alles wat tot sturen uitnodigt
  * hoort hier niet thuis (docs/plan_post_trial_rustcontroles.md).
  */
 export default function RustcontroleLogger({
   uid,
   band,
+  kind = "rustcontrole",
   onDone,
 }: {
   uid: string;
   band: BaselineBand;
+  kind?: "rustcontrole" | "nulmeting";
   onDone: () => void;
 }) {
-  const { meta, logReading, markDisturbance, startNewSession } = useActiveSession(
-    uid,
-    band,
-    "rustcontrole"
-  );
+  const { meta, logReading, markDisturbance, startNewSession } = useActiveSession(uid, band, kind);
+  const title = kind === "nulmeting" ? "Nulmeting" : "Rustcontrole";
 
   const [, forceTick] = useState(0);
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function RustcontroleLogger({
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-4 border-b border-panel-border pb-3.5">
-        <h1 className="text-[19px] font-semibold tracking-wide">Rustcontrole</h1>
+        <h1 className="text-[19px] font-semibold tracking-wide">{title}</h1>
         <p className="text-[12.5px] text-muted">
           90 seconden tot 3 minuten stil zitten, geen ademdoel, gewoon meten
         </p>
@@ -66,7 +66,7 @@ export default function RustcontroleLogger({
           onClick={finish}
           className="w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
         >
-          Beëindig rustcontrole
+          Beëindig {title.toLowerCase()}
         </button>
       </div>
     </div>

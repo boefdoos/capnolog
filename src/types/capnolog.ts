@@ -51,7 +51,9 @@ export const FEELING_COLORS: Record<SessionFeeling, string> = {
   goed: "#5EEAA0",
 };
 
-export type SessionType = "cart" | "rustcontrole";
+// "nulmeting" (P12): ongestuurde rustmetingen vóór de start van het
+// protocol, zelfde meetscherm als een rustcontrole.
+export type SessionType = "cart" | "rustcontrole" | "nulmeting";
 
 export interface SessionMeta {
   id: string;
@@ -77,6 +79,20 @@ export const DEVICE_MAX_KPA = 9.9; // EMMA kPa-versie toont EtCO2 enkel binnen 0
 export const DEFAULT_BAND_LOW = 3.8;
 export const DEFAULT_BAND_HIGH = 4.9;
 export const MIN_READINGS_FOR_BASELINE = 20;
+
+// Nulmeting (P12): drie rustmetingen per dag over vijf tot zeven dagen.
+// Streefaantal meetmomenten voor een bruikbare nulmeting.
+export const NULMETING_TARGET_SESSIONS = 20;
+
+/** Bevroren samenvatting van de nulmeting, vastgelegd bij de start van het
+ * protocol en daarna nooit meer gewijzigd (P12). */
+export interface NulmetingBaseline {
+  meanKpa: number;
+  sdKpa: number;
+  readingCount: number;
+  sessionCount: number;
+  frozenAt: number; // epoch ms
+}
 
 // CART-doelbereik (Ritz et al., CHEST 2014, methodesectie): 40-42 mmHg.
 // Vast trajectdoel, in tegenstelling tot de meebewegende referentieband
