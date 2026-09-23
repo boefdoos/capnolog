@@ -3,6 +3,7 @@
 import {
   CategoryScale,
   Chart,
+  Filler,
   type ChartDataset,
   LinearScale,
   LineController,
@@ -14,7 +15,8 @@ import { useEffect, useRef } from "react";
 import type { BaselineBand, Trend } from "@/lib/useAverages";
 import { CART_GOAL_KPA_HIGH, CART_GOAL_KPA_LOW } from "@/types/capnolog";
 
-Chart.register(LinearScale, CategoryScale, LineController, LineElement, PointElement, Tooltip);
+// Filler is nodig voor de ingekleurde band en doelzone (fill: "-1").
+Chart.register(LinearScale, CategoryScale, LineController, LineElement, PointElement, Tooltip, Filler);
 
 export default function TrendChart({
   trend,
