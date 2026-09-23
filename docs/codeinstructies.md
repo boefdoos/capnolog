@@ -89,7 +89,7 @@ Uit het bestaande plan, ongewijzigd van kracht:
 - Geen hergebruik van de 17-minuten sessieflow voor rustcontroles
 - Geen RR-doel en geen live grafiek tijdens een rustcontrole, want die nodigen uit tot sturen en dat is precies wat de meting moet uitsluiten
 - Geen countdown, geen rode stip, geen gemiste-check-status
-- Geen automatische herhaling voorbij de vier momenten
+- Geen automatische herhaling voorbij de vijf momenten (oorspronkelijk vier, +6 maanden toegevoegd op 23/09)
 
 Uit het projectprotocol en de programmaontwerpnota:
 
@@ -108,7 +108,7 @@ Voer uit wat in `plan_post_trial_rustcontroles.md` staat. Kort samengevat: veld 
 
 Bestaande sessies zonder het veld moeten als `'cart'` gelezen worden. Zet die default in `parseSessionMeta`, niet in de queries, zodat oude data zonder migratie blijft werken.
 
-**Gebouwd.** Geen opgeslagen `nextRustcontrole`-veld: `computeRustcontroleSchedule` in `src/lib/useRustcontrole.ts` rekent de vier momenten uit `cartProtocolStartDate`, en een moment telt als voltooid zodra er op of na die datum een `rustcontrole`-sessie bestaat. Het beginscherm toont vanaf drie dagen voor een moment "Rustcontrole deze week beschikbaar · start", en daarvoor enkel de datum ("Volgende rustcontrole: woensdag 24 september"). Dat laatste wijkt bewust af van het plan, dat de regel enkel vlak voor het moment toonde: op vraag van Thomas, en een datum zonder "over X dagen" is geen countdown.
+**Gebouwd.** Geen opgeslagen `nextRustcontrole`-veld: `computeRustcontroleSchedule` in `src/lib/useRustcontrole.ts` rekent de momenten uit `cartProtocolStartDate` (sinds 23/09 vijf: +1 week, +1, +2, +6 en +12 maanden), en een moment telt als voltooid zodra er vanaf drie dagen voor die datum een `rustcontrole`-sessie bestaat. Het beginscherm toont vanaf drie dagen voor een moment "Rustcontrole deze week beschikbaar · start", en daarvoor enkel de datum ("Volgende rustcontrole: donderdag 24 september"). Dat laatste wijkt bewust af van het plan, dat de regel enkel vlak voor het moment toonde: op vraag van Thomas, en een datum zonder "over X dagen" is geen countdown.
 
 ### P1b. Meetdichtheid verlagen, en de pacer die daarbij hoort
 
