@@ -258,10 +258,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
       <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">ETCO2-sessie</h1>
-          <p className="text-[12.5px] text-muted">
-            {sampleN > 1 ? `Bemonsterd loggen \u00b7 elke ${sampleN}de adem` : "Live log per ademhaling"} &middot; EMMA
-            capnograaf
-          </p>
+          <p className="text-[12.5px] text-muted">Oefensessie met de EMMA</p>
         </div>
         <div className="text-right">
           <div className="font-mono text-2xl text-trace" style={{ textShadow: "0 0 14px rgba(94,234,160,0.35)" }}>
