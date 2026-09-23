@@ -33,6 +33,18 @@ export function computeRustcontroleSchedule(startDate: number): number[] {
   ];
 }
 
+/** "woensdag 24 september", met jaartal enkel als het niet dit jaar is. */
+export function formatRustcontroleDate(ms: number): string {
+  const d = new Date(ms);
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("nl-BE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+}
+
 export interface RustcontroleStatus {
   nextDate: number | null;
   availableNow: boolean;

@@ -22,7 +22,7 @@ import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
 import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
-import { useRustcontrole } from "@/lib/useRustcontrole";
+import { formatRustcontroleDate, useRustcontrole } from "@/lib/useRustcontrole";
 import { useSessionCues } from "@/lib/useSessionCues";
 import { unlockAudioContext } from "@/lib/pacer";
 import { breathSamplingForTarget } from "@/lib/sessionPhase";
@@ -165,7 +165,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
           )}
         </div>
 
-        {rustcontrole.availableNow && (
+        {rustcontrole.availableNow ? (
           <div className="mt-2 text-center text-xs text-muted">
             Rustcontrole deze week beschikbaar &middot;{" "}
             <button
@@ -175,6 +175,13 @@ export default function SessionLogger({ uid }: { uid: string }) {
               start
             </button>
           </div>
+        ) : (
+          rustcontrole.nextDate != null && (
+            // Enkel een datum, geen "over X dagen": dat zou een countdown worden.
+            <div className="mt-2 text-center text-xs text-muted">
+              Volgende rustcontrole: {formatRustcontroleDate(rustcontrole.nextDate)}
+            </div>
+          )
         )}
 
         <div className="mt-10 text-center">
