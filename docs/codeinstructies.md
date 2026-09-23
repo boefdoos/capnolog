@@ -171,7 +171,7 @@ Sla de gebruikte bemonstering per sessie op, bijvoorbeeld `logEveryNthBreath`, z
 - Tijdens stille rust zijn het streefdoel, de live grafiek, `StatsRow` en `BandInfo` verborgen, zodat de baseline-proxy niet gestuurd wordt.
 - De pacertoon valt samen met het logmoment in plaats van een tik per ademhaling, dat voelde over tien minuten te opdringerig aan.
 - Het streefdoel staat groot in de fasekaart (`PhaseBadge`), de aparte `CartWeekBadge` is weg.
-- `MIN_READINGS_FOR_BASELINE` staat nog op 20. Die drempel is nog niet herbekeken.
+- De drempel voor een eigen referentieband is herbekeken op 23/09: `MIN_READINGS_FOR_BASELINE` (20 metingen) is vervangen door `MIN_SESSIONS_FOR_BASELINE` (4 CART-sessies, twee dagen protocol). Twintig metingen haalde je sinds de bemonstering al in één sessie, en één sessie toont enkel de spreiding binnen die sessie, niet de schommeling van dag tot dag.
 
 ### P2. De twee reeksen overal scheiden
 
@@ -314,7 +314,7 @@ Wat er wel bij hoort en nog niet bestaat:
 
 Dit is ook het moment om `MIN_READINGS_FOR_BASELINE` te herbekijken, dat na P1b nog op 20 staat. Die drempel was bedoeld voor de voortschrijdende band. Voor de nulmeting is twintig een streefaantal voor volledigheid. Beslis of dat hetzelfde getal blijft.
 
-**Gebouwd.** `sessionType: "nulmeting"`, met hetzelfde scherm als de rustcontrole (`RustcontroleLogger` met `kind`). Zolang het protocol niet gestart is, toont het beginscherm "Nulmeting: 14 van 20 metingen · meet nu". Het streefaantal telt meetmomenten, niet losse waarden (`NULMETING_TARGET_SESSIONS = 20`, drie per dag over zes à zeven dagen). `MIN_READINGS_FOR_BASELINE` blijft voorlopig 20 en staat daar los van. Bij de eerste protocolstart wordt de nulmeting bevroren als `nulmetingBaseline` in `settings/protocol` (gemiddelde, SD, aantal waarden, aantal meetmomenten, `frozenAt`). Een herstart overschrijft die nooit. Op de trendgrafiek staan de nulmetingen als eigen punten, en het bevroren gemiddelde als vaste stippellijn die ook zichtbaar blijft na 30 dagen.
+**Gebouwd.** `sessionType: "nulmeting"`, met hetzelfde scherm als de rustcontrole (`RustcontroleLogger` met `kind`). Zolang het protocol niet gestart is, toont het beginscherm "Nulmeting: 14 van 20 metingen · meet nu". Het streefaantal telt meetmomenten, niet losse waarden (`NULMETING_TARGET_SESSIONS = 20`, drie per dag over zes à zeven dagen). De drempel voor de referentieband staat daar los van (`MIN_SESSIONS_FOR_BASELINE`, zie P1b). Bij de eerste protocolstart wordt de nulmeting bevroren als `nulmetingBaseline` in `settings/protocol` (gemiddelde, SD, aantal waarden, aantal meetmomenten, `frozenAt`). Een herstart overschrijft die nooit. Op de trendgrafiek staan de nulmetingen als eigen punten, en het bevroren gemiddelde als vaste stippellijn die ook zichtbaar blijft na 30 dagen.
 
 ### P13. Begeleidersaccount
 
@@ -364,9 +364,9 @@ Op langere termijn lost eigen hardware met een data-uitgang het probleem uit P1b
 2. ~~P5: mag de bandvloer ratelen?~~ Ja, vloer die nooit daalt, over een venster van 4 weken.
 3. ~~P6: progressie koppelen aan CO2-respons?~~ Nee, kalender behouden.
 4. ~~P9: wat telt als een voltooide sessie?~~ Minimaal 10 minuten.
-5. P12: blijft twintig meetmomenten het streefaantal voor de nulmeting? Voorlopig wel. `MIN_READINGS_FOR_BASELINE` is als aparte drempel op 20 blijven staan, nog te herbekijken.
+5. P12: blijft twintig meetmomenten het streefaantal voor de nulmeting? Voorlopig wel. De banddrempel is los daarvan herbekeken: 4 CART-sessies in plaats van 20 metingen.
 6. ~~P13: waar komt de koppeling te staan?~~ Op het gebruikersdocument van de cliënt (`coachUids`), zie P13. Aan Thomas voorgelegd bij de oplevering.
-7. Wat is de bron achter de vier follow-upmomenten in het rustcontroleplan? Er staat "2 en 12 maanden follow-up uit de trials", terwijl CATCH op 1 en 6 maanden meet. Mogelijk komt het uit Meuret 2008, nog te verifiëren.
+7. ~~Wat is de bron achter de vier follow-upmomenten in het rustcontroleplan?~~ Beantwoord op 23/09: de momenten komen uit een eerder gesprek met Claude, niet uit een trial. De verwijzing "2 en 12 maanden follow-up uit de trials" in het plan is dus ongeverifieerd, en CATCH meet op 1 en 6 maanden. Thomas houdt de vier momenten zoals ze zijn. Wie ze later wil onderbouwen, vertrekt van de follow-upmomenten in CATCH en Meuret 2008, niet van het plan.
 
 ---
 

@@ -6,7 +6,7 @@ De retroactieve baseline-proxy (eerste 60s van elke sessie) toont nog geen trend
 terwijl het volledige sessiegemiddelde wel significant stijgt, p=0,038. De winst zit tot nu
 toe in het actief gestuurde deel van de sessie, niet in het meest spontane moment ervan.
 Om na te gaan of dat na afloop van het volledige protocol verandert, zijn losse, niet-actief
-gestuurde meetmomenten nodig, in lijn met hoe de CART-trials op 2 en 12 maanden follow-up meten.
+gestuurde meetmomenten nodig, in lijn met hoe de CART-trials op 2 en 12 maanden follow-up meten. *(Noot 23/09: deze bewering komt uit een gesprek met Claude en is niet geverifieerd. CATCH meet op 1 en 6 maanden, zie `docs/codeinstructies.md` §6 vraag 7.)*
 
 ## Scope van dit plan
 

@@ -78,7 +78,11 @@ export const DEVICE_MAX_KPA = 9.9; // EMMA kPa-versie toont EtCO2 enkel binnen 0
 
 export const DEFAULT_BAND_LOW = 3.8;
 export const DEFAULT_BAND_HIGH = 4.9;
-export const MIN_READINGS_FOR_BASELINE = 20;
+// Minimum aantal CART-sessies voor een eigen referentieband. Vroeger een
+// aantal metingen (20), maar sinds bemonsterd loggen (P1b) haalt één sessie
+// dat al, en één sessie toont enkel de spreiding binnen die sessie, niet de
+// schommeling van dag tot dag. Vier sessies = twee dagen protocol.
+export const MIN_SESSIONS_FOR_BASELINE = 4;
 
 // Nulmeting (P12): drie rustmetingen per dag over vijf tot zeven dagen.
 // Streefaantal meetmomenten voor een bruikbare nulmeting.

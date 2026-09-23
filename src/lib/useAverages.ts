@@ -9,7 +9,7 @@ import {
   DEFAULT_BAND_HIGH,
   DEFAULT_BAND_LOW,
   DEVICE_MIN_KPA,
-  MIN_READINGS_FOR_BASELINE,
+  MIN_SESSIONS_FOR_BASELINE,
   MIN_SESSION_SEC_FOR_DAILY_GOAL,
   type NulmetingBaseline,
   type SessionMeta,
@@ -71,7 +71,7 @@ interface RawBand {
 
 function bandFromSessions(sessions: SessionMeta[]): RawBand | null {
   const n = sessions.reduce((sum, s) => sum + s.readingCount, 0);
-  if (n < MIN_READINGS_FOR_BASELINE) return null;
+  if (sessions.length < MIN_SESSIONS_FOR_BASELINE || !n) return null;
   const sum = sessions.reduce((acc, s) => acc + s.kpaSum, 0);
   const sumSq = sessions.reduce((acc, s) => acc + s.kpaSumSq, 0);
   const mean = sum / n;
