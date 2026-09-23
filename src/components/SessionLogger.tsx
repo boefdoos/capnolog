@@ -21,6 +21,7 @@ import { useActiveSession } from "@/lib/useActiveSession";
 import { useAuth } from "@/lib/useAuth";
 import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
+import { useCoachClients } from "@/lib/useCoachClients";
 import { formatRustcontroleDate, useRustcontrole } from "@/lib/useRustcontrole";
 import { useSessionCues } from "@/lib/useSessionCues";
 import { unlockAudioContext } from "@/lib/pacer";
@@ -59,6 +60,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
     startNewSession,
   } = useActiveSession(uid, band, "cart", sampling);
   const { logOut } = useAuth();
+  // Enkel wie als begeleider cliënten heeft, ziet de link naar Begeleiding (P13).
+  const { clients: coachClients } = useCoachClients(uid);
   const rustcontrole = useRustcontrole(cartStartDate, sessions);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
@@ -151,6 +154,18 @@ export default function SessionLogger({ uid }: { uid: string }) {
             >
               Geschiedenis bekijken
             </Link>
+            {coachClients.length > 0 && (
+              <>
+                {" \u00b7 "}
+                <Link
+                  href="/begeleiding"
+                  prefetch={false}
+                  className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+                >
+                  Begeleiding
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

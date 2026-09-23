@@ -182,7 +182,11 @@ export function computeNulmetingSummary(
   };
 }
 
-export function useAverages(uid: string | null) {
+/**
+ * `readOnly`: voor de begeleidersweergave (P13). Slaat de zelfherstellende
+ * backfill over, want een begeleider mag niet schrijven in cliëntdata.
+ */
+export function useAverages(uid: string | null, { readOnly = false }: { readOnly?: boolean } = {}) {
   const [sessions, setSessions] = useState<SessionMeta[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -209,6 +213,7 @@ export function useAverages(uid: string | null) {
       // kpaSumSq steunt voor de standaarddeviatie) vertekent. Stil
       // herberekenen vanuit de echte entries; de listener hierboven pikt
       // de correctie vanzelf weer op.
+      if (readOnly) return;
       all.forEach((s) => {
         if (s.readingCount > 0 && (s.kpaSum === 0 || s.kpaSumSq === 0)) {
           backfillSessionAggregates(uid, s.id).catch(() => {});
@@ -216,7 +221,7 @@ export function useAverages(uid: string | null) {
       });
     });
     return () => unsub();
-  }, [uid]);
+  }, [uid, readOnly]);
 
   const week = useMemo(() => computeWindow(sessions, Date.now() - 7 * DAY_MS), [sessions]);
   const month = useMemo(() => computeWindow(sessions, Date.now() - 30 * DAY_MS), [sessions]);

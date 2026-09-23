@@ -2,8 +2,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Begeleider (P13): leesrecht op de data van een cliënt enkel als diens
+    // uid in `coachUids` op het gebruikersdocument van die cliënt staat. De
+    // toegang wordt dus altijd door de cliënt verleend, nooit door de
+    // begeleider zelf. Uitdrukkelijk alleen-lezen: een begeleider schrijft
+    // nergens in andermans data.
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isCoachOf(uid) {
+      let clientDoc = /databases/$(database)/documents/users/$(uid);
+      return request.auth != null
+        && exists(clientDoc)
+        && request.auth.uid in get(clientDoc).data.get('coachUids', []);
+    }
+
+    // {document=**} matcht in rules v2 ook users/{uid} zelf.
     match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if isOwner(uid) || isCoachOf(uid);
+      allow write: if isOwner(uid);
     }
   }
 }
