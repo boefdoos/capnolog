@@ -52,7 +52,8 @@ export interface RustcontroleStatus {
 
 /**
  * Geen apart 'voortgang'-veld: een moment telt als gedaan zodra er een
- * sessie met sessionType 'rustcontrole' bestaat op of na die datum. Een
+ * sessie met sessionType 'rustcontrole' bestaat binnen of na het venster
+ * van AVAILABLE_FROM_DAYS_BEFORE dagen voor die datum. Een
  * gemist moment krijgt geen status, het blijft gewoon het eerstvolgende
  * moment staan totdat het gelogd wordt (docs/codeinstructies.md §3).
  */
@@ -66,8 +67,13 @@ export function useRustcontrole(
       .filter((s) => s.sessionType === "rustcontrole")
       .map((s) => s.createdAt);
     const schedule = computeRustcontroleSchedule(startDate);
+    // Een rustcontrole telt voor een moment vanaf het begin van het
+    // beschikbaarheidsvenster: wie op de aangeboden dag vóór het moment meet,
+    // heeft dat moment gedaan.
     const nextDate =
-      schedule.find((moment) => !rustcontroleDates.some((d) => d >= moment)) ?? null;
+      schedule.find(
+        (moment) => !rustcontroleDates.some((d) => d >= moment - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS)
+      ) ?? null;
     const availableNow = nextDate != null && Date.now() >= nextDate - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS;
     return { nextDate, availableNow };
   }, [startDate, sessions]);
