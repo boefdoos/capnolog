@@ -31,7 +31,7 @@ Vraag Thomas welk punt hij wil aanpakken voor je begint. Bouw niet de hele lijst
 | P10 | Af. RR van de EMMA, enkel in rust en transfer, één waarde per fase | `93c6eae`, `724cac4`, `c41e292`, `9b11be9` |
 | P11 | Grotendeels af. Server-side aggregatie blijft open tot er meerdere cliënten zijn | `1289eb0` |
 | P12 | Af | `c66194f` |
-| P13 | Gebouwd, nog niet gecommit. Firestore-regels moeten nagekeken, getest en met de hand gepubliceerd worden | |
+| P13 | Gebouwd. Firestore-regels moeten nog getest en met de hand gepubliceerd worden | `09e327f` |
 
 De beschrijvingen hieronder zijn het oorspronkelijke reviewverslag. Waar de bouw ervan afweek, staat dat bij het punt onder **Gebouwd**.
 
@@ -336,7 +336,7 @@ Uitdrukkelijk alleen-lezen, ook later. Een begeleider die metingen van iemand an
 
 Wat wel vóór een tweede cliënt af moet: de cliënt moet in de app kunnen zien wie toegang heeft en die kunnen intrekken. Voor de piloot volstaat een afspraak op papier plus handmatig verwijderen.
 
-**Gebouwd, nog niet gecommit (23/09).** Koppeling op het gebruikersdocument van de cliënt: `users/{clientUid}.coachUids: [coachUid]`. Alleen dat veld verleent toegang, dus de cliënt beheert zelf wie mag lezen. De begeleider heeft `users/{coachUid}.clientUids` voor de eigen lijst. Dat veld geeft geen rechten, want de regels kijken alleen naar `coachUids` bij de cliënt. Optioneel `displayName` op het cliëntdocument voor de naam in de lijst. `firestore.rules` geeft de begeleider leesrecht op `users/{clientUid}/**`, schrijven blijft voorbehouden aan de eigenaar. Schermen: `/begeleiding`, `/begeleiding/[clientUid]`, `/begeleiding/[clientUid]/[sessionId]`. Alle schermen zijn alleen-lezen, en `useAverages` draait er zonder backfill. De link "Begeleiding" op het beginscherm verschijnt alleen voor wie `clientUids` heeft.
+**Gebouwd (23/09, `09e327f`).** Koppeling op het gebruikersdocument van de cliënt: `users/{clientUid}.coachUids: [coachUid]`. Alleen dat veld verleent toegang, dus de cliënt beheert zelf wie mag lezen. De begeleider heeft `users/{coachUid}.clientUids` voor de eigen lijst. Dat veld geeft geen rechten, want de regels kijken alleen naar `coachUids` bij de cliënt. Optioneel `displayName` op het cliëntdocument voor de naam in de lijst. `firestore.rules` geeft de begeleider leesrecht op `users/{clientUid}/**`, schrijven blijft voorbehouden aan de eigenaar. Schermen: `/begeleiding`, `/begeleiding/[clientUid]`, `/begeleiding/[clientUid]/[sessionId]`. Alle schermen zijn alleen-lezen, en `useAverages` draait er zonder backfill. De link "Begeleiding" op het beginscherm verschijnt alleen voor wie `clientUids` heeft.
 
 Nog te doen: de regels zijn niet getest. Er is geen emulator in de repo, en geen Java of Firebase CLI op de ontwikkelmachine. Ze moeten bovendien met de hand gepubliceerd worden in de Firebase-console, want er is geen `firebase.json`. Test ze in de Rules Playground op deze vier gevallen:
 1. Een begeleider leest `users/{client}/sessions/x` terwijl zijn uid in `coachUids` staat: toegelaten.
