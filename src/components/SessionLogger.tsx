@@ -14,13 +14,12 @@ import PhaseBadge from "./PhaseBadge";
 import RRInput from "./RRInput";
 import RustcontroleLogger from "./RustcontroleLogger";
 import StatsRow from "./StatsRow";
+import TabBar from "./TabBar";
 import TrendChart from "./TrendChart";
 import { checkCompensation } from "@/lib/compensation";
 import { useActiveSession } from "@/lib/useActiveSession";
-import { useAuth } from "@/lib/useAuth";
 import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
-import { useCoachClients } from "@/lib/useCoachClients";
 import { useRustcontrole } from "@/lib/useRustcontrole";
 import { computeTrajectPhase } from "@/lib/traject";
 import { useSessionCues } from "@/lib/useSessionCues";
@@ -62,9 +61,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
     setFeeling,
     startNewSession,
   } = useActiveSession(uid, band, "cart", sampling);
-  const { logOut } = useAuth();
-  // Enkel wie als begeleider cliënten heeft, ziet de link naar Begeleiding (P13).
-  const { clients: coachClients } = useCoachClients(uid);
   const rustcontrole = useRustcontrole(cartStartDate, sessions);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
@@ -127,7 +123,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
   }
 
   if (viewMode === "idle") {
-    const linkClass = "text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text";
     return (
       <div className="mx-auto max-w-2xl p-4 pb-10">
         <header className="mb-4 border-b border-panel-border pb-3.5">
@@ -156,27 +151,9 @@ export default function SessionLogger({ uid }: { uid: string }) {
           )}
 
           <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
-
-          <nav className="flex justify-center gap-4 pt-1">
-            <Link href="/traject" prefetch={false} className={linkClass}>
-              Traject
-            </Link>
-            <Link href="/sessions" prefetch={false} className={linkClass}>
-              Geschiedenis
-            </Link>
-            {coachClients.length > 0 && (
-              <Link href="/begeleiding" prefetch={false} className={linkClass}>
-                Begeleiding
-              </Link>
-            )}
-          </nav>
         </div>
 
-        <div className="mt-10 text-center">
-          <button onClick={() => logOut()} className="text-xs text-muted hover:text-danger">
-            Uitloggen
-          </button>
-        </div>
+        <TabBar uid={uid} />
       </div>
     );
   }

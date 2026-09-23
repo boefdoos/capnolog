@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthGate from "@/components/AuthGate";
+import TabBar from "@/components/TabBar";
 import Co2Chart from "@/components/Co2Chart";
 import EntryTable from "@/components/EntryTable";
 import StatsRow from "@/components/StatsRow";
@@ -79,6 +80,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
           </div>
         </div>
       )}
+      <TabBar uid={uid} />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AuthGate from "@/components/AuthGate";
+import TabBar from "@/components/TabBar";
 import { useCoachClients } from "@/lib/useCoachClients";
 
 function ClientsInner({ uid }: { uid: string }) {
@@ -14,9 +15,6 @@ function ClientsInner({ uid }: { uid: string }) {
           <h1 className="text-[19px] font-semibold tracking-wide">Begeleiding</h1>
           <p className="text-[12.5px] text-muted">Cliënten, alleen-lezen</p>
         </div>
-        <Link href="/" prefetch={false} className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
-          &lsaquo; Terug
-        </Link>
       </header>
 
       {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
@@ -36,6 +34,7 @@ function ClientsInner({ uid }: { uid: string }) {
           </Link>
         ))}
       </div>
+      <TabBar uid={uid} />
     </div>
   );
 }

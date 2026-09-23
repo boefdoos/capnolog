@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import AuthGate from "@/components/AuthGate";
+import TabBar from "@/components/TabBar";
 import TrajectOverview from "@/components/TrajectOverview";
 import TrendChart from "@/components/TrendChart";
 import { fmtTime } from "@/lib/format";
@@ -22,7 +23,7 @@ const TYPE_LABELS: Record<SessionType, string> = {
  * Overzicht van één cliënt voor de begeleider (P13). Uitdrukkelijk
  * alleen-lezen: geen verwijderknoppen, geen protocolstart, geen backfill.
  */
-function ClientInner({ clientUid }: { clientUid: string }) {
+function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: string }) {
   const { week, month, band, trend, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
   const { startDate, nulmetingBaseline } = useCartProtocol(clientUid);
   const { sessions, loading } = useSessionsList(clientUid);
@@ -76,11 +77,12 @@ function ClientInner({ clientUid }: { clientUid: string }) {
           })}
         </div>
       </div>
+      <TabBar uid={coachUid} />
     </div>
   );
 }
 
 export default function ClientPage() {
   const params = useParams<{ clientUid: string }>();
-  return <AuthGate>{() => <ClientInner clientUid={params.clientUid} />}</AuthGate>;
+  return <AuthGate>{(user) => <ClientInner coachUid={user.uid} clientUid={params.clientUid} />}</AuthGate>;
 }

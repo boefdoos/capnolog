@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import AuthGate from "@/components/AuthGate";
+import TabBar from "@/components/TabBar";
 import Co2Chart from "@/components/Co2Chart";
 import EntryTable from "@/components/EntryTable";
 import StatsRow from "@/components/StatsRow";
@@ -12,7 +13,15 @@ import { exportSessionCsv } from "@/lib/exportCsv";
 
 /** Sessiedetail voor de begeleider (P13): zelfde weergave als de eigen
  * geschiedenis, zonder verwijderen. */
-function ClientSessionInner({ clientUid, sessionId }: { clientUid: string; sessionId: string }) {
+function ClientSessionInner({
+  coachUid,
+  clientUid,
+  sessionId,
+}: {
+  coachUid: string;
+  clientUid: string;
+  sessionId: string;
+}) {
   const { meta, entries, loading } = useSessionDetail(clientUid, sessionId);
   const sampleN = meta?.logEveryNthBreath ?? 1;
   const clientName = useClientName(clientUid);
@@ -58,6 +67,7 @@ function ClientSessionInner({ clientUid, sessionId }: { clientUid: string; sessi
           </div>
         </div>
       )}
+      <TabBar uid={coachUid} />
     </div>
   );
 }
@@ -65,6 +75,8 @@ function ClientSessionInner({ clientUid, sessionId }: { clientUid: string; sessi
 export default function ClientSessionPage() {
   const params = useParams<{ clientUid: string; sessionId: string }>();
   return (
-    <AuthGate>{() => <ClientSessionInner clientUid={params.clientUid} sessionId={params.sessionId} />}</AuthGate>
+    <AuthGate>
+      {(user) => <ClientSessionInner coachUid={user.uid} clientUid={params.clientUid} sessionId={params.sessionId} />}
+    </AuthGate>
   );
 }

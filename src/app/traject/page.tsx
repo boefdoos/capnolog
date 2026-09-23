@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import AuthGate from "@/components/AuthGate";
 import RustcontroleLogger from "@/components/RustcontroleLogger";
+import TabBar from "@/components/TabBar";
 import TrajectOverview from "@/components/TrajectOverview";
 import { computeTrajectPhase, protocolEndDate } from "@/lib/traject";
 import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
+import { useAuth } from "@/lib/useAuth";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { formatRustcontroleDate } from "@/lib/useRustcontrole";
 
@@ -23,6 +24,7 @@ function TrajectInner({ uid }: { uid: string }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [measuring, setMeasuring] = useState<"rustcontrole" | "nulmeting" | null>(null);
+  const { logOut } = useAuth();
 
   if (measuring) {
     return <RustcontroleLogger uid={uid} band={band} kind={measuring} onDone={() => setMeasuring(null)} />;
@@ -45,14 +47,9 @@ function TrajectInner({ uid }: { uid: string }) {
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
-      <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
-        <div>
-          <h1 className="text-[19px] font-semibold tracking-wide">Traject</h1>
-          <p className="text-[12.5px] text-muted">Nulmeting, protocol en rustcontroles</p>
-        </div>
-        <Link href="/" prefetch={false} className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
-          &lsaquo; Terug
-        </Link>
+      <header className="mb-4 border-b border-panel-border pb-3.5">
+        <h1 className="text-[19px] font-semibold tracking-wide">Traject</h1>
+        <p className="text-[12.5px] text-muted">Nulmeting, protocol en rustcontroles</p>
       </header>
 
       {!ready ? (
@@ -129,6 +126,14 @@ function TrajectInner({ uid }: { uid: string }) {
           </div>
         </div>
       )}
+
+      <div className="mt-8 text-center">
+        <button onClick={() => logOut()} className="text-xs text-muted hover:text-danger">
+          Uitloggen
+        </button>
+      </div>
+
+      <TabBar uid={uid} />
     </div>
   );
 }
