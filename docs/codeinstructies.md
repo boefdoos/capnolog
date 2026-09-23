@@ -1,7 +1,7 @@
 # CapnoLog: codeinstructies voor een volgende sessie
 
 **Status:** Werkdocument, opgesteld na volledige codereview
-**Datum:** 14 september 2026, statusupdate 23 september 2026
+**Datum:** 14 september 2026, statusupdate 23 september 2026, P12 en P13 toegevoegd 23 september 2026
 **Doel:** Een sessie die hier koud instapt moet zonder verdere uitleg kunnen beginnen bouwen
 
 ---
@@ -10,7 +10,7 @@
 
 Lees eerst deel 1. Alles daarna volgt eruit.
 
-Volgorde van het werk: **P1 eerst**, want daar hangt een datum aan. **Daarna P1b**, want dat bepaalt of iemand anders dan Thomas dit programma kan volhouden. Pas dan de rest.
+Volgorde van het werk: **P12 en P13 eerst**. Die blokkeren allebei de eerste cliënt, en de rest van de open punten doet dat niet. P5, P6 en P9 wachten op keuzes van Thomas en kunnen daarna.
 
 Vraag Thomas welk punt hij wil aanpakken voor je begint. Bouw niet de hele lijst in één keer.
 
@@ -23,13 +23,15 @@ Vraag Thomas welk punt hij wil aanpakken voor je begint. Bouw niet de hele lijst
 | P2 | Af | `654317c` |
 | P3 | Af | `654317c` |
 | P4 | Af, gebruikt de afgeleide RR met N-correctie | `f2efa30` |
-| P5 | Open, wacht op keuzes van Thomas (§6 vraag 2) | |
-| P6 | Open, wacht op akkoord van Thomas (§6 vraag 3) | |
+| P5 | Af. Venster van 4 weken, vloer die nooit daalt | `122673b` |
+| P6 | Niet bouwen. Thomas kiest voor de kalender zoals in CATCH | |
 | P7 | Af, opgegaan in P1b | `5a93169` |
 | P8 | Af. Fasen, automatisch afronden na 17 min, stille rust zonder feedback | `5a93169`, `255171c`, `5a2dae1` |
-| P9 | Open, wacht op keuze van Thomas (§6 vraag 4) | |
+| P9 | Af. Minimumduur 10 minuten | `22536b7` |
 | P10 | Af. RR van de EMMA, enkel in rust en transfer, één waarde per fase | `93c6eae`, `724cac4`, `c41e292`, `9b11be9` |
-| P11 | Open. Enkel een commentaar bij de niet-gesyncte `meta` in `SessionLogger` | |
+| P11 | Grotendeels af. Server-side aggregatie blijft open tot er meerdere cliënten zijn | `1289eb0` |
+| P12 | Af | `c66194f` |
+| P13 | Gebouwd, nog niet gecommit. Firestore-regels moeten nagekeken, getest en met de hand gepubliceerd worden | |
 
 De beschrijvingen hieronder zijn het oorspronkelijke reviewverslag. Waar de bouw ervan afweek, staat dat bij het punt onder **Gebouwd**.
 
@@ -37,7 +39,7 @@ De beschrijvingen hieronder zijn het oorspronkelijke reviewverslag. Waar de bouw
 
 **Datamodel.** `users/{uid}/sessions/{sessionId}` met metadata en aggregaten, subcollectie `entries/{entryId}` met `type` ("reading" | "marker" | "sigh"), `subtype`, `tSec`, `kpa`. De velden `idx`, `delta`, `mmHg` en `rr` worden client-side afgeleid in `deriveEntries` en nooit opgeslagen. Protocolinstellingen staan in `users/{uid}/settings/protocol`.
 
-P1 voegt `sessionType` toe op het sessiedocument, P1b en P10 voegen een entry-type `"rr"` toe met een veld `rrValue` en een sessieveld `logEveryNthBreath`.
+P1 voegt `sessionType` toe op het sessiedocument, P1b en P10 voegen een entry-type `"rr"` toe met een veld `rrValue` en een sessieveld `logEveryNthBreath`. P12 voegt `nulmeting` toe als derde `sessionType` plus een bevroren baselinewaarde op gebruikersniveau, P13 voegt een koppeling tussen begeleider en cliënt toe.
 
 ---
 
@@ -226,6 +228,8 @@ Het commentaar in de code motiveert de keuze bewust met stabiliteit, en die rede
 
 Voorstel, te bespreken met Thomas voor je bouwt: houd de meebewegende band als sessiedoel, maar laat de ondergrens nooit dalen. Beste behaalde waarde wordt de vloer. Een slechte week betekent dan tijdelijk onder je band zitten, niet dat de band naar beneden komt. En clamp `mean - sd` in elk geval op `DEVICE_MIN_KPA`, want nu kan die bij weinig data en grote spreiding onder nul uitkomen.
 
+**Gebouwd.** `computeBaselineBand` rekent gemiddelde ± 1 SD over de CART-sessies van de laatste 28 dagen. Met te weinig recente data valt ze terug op alle CART-sessies, en daaronder op de vaste terugvalband. De vloer is de hoogste ondergrens die ooit bereikt werd over een venster van 28 dagen met minstens 6 sessies (`MIN_SESSIONS_FOR_FLOOR`), zodat één uitschieter in het begin niet voorgoed de vloer vastlegt. Trekt de vloer de ondergrens op, dan schuift de band mee met dezelfde breedte. Begrensd op `DEVICE_MIN_KPA`. `BandInfo` en het commentaar in `ensureSession` kloppen nu met de berekening.
+
 ### P6. Progressie op respons in plaats van op kalender
 
 `computeCartWeekTarget` in `src/lib/useCartProtocol.ts` schuift puur op verstreken dagen door: 13, 11, 9, 6 per week. Wie op 11 nog geen CO2-respons haalt, wordt na veertien dagen naar 9 geduwd.
@@ -235,6 +239,8 @@ De stap van 9 naar 6 is bovendien de grootste, een reductie van 33 procent tegen
 Voorstel: laat de volgende frequentie pas vrijkomen wanneer de huidige betrouwbaar een CO2-stijging oplevert. Behoud de kalender als bovengrens zodat niemand vastloopt, maar niet als enige criterium. Dit hangt samen met P4: dezelfde berekening voedt beide.
 
 Dit is een gedragswijziging aan het protocol. Bespreek ze met Thomas voor je ze bouwt.
+
+**Beslist op 23/09: niet bouwen.** De kalenderprogressie blijft zoals in CATCH, zodat het protocol vergelijkbaar blijft met de trial. Compensatie blijft zichtbaar via de melding uit P4.
 
 ### P7. Ademtempo-aangever
 
@@ -264,6 +270,8 @@ De laatste vijf minuten zonder pacing zijn de transferfase. Therapeutisch is dat
 
 Twee keer één waarde intikken haalt dus het dagdoel. Voor persoonlijk gebruik is dat hooguit vervelend, voor een programma waarin adherentie een uitkomstmaat is, is het onbruikbaar. Voeg een minimumduur of een minimumaantal metingen toe voor een sessie meetelt. Na P1b is een minimumduur logischer dan een minimumaantal metingen.
 
+**Gebouwd.** Een CART-sessie telt mee voor het dagdoel vanaf 10 minuten tussen start en laatste log (`MIN_SESSION_SEC_FOR_DAILY_GOAL`, getoetst op `lastTSec`).
+
 ### P10. RR gemeten in plaats van afgeleid
 
 `deriveEntries` leidt de ademfrequentie af uit het interval tussen twee opeenvolgende **gelogde** metingen. Het codecommentaar erkent dit al. Bij manuele invoer is dat de logfrequentie, niet de ademfrequentie: één overgeslagen log verdubbelt het interval en halveert de schijnbare RR. `StatsRow` toont dat als "RR gem." met nul decimalen, wat als een meting oogt.
@@ -284,14 +292,63 @@ Dit hangt samen met P1b en hoort in dezelfde wijziging thuis: bij bemonsterd log
 
 `useAverages` haalt tot duizend sessies op en rekent alles client-side. Prima voor één gebruiker. Zodra er een begeleidersweergave over meerdere cliënten komt, moet dat naar server-side aggregatie.
 
+**Gebouwd.** Commentaar bij `metaRef` in `useActiveSession`. `createdAt` wordt nu opgeslagen als `Timestamp.fromMillis` van dezelfde toestelklok als `tSec`, in plaats van `serverTimestamp()`. Server-side aggregatie blijft open: de begeleidersweergave uit P13 rekent per cliënt client-side, en dat volstaat voor een handvol cliënten.
+
 ---
+
+### P12. Nulmeting als derde sessietype
+
+**Blokkeert de eerste cliënt.**
+
+Het traject begint met een nulmeting van vijf tot zeven dagen: drie rustmetingen per dag, geen oefeningen, geen sturing. Die staat nu nergens in de app, terwijl ze het vertrekpunt is waartegen alles later afgemeten wordt.
+
+Technisch is het een kleine toevoeging, want een nulmeting is dezelfde meting als een rustcontrole: kort, ongestuurd, geen streefdoel op het scherm, geen live grafiek. Het meetscherm daarvoor bestaat al sinds P1. Voeg `nulmeting` toe als derde waarde op `sessionType` en hergebruik dat scherm.
+
+Wat er wel bij hoort en nog niet bestaat:
+
+**Een volledigheidsteller.** Toon tijdens de nulmeetweek hoeveel metingen er al zijn, bijvoorbeeld "14 van 20". De cliënt weet dan wanneer hij klaar is, en bij het go-of-no-go-gesprek is meteen zichtbaar of de nulmeting bruikbaar is.
+
+**Een bevroren baselinewaarde.** Zodra het protocol start, sla gemiddelde, aantal metingen en spreiding van de nulmeting op als vaste waarde op gebruikersniveau, die daarna nooit meer verandert. De referentieband herberekent zich over alle sessies, dus zonder dit veld is het oorspronkelijke vertrekpunt na een paar weken niet meer terug te vinden. Het absolute vergelijkingspunt uit P3 steunt hierop.
+
+**Uitsluiten uit de CART-reeks.** Net zoals bij rustcontroles in P2: nulmetingen tellen niet mee in weekgemiddelde, maandgemiddelde, referentieband of dagteller. Wel als eigen reeks op de trendgrafiek, zodat het vertrekpunt zichtbaar blijft.
+
+Dit is ook het moment om `MIN_READINGS_FOR_BASELINE` te herbekijken, dat na P1b nog op 20 staat. Die drempel was bedoeld voor de voortschrijdende band. Voor de nulmeting is twintig een streefaantal voor volledigheid. Beslis of dat hetzelfde getal blijft.
+
+**Gebouwd.** `sessionType: "nulmeting"`, met hetzelfde scherm als de rustcontrole (`RustcontroleLogger` met `kind`). Zolang het protocol niet gestart is, toont het beginscherm "Nulmeting: 14 van 20 metingen · meet nu". Het streefaantal telt meetmomenten, niet losse waarden (`NULMETING_TARGET_SESSIONS = 20`, drie per dag over zes à zeven dagen). `MIN_READINGS_FOR_BASELINE` blijft voorlopig 20 en staat daar los van. Bij de eerste protocolstart wordt de nulmeting bevroren als `nulmetingBaseline` in `settings/protocol` (gemiddelde, SD, aantal waarden, aantal meetmomenten, `frozenAt`). Een herstart overschrijft die nooit. Op de trendgrafiek staan de nulmetingen als eigen punten, en het bevroren gemiddelde als vaste stippellijn die ook zichtbaar blijft na 30 dagen.
+
+### P13. Begeleidersaccount
+
+**Blokkeert de eerste cliënt.**
+
+Data staat onder `users/{uid}`, dus een cliënt die met zijn eigen account inlogt, zit in een afgesloten ruimte waar de begeleider niet in kan. Zonder oplossing blijven er twee uitwegen over: een gedeeld inlogaccount, wat een slechte constructie is voor de gegevensafspraak, of de cliënt na elke sessie handmatig een CSV laten doorsturen.
+
+De minimale versie bestaat uit drie stukken.
+
+**Een koppeling** tussen de uid van de begeleider en die van de cliënt. Een veld op het gebruikersdocument van de cliënt volstaat, of een apart koppelingsdocument.
+
+**Firestore-regels** die de begeleider leesrecht geven op `users/{clientUid}/sessions/**` wanneer die koppeling bestaat. Dit is het enige stuk waar een fout meteen een datalek is, dus test expliciet twee dingen: een begeleider mag niets lezen van een cliënt waaraan hij niet gekoppeld is, en hij mag nergens schrijven.
+
+**Een overzichtsscherm** waar de begeleider zijn cliënten ziet en er één kan openen, alleen-lezen.
+
+Uitdrukkelijk alleen-lezen, ook later. Een begeleider die metingen van iemand anders kan aanpassen, maakt de data onbetrouwbaar, en het houdt de regels eenvoudiger.
+
+**Voor cliënt één: koppel met de hand in Firestore.** Dat kost tien minuten en bespaart het bouwen van een uitnodigingsflow die pas nodig is bij een tweede cliënt.
+
+Wat wel vóór een tweede cliënt af moet: de cliënt moet in de app kunnen zien wie toegang heeft en die kunnen intrekken. Voor de piloot volstaat een afspraak op papier plus handmatig verwijderen.
+
+**Gebouwd, nog niet gecommit (23/09).** Koppeling op het gebruikersdocument van de cliënt: `users/{clientUid}.coachUids: [coachUid]`. Alleen dat veld verleent toegang, dus de cliënt beheert zelf wie mag lezen. De begeleider heeft `users/{coachUid}.clientUids` voor de eigen lijst. Dat veld geeft geen rechten, want de regels kijken alleen naar `coachUids` bij de cliënt. Optioneel `displayName` op het cliëntdocument voor de naam in de lijst. `firestore.rules` geeft de begeleider leesrecht op `users/{clientUid}/**`, schrijven blijft voorbehouden aan de eigenaar. Schermen: `/begeleiding`, `/begeleiding/[clientUid]`, `/begeleiding/[clientUid]/[sessionId]`. Alle schermen zijn alleen-lezen, en `useAverages` draait er zonder backfill. De link "Begeleiding" op het beginscherm verschijnt alleen voor wie `clientUids` heeft.
+
+Nog te doen: de regels zijn niet getest. Er is geen emulator in de repo, en geen Java of Firebase CLI op de ontwikkelmachine. Ze moeten bovendien met de hand gepubliceerd worden in de Firebase-console, want er is geen `firebase.json`. Test ze in de Rules Playground op deze vier gevallen:
+1. Een begeleider leest `users/{client}/sessions/x` terwijl zijn uid in `coachUids` staat: toegelaten.
+2. Dezelfde begeleider leest een cliënt waar hij niet in `coachUids` staat: geweigerd.
+3. Een begeleider schrijft naar `users/{client}/sessions/x`: geweigerd.
+4. Een begeleider leest een cliënt die geen gebruikersdocument heeft: geweigerd.
 
 ## 5. Wat er nog niet in zit en later komt
 
 Uit de programmaontwerpnota, nog niet gepland als bouwwerk:
 
 - Fase-besef over twaalf weken, met bewust afnemende meetintensiteit in fase 3
-- Begeleidersweergave over meerdere cliënten
 - Uitvoer voor de huisarts: nulmeting, verloop, slotmeting op één pagina
 - Bandberekening en progressie afgeleid uit de nulmeting van de individuele gebruiker in plaats van uit constanten. De huidige standaardwaarden zijn gekalibreerd op één persoon, en die persoon is Thomas.
 
@@ -302,10 +359,12 @@ Op langere termijn lost eigen hardware met een data-uitgang het probleem uit P1b
 ## 6. Open vragen voor Thomas
 
 1. ~~P1b: is de bemonstering van ongeveer 30 seconden een week op jezelf getest, en ontbrak er iets in de data?~~ Getest, P1b is gebouwd.
-2. P5: mag de bandvloer ratelen, dus nooit meer dalen? En blijft de band cumulatief of gaat hij naar een venster?
-3. P6: akkoord om de progressie te koppelen aan CO2-respons in plaats van aan de kalender?
-4. P9: wat telt als een voltooide sessie, een minimumduur of een minimumaantal metingen?
-5. Wat is de bron achter de vier follow-upmomenten in het rustcontroleplan? Er staat "2 en 12 maanden follow-up uit de trials", terwijl CATCH op 1 en 6 maanden meet. Mogelijk komt het uit Meuret 2008, nog te verifiëren.
+2. ~~P5: mag de bandvloer ratelen?~~ Ja, vloer die nooit daalt, over een venster van 4 weken.
+3. ~~P6: progressie koppelen aan CO2-respons?~~ Nee, kalender behouden.
+4. ~~P9: wat telt als een voltooide sessie?~~ Minimaal 10 minuten.
+5. P12: blijft twintig meetmomenten het streefaantal voor de nulmeting? Voorlopig wel. `MIN_READINGS_FOR_BASELINE` is als aparte drempel op 20 blijven staan, nog te herbekijken.
+6. ~~P13: waar komt de koppeling te staan?~~ Op het gebruikersdocument van de cliënt (`coachUids`), zie P13. Aan Thomas voorgelegd bij de oplevering.
+7. Wat is de bron achter de vier follow-upmomenten in het rustcontroleplan? Er staat "2 en 12 maanden follow-up uit de trials", terwijl CATCH op 1 en 6 maanden meet. Mogelijk komt het uit Meuret 2008, nog te verifiëren.
 
 ---
 
