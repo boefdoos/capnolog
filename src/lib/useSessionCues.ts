@@ -8,6 +8,7 @@ import {
   phaseDurationSec,
   phaseForElapsedSec,
   phaseStartSec,
+  restCueCount,
 } from "./sessionPhase";
 import type { BreathSampling, SessionPhase } from "@/types/capnolog";
 
@@ -24,11 +25,10 @@ export interface SessionCuesState {
  * logmoment (zelfde cadans als de bemonsteringstabel), plus trilling erbij
  * waar een trilmotor bestaat: geen apart, dichter metronoomtikje per
  * ademhaling meer, dat voelde over tien minuten te opdringerig aan. In rust
- * en transfer is er geen pacer, enkel het logsignaal (trilling, of een
- * hoorbare tik als fallback op toestellen zonder trilmotor, zoals iOS).
- * Zonder gekende doelfrequentie (protocol niet geactiveerd) levert dit enkel
- * fase-informatie, geen pacer en geen cues: dat is het oude, ongestuurde
- * gedrag.
+ * en transfer is er geen pacer, enkel het logsignaal (een hoorbare tik, plus
+ * trilling waar een trilmotor bestaat). De rustcues (REST_CUE_SEC) vallen
+ * altijd; zonder gekende doelfrequentie (protocol niet geactiveerd) is er in
+ * gepaced en transfer geen pacer en geen logcue.
  */
 export function useSessionCues(
   active: boolean,
@@ -48,7 +48,12 @@ export function useSessionCues(
   const phaseRemainingSec = phase ? Math.max(0, phaseDurationSec(phase) - phaseElapsedSec) : 0;
   const sampling = breathSamplingForTarget(targetRR);
   const logIntervalSec = phase ? logIntervalForPhase(phase, sampling) : null;
-  const logIdx = logIntervalSec ? Math.floor(phaseElapsedSec / logIntervalSec) : null;
+  const logIdx =
+    phase === "rest"
+      ? restCueCount(phaseElapsedSec)
+      : logIntervalSec
+        ? Math.floor(phaseElapsedSec / logIntervalSec)
+        : null;
 
   const lastPhaseRef = useRef<SessionPhase | null>(null);
   const lastLogIdxRef = useRef(0);

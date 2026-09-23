@@ -46,7 +46,8 @@ nog niet aangemaakt Firebase-project.
 
 **Sessielevenscyclus.** Een sessiedocument ontstaat pas bij de eerste log
 (`ensureSession` in `src/lib/useActiveSession.ts`), niet bij het openen van het
-scherm, dus `tSec` van de eerste entry is altijd ~0. `readingCount`/`kpaSum`/
+scherm, maar met als `createdAt` het moment van de tik op Start (`begin`), dus `tSec` telt
+vanaf die tik en de eerste waarde valt typisch rond 60 s. `readingCount`/`kpaSum`/
 `kpaSumSq`/`lastTSec` op het sessiedocument worden per log incrementeel bijgewerkt
 (`increment(...)`) en bij het verwijderen van een entry weer teruggedraaid: dat zijn
 de opgeslagen aggregaten waarop week-, maand- en referentiebandberekeningen steunen.

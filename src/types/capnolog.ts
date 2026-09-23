@@ -134,8 +134,9 @@ export const BREATH_SAMPLING: Record<number, BreathSampling> = {
   6: { n: 3, intervalSec: 30 },
 };
 
-// Vaste, tijdsgebaseerde cue tijdens de ongestuurde rustfase: geen pacer om
-// op te tellen, dus geen ademcyclus-interval beschikbaar. Twee meetpunten:
-// de eerste log start de sessie (t=0), één cue op 110s vraagt het tweede,
-// net voor het einde van de rust en dus het meest uitgeruste punt.
-export const REST_LOG_INTERVAL_SEC = 110;
+// Vaste cuemomenten tijdens elke ongestuurde rustmeting: de stille rust aan
+// het begin van een oefensessie, de nulmeting en de rustcontrole. Twee
+// waarden, na 1 en na bijna 2 minuten stilzitten vanaf de tik op Start, zodat
+// de drie ongestuurde reeksen onderling vergelijkbaar zijn.
+export const REST_CUE_SEC = [60, 110] as const;
+export const REST_MEASUREMENT_SEC = 120;

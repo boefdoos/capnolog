@@ -38,6 +38,13 @@ export function useActiveSession(
 ) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [meta, setMeta] = useState<SessionMeta | null>(null);
+  // Starttijd van de sessie: gezet bij de tik op Start (`begin`), niet pas bij
+  // de eerste log. Zo loopt de stille rust vanaf het moment dat je gaat zitten.
+  // Het sessiedocument zelf ontstaat nog altijd pas bij de eerste log, maar
+  // met deze starttijd als createdAt, dus tSec telt vanaf de tik.
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  startedAtRef.current = startedAt;
   const [rawEntries, setRawEntries] = useState<StoredEntry[]>([]);
   const sessionIdRef = useRef<string | null>(null);
   // `meta` wordt enkel bij aanmaak gevuld en daarna niet uit Firestore
@@ -78,7 +85,7 @@ export function useActiveSession(
     if (!uid) throw new Error("Niet aangemeld.");
     const db = getFirebaseDb();
     const ref = doc(collection(db, "users", uid, "sessions"));
-    const createdAt = Date.now();
+    const createdAt = startedAtRef.current ?? Date.now();
     // Referentieband wordt bevroren bij sessiestart (zie computeBaselineBand,
     // of de vaste terugvalband bij te weinig data), niet live herberekend
     // terwijl je aan het loggen bent.
@@ -216,6 +223,12 @@ export function useActiveSession(
     setSessionId(null);
     setMeta(null);
     setRawEntries([]);
+    setStartedAt(null);
+  }
+
+  /** Start de klok, zonder al iets weg te schrijven (zie `startedAt`). */
+  function begin() {
+    if (startedAtRef.current == null) setStartedAt(Date.now());
   }
 
   async function setFeeling(feeling: SessionMeta["feeling"]) {
@@ -232,6 +245,8 @@ export function useActiveSession(
   return {
     sessionId,
     meta,
+    startedAt: meta?.createdAt ?? startedAt,
+    begin,
     entries,
     logReading,
     markDisturbance,

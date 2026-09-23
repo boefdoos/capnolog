@@ -28,12 +28,12 @@ export default function PhaseBadge({
 
   const cueDescription =
     cues.phase === "rest"
-      ? "meetpunt bij start en na ~2 min, zachte trilcue"
+      ? "twee waarden, na 1 en na 2 minuten, bij het geluidssignaal"
       : !cues.sampling
         ? "geen doelfrequentie ingesteld, activeer het CART-protocol voor pacer en logcue"
         : cues.phase === "paced"
-          ? `pacertoon + trilcue elke ${cues.sampling.n}de adem (~${cues.sampling.intervalSec}s)`
-          : `geen pacer · trilcue elke ${cues.sampling.n}de adem (~${cues.sampling.intervalSec}s)`;
+          ? `pacertoon elke ${cues.sampling.n}de adem (~${cues.sampling.intervalSec}s), dan loggen`
+          : `geen pacer · geluidssignaal elke ${cues.sampling.n}de adem (~${cues.sampling.intervalSec}s)`;
 
   return (
     <div className="panel">

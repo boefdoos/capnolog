@@ -10,6 +10,7 @@ import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useAuth } from "@/lib/useAuth";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { formatRustcontroleDate } from "@/lib/useRustcontrole";
+import { unlockAudioContext } from "@/lib/pacer";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -69,13 +70,19 @@ function TrajectInner({ uid }: { uid: string }) {
             <p className="mb-3 text-xs text-muted">Buiten de geplande momenten, bijvoorbeeld tijdens een afspraak.</p>
             <div className="flex gap-2.5">
               <button
-                onClick={() => setMeasuring("rustcontrole")}
+                onClick={() => {
+                  unlockAudioContext();
+                  setMeasuring("rustcontrole");
+                }}
                 className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-text active:scale-[0.99]"
               >
                 Rustcontrole
               </button>
               <button
-                onClick={() => setMeasuring("nulmeting")}
+                onClick={() => {
+                  unlockAudioContext();
+                  setMeasuring("nulmeting");
+                }}
                 className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-text active:scale-[0.99]"
               >
                 Nulmeting

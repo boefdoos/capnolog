@@ -55,11 +55,11 @@ export default function TrajectOverview({
         {nulmetingBaseline ? (
           <Row
             label={`${nulmetingBaseline.meanKpa.toFixed(2)} ± ${nulmetingBaseline.sdKpa.toFixed(2)} kPa`}
-            value={`${nulmetingBaseline.sessionCount} metingen · vastgelegd ${fmtDate(nulmetingBaseline.frozenAt, true)}`}
+            value={`${nulmetingBaseline.sessionCount} rustmetingen · vastgelegd ${fmtDate(nulmetingBaseline.frozenAt, true)}`}
           />
         ) : phase.kind === "nulmeting" ? (
           <Row
-            label={`${nulmetingNow?.sessionCount ?? 0} van ${NULMETING_TARGET_SESSIONS} metingen`}
+            label={`${nulmetingNow?.sessionCount ?? 0} van ${NULMETING_TARGET_SESSIONS} rustmetingen`}
             value="loopt"
             current
           />

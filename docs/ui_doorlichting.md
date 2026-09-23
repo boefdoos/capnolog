@@ -140,3 +140,5 @@ Dit scherm is ook de plek voor de begeleider: per cliënt dezelfde tijdlijn.
 - `/traject` met `TrajectOverview`: nulmeting, de vier CART-weken met datum, de vijf rustcontroles met datum en "gedaan", gemiddelden, losse meting, protocol starten of herstarten met bevestiging in het scherm zelf.
 - Begeleiding per cliënt gebruikt dezelfde `TrajectOverview` (C1).
 - Legende onder de evolutiegrafiek (B6).
+- Vaste tabbalk onderaan (Vandaag, Traject, Geschiedenis, Begeleiding), verborgen tijdens sessie of meting (S7).
+- Klok start bij de tik op Start in plaats van bij de eerste log (S1, R1). Rustmeting (nulmeting en rustcontrole) heeft een vaste vorm: 2 minuten, twee waarden op 60 en 110 s met een geluidssignaal, voortgang "waarde 1 van 2" en een duidelijk einde (R2). De stille rust in de oefensessie volgt dezelfde tijden.

@@ -38,10 +38,12 @@ export default function NowCard({
       <div className="panel">
         <div className="text-[11px] uppercase tracking-wide text-muted">Nulmeting</div>
         <div className="mt-1 text-lg text-text">
-          {nulmetingCount} van {NULMETING_TARGET_SESSIONS} metingen
+          {nulmetingCount} van {NULMETING_TARGET_SESSIONS} rustmetingen
         </div>
         <div className="mt-0.5 text-xs text-muted">
-          {complete ? "Nulmeting klaar, het protocol kan starten" : "Drie rustmetingen per dag, zonder oefenen"}
+          {complete
+            ? "Nulmeting klaar, het protocol kan starten"
+            : "Drie rustmetingen per dag, zonder oefenen. Elke rustmeting duurt 2 minuten en vraagt twee waarden."}
         </div>
         {complete ? (
           <>

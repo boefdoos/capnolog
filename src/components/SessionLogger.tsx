@@ -60,12 +60,14 @@ export default function SessionLogger({ uid }: { uid: string }) {
     deleteEntry,
     setFeeling,
     startNewSession,
+    startedAt,
+    begin,
   } = useActiveSession(uid, band, "cart", sampling);
   const rustcontrole = useRustcontrole(cartStartDate, sessions);
   const [viewMode, setViewMode] = useState<ViewMode>("idle");
   const [refocusToken, setRefocusToken] = useState(0);
   const [rrFocusToken, setRrFocusToken] = useState(0);
-  const cues = useSessionCues(viewMode === "active", meta?.createdAt ?? null, cartTarget?.targetRR ?? null);
+  const cues = useSessionCues(viewMode === "active", startedAt, cartTarget?.targetRR ?? null);
 
   function bumpRefocus() {
     setRefocusToken((t) => t + 1);
@@ -73,12 +75,12 @@ export default function SessionLogger({ uid }: { uid: string }) {
 
   const [, forceTick] = useState(0);
   useEffect(() => {
-    if (!meta) return;
+    if (startedAt == null) return;
     const id = setInterval(() => forceTick((n) => n + 1), 1000);
     return () => clearInterval(id);
-  }, [meta]);
+  }, [startedAt]);
 
-  const durationSec = meta ? (Date.now() - meta.createdAt) / 1000 : 0;
+  const durationSec = startedAt != null ? (Date.now() - startedAt) / 1000 : 0;
   const duration = fmtTime(durationSec);
   const cartTargetReached = durationSec >= CART_TARGET_MINUTES * 60;
   const hasSession = Boolean(meta && entries.length > 0);
@@ -141,10 +143,17 @@ export default function SessionLogger({ uid }: { uid: string }) {
               rustcontrole={rustcontrole}
               onStartCart={() => {
                 unlockAudioContext();
+                begin();
                 setViewMode("active");
               }}
-              onStartRustcontrole={() => setViewMode("rustcontrole")}
-              onStartNulmeting={() => setViewMode("nulmeting")}
+              onStartRustcontrole={() => {
+                unlockAudioContext();
+                setViewMode("rustcontrole");
+              }}
+              onStartNulmeting={() => {
+                unlockAudioContext();
+                setViewMode("nulmeting");
+              }}
             />
           ) : (
             <div className="panel py-10 text-center text-xs text-muted">...</div>

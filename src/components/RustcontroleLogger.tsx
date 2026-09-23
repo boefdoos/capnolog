@@ -1,17 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import KpaInput from "./KpaInput";
 import { useActiveSession } from "@/lib/useActiveSession";
 import { fmtTime } from "@/lib/format";
+import { fireLogCue } from "@/lib/pacer";
+import { restCueCount } from "@/lib/sessionPhase";
 import type { BaselineBand } from "@/lib/useAverages";
+import { REST_CUE_SEC, REST_MEASUREMENT_SEC } from "@/types/capnolog";
+
+const TARGET_VALUES = REST_CUE_SEC.length;
 
 /**
- * Rustcontrole: kort, niet-gestuurd meetmoment na afloop van het actieve
- * CART-protocol. Hetzelfde scherm dient voor de nulmeting vóór de start van
- * het protocol (P12), enkel het sessietype en de titel verschillen. Bewust geen Co2Chart, geen StatsRow, geen streefdoel,
- * geen FeelingSelector, geen zucht-oefening: alles wat tot sturen uitnodigt
- * hoort hier niet thuis (docs/plan_post_trial_rustcontroles.md).
+ * Rustmeting: kort, niet-gestuurd meetmoment. Dient voor de rustcontrole na
+ * het protocol en voor de nulmeting ervoor (P12), enkel sessietype en titel
+ * verschillen. Zelfde vorm als de stille rust aan het begin van een
+ * oefensessie: de klok start bij het openen, een geluidssignaal na 1 en na
+ * bijna 2 minuten vraagt telkens één waarde. Bewust geen grafiek, geen
+ * statistieken, geen streefdoel: alles wat tot sturen uitnodigt hoort hier
+ * niet thuis (docs/plan_post_trial_rustcontroles.md).
  */
 export default function RustcontroleLogger({
   uid,
@@ -24,17 +31,47 @@ export default function RustcontroleLogger({
   kind?: "rustcontrole" | "nulmeting";
   onDone: () => void;
 }) {
-  const { meta, logReading, markDisturbance, startNewSession } = useActiveSession(uid, band, kind);
+  const { entries, logReading, markDisturbance, startNewSession, startedAt, begin } = useActiveSession(
+    uid,
+    band,
+    kind
+  );
   const title = kind === "nulmeting" ? "Nulmeting" : "Rustcontrole";
+  const [refocusToken, setRefocusToken] = useState(0);
+
+  // De tik die dit scherm opende, is de start.
+  useEffect(() => {
+    begin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [, forceTick] = useState(0);
   useEffect(() => {
-    if (!meta) return;
     const id = setInterval(() => forceTick((n) => n + 1), 1000);
     return () => clearInterval(id);
-  }, [meta]);
+  }, []);
 
-  const durationSec = meta ? (Date.now() - meta.createdAt) / 1000 : 0;
+  const elapsedSec = startedAt != null ? (Date.now() - startedAt) / 1000 : 0;
+  const cuesFired = restCueCount(elapsedSec);
+  const valueCount = entries.filter((e) => e.type === "reading").length;
+  const done = valueCount >= TARGET_VALUES || (elapsedSec >= REST_MEASUREMENT_SEC && valueCount > 0);
+
+  const lastCueRef = useRef(0);
+  useEffect(() => {
+    if (cuesFired > lastCueRef.current) {
+      lastCueRef.current = cuesFired;
+      fireLogCue();
+      setRefocusToken((t) => t + 1);
+    }
+  }, [cuesFired]);
+
+  const status = done
+    ? "Klaar. Je kunt afronden."
+    : cuesFired > valueCount
+      ? `Lees de EMMA af en tik waarde ${valueCount + 1} in.`
+      : valueCount === 0
+        ? "Zit stil en adem gewoon. Bij het geluidssignaal lees je de EMMA af."
+        : "Blijf stil zitten tot het tweede signaal.";
 
   function finish() {
     startNewSession();
@@ -43,30 +80,42 @@ export default function RustcontroleLogger({
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
-      <header className="mb-4 border-b border-panel-border pb-3.5">
-        <h1 className="text-[19px] font-semibold tracking-wide">{title}</h1>
-        <p className="text-[12.5px] text-muted">
-          90 seconden tot 3 minuten stil zitten, geen ademdoel, gewoon meten
-        </p>
+      <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
+        <div>
+          <h1 className="text-[19px] font-semibold tracking-wide">{title}</h1>
+          <p className="text-[12.5px] text-muted">Twee waarden, na 1 en na 2 minuten. Geen ademdoel.</p>
+        </div>
+        <div className="font-mono text-lg text-muted">{fmtTime(elapsedSec)}</div>
       </header>
 
-      <div className="mb-3.5 text-center font-mono text-2xl text-trace">{fmtTime(durationSec)}</div>
-
       <div className="space-y-3.5">
-        <KpaInput onLog={logReading} />
+        <div className="panel">
+          <div className="text-[11px] uppercase tracking-wide text-muted">
+            Waarde {Math.min(valueCount + (done ? 0 : 1), TARGET_VALUES)} van {TARGET_VALUES}
+          </div>
+          <div className="mt-1 text-base text-text">{status}</div>
+        </div>
 
-        <button
-          onClick={() => markDisturbance()}
-          className="w-full rounded-lg border border-amber py-2.5 text-sm font-semibold text-amber active:scale-[0.99]"
-        >
-          Markeer verstoring
-        </button>
+        {!done && <KpaInput onLog={logReading} refocusToken={refocusToken} />}
+
+        {!done && (
+          <button
+            onClick={() => markDisturbance()}
+            className="w-full rounded-lg border border-panel-border py-2.5 text-sm font-semibold text-muted active:scale-[0.99]"
+          >
+            Markeer verstoring
+          </button>
+        )}
 
         <button
           onClick={finish}
-          className="w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
+          className={
+            done
+              ? "w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
+              : "w-full rounded-lg py-3 text-xs text-muted underline decoration-panel-border underline-offset-2"
+          }
         >
-          Beëindig {title.toLowerCase()}
+          {done ? "Afronden" : valueCount === 0 ? "Annuleren" : "Nu stoppen"}
         </button>
       </div>
     </div>

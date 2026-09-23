@@ -167,7 +167,8 @@ Sla de gebruikte bemonstering per sessie op, bijvoorbeeld `logEveryNthBreath`, z
 
 **Gebouwd.** De weektest op Thomas is gedaan, daarna zijn pacer en fasestructuur meteen mee gebouwd (`src/lib/pacer.ts`, `src/lib/sessionPhase.ts`, `src/lib/useSessionCues.ts`). Bemonstering volgens de tabel hierboven (`BREATH_SAMPLING`), opgeslagen als `logEveryNthBreath`. Afwijkingen van het ontwerp:
 
-- Stille rust heeft **twee meetpunten** in plaats van drie tot vier: de eerste log start de sessie (t=0), één zachte cue op 110 s vraagt het tweede, net voor het einde van de rust (`REST_LOG_INTERVAL_SEC`).
+- Stille rust heeft **twee meetpunten** in plaats van drie tot vier, op 60 en 110 s na de tik op Start (`REST_CUE_SEC`). Sinds 23/09 start de klok bij die tik en niet meer bij de eerste log, en hebben nulmeting en rustcontrole exact dezelfde vorm (twee waarden, 2 minuten), zodat de drie ongestuurde reeksen vergelijkbaar zijn.
+- Het logsignaal is altijd hoorbaar, trilling komt er enkel bij waar een trilmotor bestaat. Op iPhone bestaat geen Vibration API, dus daar is de toon het enige signaal (Thomas, 23/09).
 - Tijdens stille rust zijn het streefdoel, de live grafiek, `StatsRow` en `BandInfo` verborgen, zodat de baseline-proxy niet gestuurd wordt.
 - De pacertoon valt samen met het logmoment in plaats van een tik per ademhaling, dat voelde over tien minuten te opdringerig aan.
 - Het streefdoel staat groot in de fasekaart (`PhaseBadge`), de aparte `CartWeekBadge` is weg.

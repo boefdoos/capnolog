@@ -4,9 +4,10 @@
  * Pacertoon en logcue vallen samen op het logritme (docs/codeinstructies.md
  * P1b/P7): geen apart metronoomtikje per ademhaling meer, dat voelde over
  * tien minuten te opdringerig aan (feedback Thomas, 18 september 2026).
- * Trilling is het logsignaal waar een trilmotor bestaat; Safari/iOS kent de
- * Vibration API nooit, dus daar valt dit terug op een hoorbare tik, met een
- * ander klankbeeld dan de pacertoon zodat de twee niet door elkaar lopen.
+ * Het logsignaal is altijd hoorbaar, met een ander klankbeeld dan de
+ * pacertoon zodat de twee niet door elkaar lopen. Trilling komt er enkel bij
+ * waar een trilmotor bestaat: Safari/iOS kent de Vibration API niet, en op
+ * iPhone is de toon dus het enige signaal (feedback Thomas, 23/09).
  * Alles hier faalt stil bij ontbrekende of geblokkeerde browser-API's (geen
  * user-gesture, geen trilmotor), dit is een comfortsignaal, geen kritiek pad.
  */
@@ -79,7 +80,7 @@ export function playPacerTone() {
   }
 }
 
-/** Korte, hogere tik: audio-fallback voor het logsignaal waar trilling niet bestaat. */
+/** Korte, hogere tik: het hoorbare logsignaal. */
 function playLogTick() {
   try {
     tone(660, 0, 0.12, 0.08);
@@ -88,7 +89,7 @@ function playLogTick() {
   }
 }
 
-/** Twee korte, stijgende tonen: audio-fallback voor de faseovergang. */
+/** Twee korte, stijgende tonen: het hoorbare signaal voor de faseovergang. */
 function playPhaseChangeTone() {
   try {
     tone(440, 0, 0.2, 0.12);
@@ -111,14 +112,14 @@ export function triggerVibration(pattern: number | number[]) {
   }
 }
 
-/** Logmoment buiten de gepacede fase (rust/transfer): trilling, of de hoorbare tik als fallback. */
+/** Logmoment buiten de gepacede fase (rust/transfer): hoorbare tik, plus trilling waar mogelijk. */
 export function fireLogCue() {
-  if (supportsVibration()) triggerVibration(60);
-  else playLogTick();
+  playLogTick();
+  triggerVibration(60);
 }
 
 /** Faseovergang: idem, met een ander klankbeeld dan de logtik en de pacer. */
 export function firePhaseChangeCue() {
-  if (supportsVibration()) triggerVibration([40, 80, 40]);
-  else playPhaseChangeTone();
+  playPhaseChangeTone();
+  triggerVibration([40, 80, 40]);
 }

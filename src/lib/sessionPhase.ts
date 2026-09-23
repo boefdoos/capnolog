@@ -1,9 +1,9 @@
 import {
   BREATH_SAMPLING,
+  REST_CUE_SEC,
   CART_PACED_SEC,
   CART_REST_SEC,
   CART_TRANSFER_SEC,
-  REST_LOG_INTERVAL_SEC,
   type BreathSampling,
   type SessionPhase,
 } from "@/types/capnolog";
@@ -42,12 +42,17 @@ export function breathSamplingForTarget(targetRR: number | null): BreathSampling
 }
 
 /**
- * Logcue-interval per fase. Rust gebruikt de vaste, zachte tijdscue (geen
- * ademcyclus om op te tellen zonder pacer). Gepaced en transfer gebruiken
- * hetzelfde ademcyclus-interval: transfer heeft geen audiopacer meer, maar
- * het logritme uit de gepacede fase blijft de vergelijkingsbasis.
+ * Logcue-interval voor gepaced en transfer: hetzelfde ademcyclus-interval,
+ * transfer heeft geen audiopacer meer maar het logritme uit de gepacede fase
+ * blijft de vergelijkingsbasis. De rustfase gebruikt vaste cuemomenten
+ * (REST_CUE_SEC, zie `restCueCount`).
  */
 export function logIntervalForPhase(phase: SessionPhase, sampling: BreathSampling | null): number | null {
-  if (phase === "rest") return REST_LOG_INTERVAL_SEC;
+  if (phase === "rest") return null;
   return sampling?.intervalSec ?? null;
+}
+
+/** Aantal rustcues dat na `elapsedSec` al gevallen is (0, 1 of 2). */
+export function restCueCount(elapsedSec: number): number {
+  return REST_CUE_SEC.filter((t) => elapsedSec >= t).length;
 }
