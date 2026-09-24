@@ -25,7 +25,7 @@ export default function EntryTable({
           {/* Bij bemonsterd loggen is deze kolom geen RR-meting maar een
               nalevingscontrole op het pacer-tempo (P10), vandaar het andere
               label. */}
-          {["#", "Tijd", "kPa", "mmHg", "\u0394", sampleN > 1 ? "Tempo" : "RR", ""].map((h) => (
+          {["#", "Tijd", "kPa", "mmHg", "\u0394", sampleN > 1 ? "Ritme" : "Adem/min", ""].map((h) => (
             <th
               key={h}
               className="border-b border-panel-border px-2 py-1.5 text-left text-[11px] uppercase tracking-wide text-muted"
@@ -79,7 +79,7 @@ export default function EntryTable({
             return (
               <tr key={e.id} className="bg-[#8B93F0]/5">
                 <td colSpan={6} className="border-b border-[#1A2320] px-2 py-1.5 text-[#8B93F0]">
-                  RR van EMMA-scherm: {e.rrValue ?? "\u2014"}/min &middot; t+{fmtTime(e.tSec)}
+                  Ademhalingen per minuut (EMMA): {e.rrValue ?? "\u2014"} &middot; t+{fmtTime(e.tSec)}
                 </td>
                 {onDelete && (
                   <td className="border-b border-[#1A2320] px-2 py-1.5">

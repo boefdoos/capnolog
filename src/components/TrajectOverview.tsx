@@ -86,7 +86,7 @@ export default function TrajectOverview({
   return (
     <div className="space-y-3.5">
       <div className="panel">
-        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Nulmeting</h2>
+        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Startweek</h2>
         {nulmetingBaseline ? (
           <Row
             label={`${nulmetingBaseline.meanKpa.toFixed(2)} ± ${nulmetingBaseline.sdKpa.toFixed(2)} kPa`}
@@ -99,12 +99,12 @@ export default function TrajectOverview({
             current
           />
         ) : (
-          <Row label="Geen nulmeting" value="protocol gestart zonder nulmeting" />
+          <Row label="Geen startweek" value="CO2-training gestart zonder startweek" />
         )}
       </div>
 
       <div className="panel">
-        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">CART-protocol</h2>
+        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">CO2-training</h2>
         {startDate == null ? (
           <Row label="Nog niet gestart" value="" />
         ) : (
@@ -121,15 +121,15 @@ export default function TrajectOverview({
                 />
               );
             })}
-            <Row label="Einde protocol" value={fmtDate(protocolEndDate(startDate), true)} />
+            <Row label="Einde CO2-training" value={fmtDate(protocolEndDate(startDate), true)} />
           </>
         )}
       </div>
 
       <div className="panel">
-        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Rustcontroles</h2>
+        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Opvolging · rustmetingen</h2>
         {rustcontrole.moments.length === 0 ? (
-          <Row label="Volgen na het protocol" value="" />
+          <Row label="Volgen na de CO2-training" value="" />
         ) : (
           rustcontrole.moments.map((m, i) => {
             const isNext = m.date === rustcontrole.nextDate;

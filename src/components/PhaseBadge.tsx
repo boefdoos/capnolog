@@ -5,9 +5,9 @@ import type { CartWeekTarget } from "@/lib/useCartProtocol";
 import type { SessionCuesState } from "@/lib/useSessionCues";
 
 const PHASE_LABELS: Record<NonNullable<SessionCuesState["phase"]>, string> = {
-  rest: "Stille rust",
-  paced: "Gepaced ademen",
-  transfer: "Transfer",
+  rest: "Tot rust komen",
+  paced: "Ademen op het ritme",
+  transfer: "Zelf verder ademen",
 };
 
 /**
@@ -30,7 +30,7 @@ export default function PhaseBadge({
     cues.phase === "rest"
       ? "twee waarden, na 1 en na 2 minuten, bij het geluidssignaal"
       : !cues.sampling
-        ? "geen doelfrequentie ingesteld, activeer het CART-protocol voor pacer en logcue"
+        ? "geen ritme ingesteld, start de CO2-training onder Traject"
         : cues.phase === "paced"
           ? `pacertoon elke ${cues.sampling.n}de adem (~${cues.sampling.intervalSec}s), dan loggen`
           : `geen pacer · geluidssignaal elke ${cues.sampling.n}de adem (~${cues.sampling.intervalSec}s)`;
@@ -43,12 +43,12 @@ export default function PhaseBadge({
       </div>
 
       {cues.phase === "rest" ? (
-        <div className="mt-1.5 text-sm text-text">Geen streefdoel, adem zoals het vanzelf gaat</div>
+        <div className="mt-1.5 text-sm text-text">Geen ritme, adem zoals het vanzelf gaat</div>
       ) : (
         target && (
           <div className="mt-1.5 flex items-baseline gap-2">
             <span className="font-mono text-3xl text-trace">{target.targetRR}</span>
-            <span className="text-sm text-muted">/min &middot; streefdoel week {target.week}</span>
+            <span className="text-sm text-muted">ademhalingen per minuut &middot; week {target.week}</span>
           </div>
         )
       )}

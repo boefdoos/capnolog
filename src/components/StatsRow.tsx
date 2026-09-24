@@ -44,12 +44,12 @@ export default function StatsRow({
   // label. De echte, van het EMMA-scherm afgelezen RR staat apart hieronder.
   const avgRR = computeAvgRR(readings, sampleN);
   if (avgRR != null) {
-    chips.push([sampleN > 1 ? "Tempo (afgeleid)" : "RR gem.", `${avgRR.toFixed(0)}/min`]);
+    chips.push([sampleN > 1 ? "Ritme (afgeleid)" : "Adem/min", `${avgRR.toFixed(0)}/min`]);
   }
 
   const avgMeasuredRR = computeAvgMeasuredRR(rrMeasurements);
   if (avgMeasuredRR != null) {
-    chips.push(["RR gemeten", `${avgMeasuredRR.toFixed(0)}/min`]);
+    chips.push(["Adem/min (EMMA)", `${avgMeasuredRR.toFixed(0)}`]);
   }
 
   if (sighs.length) {
@@ -61,7 +61,7 @@ export default function StatsRow({
     <div className="panel space-y-3">
       {avg != null && (
         <div className="rounded-lg border border-trace/40 bg-[#0D1210] px-4 py-3.5 text-center">
-          <div className="text-[11px] uppercase tracking-wide text-muted">Gemiddelde ETCO2</div>
+          <div className="text-[11px] uppercase tracking-wide text-muted">Gemiddelde CO2-waarde</div>
           <div className="mt-1 flex items-baseline justify-center gap-2">
             <span className="font-mono text-4xl text-trace" style={{ textShadow: "0 0 16px rgba(94,234,160,0.3)" }}>
               {avg.toFixed(1)}

@@ -48,7 +48,7 @@ function TrajectInner({ uid }: { uid: string }) {
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-4 border-b border-panel-border pb-3.5">
         <h1 className="text-[19px] font-semibold tracking-wide">Traject</h1>
-        <p className="text-[12.5px] text-muted">Nulmeting, protocol en rustcontroles</p>
+        <p className="text-[12.5px] text-muted">Startweek, CO2-training en opvolging</p>
       </header>
 
       {!ready ? (
@@ -64,7 +64,7 @@ function TrajectInner({ uid }: { uid: string }) {
           />
 
           <div className="panel">
-            <h2 className="mb-2 text-xs uppercase tracking-wide text-muted">Losse meting</h2>
+            <h2 className="mb-2 text-xs uppercase tracking-wide text-muted">Losse rustmeting</h2>
             <p className="mb-3 text-xs text-muted">Buiten de geplande momenten, bijvoorbeeld tijdens een afspraak.</p>
             <div className="flex gap-2.5">
               <button
@@ -74,7 +74,7 @@ function TrajectInner({ uid }: { uid: string }) {
                 }}
                 className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-text active:scale-[0.99]"
               >
-                Rustcontrole
+                Opvolging
               </button>
               <button
                 onClick={() => {
@@ -83,33 +83,33 @@ function TrajectInner({ uid }: { uid: string }) {
                 }}
                 className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-text active:scale-[0.99]"
               >
-                Nulmeting
+                Startweek
               </button>
             </div>
           </div>
 
           <div className="panel">
-            <h2 className="mb-2 text-xs uppercase tracking-wide text-muted">Protocol</h2>
+            <h2 className="mb-2 text-xs uppercase tracking-wide text-muted">CO2-training</h2>
             {!confirming ? (
               <button
                 onClick={() => setConfirming(true)}
                 className="w-full rounded-lg border border-panel-border py-3 text-sm font-semibold text-text active:scale-[0.99]"
               >
-                {startDate == null ? "Protocol starten" : "Protocol herstarten"}
+                {startDate == null ? "CO2-training starten" : "CO2-training herstarten"}
               </button>
             ) : (
               <div className="space-y-2.5 text-sm text-text">
                 <p>
-                  Week 1 begint vandaag, met streefdoel 13/min. Het protocol loopt tot{" "}
+                  Week 1 begint vandaag, op een ritme van 13 ademhalingen per minuut. De CO2-training loopt tot{" "}
                   {formatRustcontroleDate(newEnd)}.
                 </p>
                 <p className="text-muted">
-                  De rustcontroles schuiven mee: de eerste valt dan op{" "}
+                  De rustmetingen van de opvolging schuiven mee: de eerste valt dan op{" "}
                   {formatRustcontroleDate(newEnd + 7 * DAY_MS)}.
                   {phase.kind !== "nulmeting" && " De huidige planning vervalt."}
                   {!nulmetingBaseline &&
                     nulmetingSummary &&
-                    ` De nulmeting (${nulmetingSummary.sessionCount} metingen) wordt vastgelegd.`}
+                    ` De startweek (${nulmetingSummary.sessionCount} rustmetingen) wordt vastgelegd.`}
                 </p>
                 <div className="flex gap-2.5 pt-1">
                   <button
@@ -123,7 +123,7 @@ function TrajectInner({ uid }: { uid: string }) {
                     disabled={busy}
                     className="flex-1 rounded-lg bg-trace py-3 text-sm font-semibold text-[#06120B] active:scale-[0.99] disabled:opacity-50"
                   >
-                    {startDate == null ? "Start protocol" : "Herstart protocol"}
+                    {startDate == null ? "Start CO2-training" : "Herstart CO2-training"}
                   </button>
                 </div>
               </div>

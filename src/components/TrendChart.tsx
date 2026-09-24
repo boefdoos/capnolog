@@ -64,8 +64,8 @@ export default function TrendChart({
               },
               label: (item) => {
                 const value = `${(item.parsed.y as number).toFixed(1)} kPa`;
-                if (item.dataset.label === "Rustcontrole") return `Rustcontrole · ${value}`;
-                if (item.dataset.label === "Nulmeting") return `Nulmeting · ${value}`;
+                if (item.dataset.label === "Rustmeting opvolging") return `Rustmeting opvolging · ${value}`;
+                if (item.dataset.label === "Startweek") return `Startweek · ${value}`;
                 if (item.dataset.label === "Gezond bereik") return `Gezond bereik · ${value}`;
                 return value;
               },
@@ -139,7 +139,7 @@ export default function TrendChart({
       order: 2,
     };
     const trace: ChartDataset<"line"> = {
-      label: "CART",
+      label: "Oefening",
       data: trend.cart.map((p) => ({ x: p.date, y: p.avgKpa })),
       borderColor: "#5EEAA0",
       backgroundColor: "rgba(94,234,160,0.15)",
@@ -154,7 +154,7 @@ export default function TrendChart({
     // Losse punten, geen lijn: enkele sporadische momenten over maanden
     // verbinden zou een continu verloop suggereren dat er niet is.
     const rustTrace: ChartDataset<"line"> = {
-      label: "Rustcontrole",
+      label: "Rustmeting opvolging",
       data: trend.rustcontrole.map((p) => ({ x: p.date, y: p.avgKpa })),
       showLine: false,
       borderColor: "transparent",
@@ -195,7 +195,7 @@ export default function TrendChart({
     };
 
     const nulTrace: ChartDataset<"line"> = {
-      label: "Nulmeting",
+      label: "Startweek",
       data: trend.nulmeting.map((p) => ({ x: p.date, y: p.avgKpa })),
       showLine: false,
       borderColor: "transparent",
@@ -208,7 +208,7 @@ export default function TrendChart({
       nulmetingMeanKpa == null
         ? null
         : {
-            label: "Nulmeting",
+            label: "Startweek",
             data: [
               { x: minX, y: nulmetingMeanKpa },
               { x: maxX, y: nulmetingMeanKpa },
@@ -239,11 +239,11 @@ export default function TrendChart({
       </div>
       <Legend
         items={[
-          trend.cart.length > 0 && { color: "#5EEAA0", label: "Oefensessie" },
-          trend.rustcontrole.length > 0 && { color: "#F2B84B", label: "Rustcontrole" },
-          (trend.nulmeting.length > 0 || nulmetingMeanKpa != null) && { color: "#8B93F0", label: "Nulmeting" },
+          trend.cart.length > 0 && { color: "#5EEAA0", label: "Oefening" },
+          trend.rustcontrole.length > 0 && { color: "#F2B84B", label: "Rustmeting opvolging" },
+          (trend.nulmeting.length > 0 || nulmetingMeanKpa != null) && { color: "#8B93F0", label: "Startweek" },
           { color: "#4FD1C5", label: "Gezond bereik", zone: true },
-          { color: "#5EEAA0", label: "Jouw band", zone: true },
+          { color: "#5EEAA0", label: "Je persoonlijk bereik", zone: true },
         ]}
       />
     </div>

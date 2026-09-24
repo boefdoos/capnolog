@@ -56,9 +56,9 @@ export const FEELING_COLORS: Record<SessionFeeling, string> = {
 export type SessionType = "cart" | "rustcontrole" | "nulmeting";
 
 export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
-  cart: "Oefensessie",
-  rustcontrole: "Rustcontrole",
-  nulmeting: "Nulmeting",
+  cart: "Oefening",
+  rustcontrole: "Rustmeting opvolging",
+  nulmeting: "Rustmeting startweek",
 };
 
 export interface SessionMeta {

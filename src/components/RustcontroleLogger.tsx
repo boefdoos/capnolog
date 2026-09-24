@@ -37,7 +37,7 @@ export default function RustcontroleLogger({
     band,
     kind
   );
-  const title = kind === "nulmeting" ? "Nulmeting" : "Rustcontrole";
+  const title = "Rustmeting";
   const [refocusToken, setRefocusToken] = useState(0);
 
   // De tik die dit scherm opende, is de start.
@@ -90,7 +90,9 @@ export default function RustcontroleLogger({
       <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">{title}</h1>
-          <p className="text-[12.5px] text-muted">Twee waarden, na 1 en na 2 minuten. Geen ademdoel.</p>
+          <p className="text-[12.5px] text-muted">
+            {kind === "nulmeting" ? "Startweek" : "Opvolging"} &middot; twee waarden, na 1 en na 2 minuten
+          </p>
         </div>
         <div className="font-mono text-lg text-muted">{fmtTime(elapsedSec)}</div>
       </header>

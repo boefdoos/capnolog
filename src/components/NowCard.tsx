@@ -36,19 +36,19 @@ export default function NowCard({
     const complete = nulmetingCount >= NULMETING_TARGET_SESSIONS;
     return (
       <div className="panel">
-        <div className="text-xs uppercase tracking-wide text-muted">Nulmeting</div>
+        <div className="text-xs uppercase tracking-wide text-muted">Startweek</div>
         <div className="mt-1 text-lg text-text">
           {nulmetingCount} van {NULMETING_TARGET_SESSIONS} rustmetingen
         </div>
         <div className="mt-0.5 text-xs text-muted">
           {complete
-            ? "Nulmeting klaar, het protocol kan starten"
-            : "Drie rustmetingen per dag, zonder oefenen. Elke rustmeting duurt 2 minuten en vraagt twee waarden."}
+            ? "Startweek klaar, de CO2-training kan beginnen"
+            : "Drie rustmetingen per dag, zonder te oefenen. Elke rustmeting duurt 2 minuten en vraagt twee waarden."}
         </div>
         {complete ? (
           <>
             <Link href="/traject" prefetch={false} className={primaryClass + " block text-center"}>
-              Protocol starten
+              CO2-training starten
             </Link>
             <button onClick={onStartNulmeting} className={secondaryClass}>
               Nog een rustmeting
@@ -66,16 +66,16 @@ export default function NowCard({
   if (phase.kind === "cart") {
     return (
       <div className="panel">
-        <div className="text-xs uppercase tracking-wide text-muted">CART-protocol &middot; week {phase.week} van 4</div>
+        <div className="text-xs uppercase tracking-wide text-muted">CO2-training &middot; week {phase.week} van 4</div>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="font-mono text-3xl text-trace">{phase.targetRR}</span>
-          <span className="text-sm text-muted">/min streefdoel</span>
+          <span className="text-sm text-muted">ademhalingen per minuut</span>
         </div>
         <div className="mt-0.5 text-xs text-muted">
-          Vandaag {Math.min(sessionsToday, CART_TARGET_SESSIONS_PER_DAY)} van {CART_TARGET_SESSIONS_PER_DAY} oefensessies
+          Vandaag {Math.min(sessionsToday, CART_TARGET_SESSIONS_PER_DAY)} van {CART_TARGET_SESSIONS_PER_DAY} oefeningen
         </div>
         <button onClick={onStartCart} className={primaryClass}>
-          Start oefensessie
+          Start oefening
         </button>
       </div>
     );
@@ -83,24 +83,24 @@ export default function NowCard({
 
   return (
     <div className="panel">
-      <div className="text-xs uppercase tracking-wide text-muted">Na het protocol</div>
+      <div className="text-xs uppercase tracking-wide text-muted">Opvolging</div>
       {rustcontrole.availableNow ? (
         <>
-          <div className="mt-1 text-lg text-text">Rustcontrole beschikbaar</div>
+          <div className="mt-1 text-lg text-text">Rustmeting beschikbaar</div>
           <div className="mt-0.5 text-xs text-muted">Stil zitten, geen ademdoel, gewoon meten</div>
           <button onClick={onStartRustcontrole} className={primaryClass}>
-            Rustcontrole
+            Rustmeting
           </button>
         </>
       ) : (
         <div className="mt-1 text-lg text-text">
           {rustcontrole.nextDate != null
-            ? `Volgende rustcontrole: ${formatRustcontroleDate(rustcontrole.nextDate)}`
-            : "Alle rustcontroles gedaan"}
+            ? `Volgende rustmeting: ${formatRustcontroleDate(rustcontrole.nextDate)}`
+            : "Alle rustmetingen gedaan"}
         </div>
       )}
       <button onClick={onStartCart} className={secondaryClass}>
-        Oefensessie
+        Oefening
       </button>
     </div>
   );

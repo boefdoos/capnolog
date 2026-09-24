@@ -42,7 +42,7 @@ export default function RRInput({
   return (
     <div className="panel">
       <label htmlFor="rrInput" className="mb-2 block text-xs uppercase tracking-wide text-muted">
-        Ademfrequentie van EMMA-scherm (/min)
+        Ademhalingen per minuut (van de EMMA)
       </label>
       <div className="flex gap-2">
         <input

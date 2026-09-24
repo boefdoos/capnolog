@@ -170,3 +170,23 @@ Beslissing van Thomas. Zucht (en het percentage "zucht gelukt", vroeger BSR) hoo
 
 Daarbij: een rustcontrole telt enkel als gedaan met minstens één waarde. Een testsessie met enkel een verstoring markeerde de momenten van 31/08 en 24/09 als gedaan.
 
+## 11. Eigen terminologie (24/09)
+
+Vakwoorden vervangen door gewone woorden op het scherm, beslist met Thomas. "Ademtraining" bewust vermeden: dat legt de nadruk op het sturen van de ademhaling, wat bij CHV net het probleem is.
+
+| Was | Wordt |
+|---|---|
+| CART-protocol | CO2-training (4 weken) |
+| Nulmeting | Startweek |
+| Na het protocol | Opvolging |
+| Rustcontrole, nulmeting (de meting) | Rustmeting (met "startweek" of "opvolging" erbij waar het onderscheid telt) |
+| Oefensessie, sessie | Oefening |
+| Stille rust / Gepaced ademen / Transfer | Tot rust komen / Ademen op het ritme / Zelf verder ademen |
+| streefdoel 13/min | ritme van 13 ademhalingen per minuut |
+| Referentieband, Jouw band | Je persoonlijk bereik |
+| ETCO2 | CO2-waarde (ETCO2) |
+| RR, ademfrequentie | ademhalingen per minuut |
+| Doelfrequentie gehaald, CO2-respons uitgebleven | Je ademde trager, maar je CO2-waarde steeg niet mee |
+
+In de code blijven `cart`, `rustcontrole` en `nulmeting` staan, want die liggen zo in de opgeslagen data. In de werkdocumenten blijft CART de naam van de methode.
+

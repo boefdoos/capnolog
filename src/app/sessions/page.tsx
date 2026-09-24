@@ -86,13 +86,13 @@ function SessionsListInner({ uid }: { uid: string }) {
       <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
           <h1 className="text-[19px] font-semibold tracking-wide">Geschiedenis</h1>
-          <p className="text-[12.5px] text-muted">Alle sessies en metingen</p>
+          <p className="text-[12.5px] text-muted">Alle oefeningen en rustmetingen</p>
         </div>
       </header>
 
       {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
       {!loading && !sessions.length && (
-        <div className="py-6 text-center text-xs text-muted">Nog geen sessies gelogd.</div>
+        <div className="py-6 text-center text-xs text-muted">Nog niets gelogd.</div>
       )}
 
       {!loading && presentTypes.length > 1 && (

@@ -98,14 +98,14 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
               title: (items) => {
                 if (!items.length) return "";
                 const raw = items[0].raw as Entry | undefined;
-                if (raw?.type === "rr") return "Ademfrequentie";
+                if (raw?.type === "rr") return "Ademhalingen per minuut";
                 return raw && raw.idx ? "Ademhaling " + raw.idx : "";
               },
               label: (item) => {
                 const raw = item.raw as Entry | undefined;
                 if (!raw) return "";
                 if (raw.type === "rr") {
-                  return ["RR gemeten: " + (raw.rrValue ?? "\u2014") + "/min", "t+" + fmtTime(raw.tSec)];
+                  return ["Ademhalingen per minuut (EMMA): " + (raw.rrValue ?? "\u2014"), "t+" + fmtTime(raw.tSec)];
                 }
                 if (raw.idx == null || raw.kpa == null || raw.mmHg == null) return "";
                 const lines = [
@@ -116,7 +116,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
                   lines.push((raw.delta > 0 ? "+" : "") + raw.delta.toFixed(1) + " kPa t.o.v. vorige");
                 }
                 if (typeof raw.rr === "number") {
-                  const label = sampleNRef.current > 1 ? "Tempo (afgeleid) \u2248 " : "RR \u2248 ";
+                  const label = sampleNRef.current > 1 ? "Ritme (afgeleid) \u2248 " : "Ademhalingen \u2248 ";
                   lines.push(label + raw.rr.toFixed(0) + "/min");
                 }
                 return lines;
@@ -138,7 +138,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
           },
           y1: {
             position: "right",
-            title: { display: true, text: "ademfrequentie (/min)", color: "#8B93F0", font: { size: 11 } },
+            title: { display: true, text: "ademhalingen per minuut", color: "#8B93F0", font: { size: 11 } },
             ticks: { color: "#8B93F0" },
             grid: { display: false },
           },
@@ -188,7 +188,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
       order: 2,
     };
     const trace: ChartDataset<"line"> = {
-      label: "ETCO2",
+      label: "CO2-waarde",
       data: readings.map((r) => ({ x: r.tSec, y: r.kpa as number, ...r })) as unknown as {
         x: number;
         y: number;
@@ -207,7 +207,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
     // loggen, dus altijd als gestippelde lijn getoond, nooit als "RR".
     const rrReadings = readings.filter((r) => typeof r.rr === "number");
     const rrTrace: ChartDataset<"line"> = {
-      label: sampleN > 1 ? "Tempo (afgeleid)" : "RR",
+      label: sampleN > 1 ? "Ritme (afgeleid)" : "Ademhalingen per minuut",
       yAxisID: "y1",
       data: rrReadings.map((r) => ({ x: r.tSec, y: r.rr as number, ...r })) as unknown as {
         x: number;
@@ -229,7 +229,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
     // datareeks met effectieve waarde, niet enkel de gebeurtenismarkering.
     const rrMeasurements = entries.filter((e) => e.type === "rr" && typeof e.rrValue === "number");
     const measuredRRTrace: ChartDataset<"line"> = {
-      label: "RR gemeten",
+      label: "Ademhalingen (EMMA)",
       yAxisID: "y1",
       data: rrMeasurements.map((r) => ({ x: r.tSec, y: r.rrValue as number, ...r })) as unknown as {
         x: number;
@@ -252,7 +252,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
     }
     const y1 = chart.options.scales?.y1 as { title?: { text?: string } } | undefined;
     if (y1?.title) {
-      y1.title.text = "ademfrequentie (/min)";
+      y1.title.text = "ademhalingen per minuut";
     }
     chart.update();
   }, [entries, bandLow, bandHigh, sampleN]);

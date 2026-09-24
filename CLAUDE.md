@@ -89,7 +89,7 @@ eigen `users/{uid}`-pad, er is verder geen schemavalidatie.
 
 ## Schrijfwijze
 
-Belgisch Nederlands in alle UI-tekst, commentaar en commits. Kinesitherapeut, NKO-arts,
+Belgisch Nederlands in alle UI-tekst, commentaar en commits. Op het scherm gewone woorden, geen vakjargon: "CO2-training" (niet CART-protocol, niet ademtraining), "startweek", "opvolging", "rustmeting", "oefening", "je persoonlijk bereik". Volledige lijst in `docs/ui_doorlichting.md` §11. Kinesitherapeut, NKO-arts,
 maag-darmklachten. Geen em-dash, gebruik een komma of een punt. Nederlandse
 codecommentaar mag, Engelse identifiers zijn de norm.
 

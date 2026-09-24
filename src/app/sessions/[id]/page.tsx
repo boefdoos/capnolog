@@ -20,7 +20,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
 
   async function handleDelete() {
     const ok = window.confirm(
-      "Deze sessie en alle metingen erin definitief verwijderen? Dit kan niet ongedaan gemaakt worden."
+      "Dit en alle waarden erin definitief verwijderen? Dit kan niet ongedaan gemaakt worden."
     );
     if (!ok) return;
     setDeleting(true);
@@ -56,7 +56,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
             disabled={deleting}
             className="text-xs text-danger hover:underline disabled:opacity-50"
           >
-            {deleting ? "bezig..." : "Verwijder sessie"}
+            {deleting ? "bezig..." : "Verwijderen"}
           </button>
         </div>
       </header>

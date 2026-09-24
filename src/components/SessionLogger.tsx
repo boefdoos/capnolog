@@ -85,7 +85,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
   const hasSession = Boolean(meta && entries.length > 0);
 
   // Bij het bereiken van het CART-doel automatisch naar het afrondingsscherm,
-  // maar hoogstens één keer per sessie: wie via "Terug naar sessie" verder
+  // maar hoogstens één keer per sessie: wie via "Terug naar oefening" verder
   // oefent, mag dat doen zonder meteen weer teruggeduwd te worden.
   const autoStoppedSessionIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
       <div className="mx-auto max-w-2xl p-4 pb-10">
         <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
           <div>
-            <h1 className="text-[19px] font-semibold tracking-wide">Sessie afronden</h1>
+            <h1 className="text-[19px] font-semibold tracking-wide">Oefening afronden</h1>
             <p className="text-[12.5px] text-muted">Laatste controle voor je afsluit</p>
           </div>
           {hasSession && (
@@ -216,13 +216,13 @@ export default function SessionLogger({ uid }: { uid: string }) {
               onClick={confirmEndSession}
               className="w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
             >
-              {hasSession ? "Bevestig en beëindig sessie" : "Sessie sluiten"}
+              {hasSession ? "Bevestig en beëindig oefening" : "Oefening sluiten"}
             </button>
             <button
               onClick={() => setViewMode("active")}
               className="w-full rounded-lg border border-panel-border py-3 text-sm font-semibold text-muted active:scale-[0.99]"
             >
-              Terug naar sessie
+              Terug naar oefening
             </button>
           </div>
         </div>
@@ -238,7 +238,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
-          <h1 className="text-[19px] font-semibold tracking-wide">Oefensessie</h1>
+          <h1 className="text-[19px] font-semibold tracking-wide">Oefening</h1>
           <p className="text-[12.5px] text-muted">
             {cartTargetReached ? "17 minuten bereikt" : `${CART_TARGET_MINUTES} minuten`}
           </p>
@@ -268,7 +268,7 @@ export default function SessionLogger({ uid }: { uid: string }) {
               : "w-full py-3 text-xs text-muted underline decoration-panel-border underline-offset-2"
           }
         >
-          Sessie beëindigen
+          Oefening beëindigen
         </button>
       </div>
     </div>
