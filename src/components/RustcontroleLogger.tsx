@@ -6,6 +6,7 @@ import { useActiveSession } from "@/lib/useActiveSession";
 import { fmtTime } from "@/lib/format";
 import { fireLogCue } from "@/lib/pacer";
 import { restCueCount } from "@/lib/sessionPhase";
+import { useWakeLock } from "@/lib/useWakeLock";
 import type { BaselineBand } from "@/lib/useAverages";
 import { REST_CUE_SEC, REST_MEASUREMENT_SEC } from "@/types/capnolog";
 
@@ -55,6 +56,8 @@ export default function RustcontroleLogger({
   const cuesFired = restCueCount(elapsedSec);
   const valueCount = entries.filter((e) => e.type === "reading").length;
   const done = valueCount >= TARGET_VALUES || (elapsedSec >= REST_MEASUREMENT_SEC && valueCount > 0);
+  // Scherm aan tot de meting klaar is, anders vallen de signalen weg.
+  useWakeLock(!done);
 
   const lastCueRef = useRef(0);
   useEffect(() => {

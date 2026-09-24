@@ -31,8 +31,25 @@ function ensureAudioCtx(): AudioContext | null {
  */
 export function unlockAudioContext() {
   try {
+    // iOS: zonder dit volgt Web Audio de stille schakelaar en blijft alles
+    // stil (Safari 16.4+). "playback" laat de signalen ook klinken als de
+    // iPhone op stil staat, zoals een audiospeler.
+    const audioSession = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+    if (audioSession) audioSession.type = "playback";
+  } catch {
+    // Audio Session API niet beschikbaar.
+  }
+  try {
     const ctx = ensureAudioCtx();
-    if (ctx && ctx.state === "suspended") void ctx.resume();
+    if (!ctx) return;
+    if (ctx.state === "suspended") void ctx.resume();
+    // iOS geeft de context pas echt vrij als er binnen de tik zelf iets
+    // afgespeeld wordt: een buffer van één stil sample volstaat.
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
   } catch {
     // Web Audio niet beschikbaar, pacer valt stil weg.
   }

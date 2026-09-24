@@ -21,6 +21,7 @@ import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useRustcontrole } from "@/lib/useRustcontrole";
 import { computeTrajectPhase } from "@/lib/traject";
 import { useSessionCues } from "@/lib/useSessionCues";
+import { useWakeLock } from "@/lib/useWakeLock";
 import { unlockAudioContext } from "@/lib/pacer";
 import { breathSamplingForTarget } from "@/lib/sessionPhase";
 import { computeAvgKpa, computeAvgRR, fmtTime } from "@/lib/format";
@@ -64,6 +65,8 @@ export default function SessionLogger({ uid }: { uid: string }) {
   const [refocusToken, setRefocusToken] = useState(0);
   const [rrFocusToken, setRrFocusToken] = useState(0);
   const cues = useSessionCues(viewMode === "active", startedAt, cartTarget?.targetRR ?? null);
+  // Scherm aan tijdens de oefensessie, anders vallen de signalen weg.
+  useWakeLock(viewMode === "active");
 
   function bumpRefocus() {
     setRefocusToken((t) => t + 1);
