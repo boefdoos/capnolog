@@ -67,7 +67,11 @@ export interface RustcontroleStatus {
  */
 export function computeRustcontroleStatus(startDate: number | null, sessions: SessionMeta[]): RustcontroleStatus {
   if (startDate == null) return { moments: [], nextDate: null, availableNow: false };
-  const rustcontroleDates = sessions.filter((s) => s.sessionType === "rustcontrole").map((s) => s.createdAt);
+  // Enkel rustcontroles met minstens één waarde: een sessie met enkel een
+  // verstoring (per ongeluk aangetikt) is geen meting.
+  const rustcontroleDates = sessions
+    .filter((s) => s.sessionType === "rustcontrole" && s.readingCount > 0)
+    .map((s) => s.createdAt);
   const moments = computeRustcontroleSchedule(startDate).map((date) => ({
     date,
     done: rustcontroleDates.some((d) => d >= date - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS),

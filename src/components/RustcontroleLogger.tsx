@@ -98,15 +98,6 @@ export default function RustcontroleLogger({
 
         {!done && <KpaInput onLog={logReading} refocusToken={refocusToken} />}
 
-        {!done && (
-          <button
-            onClick={() => markDisturbance()}
-            className="w-full rounded-lg border border-panel-border py-2.5 text-sm font-semibold text-muted active:scale-[0.99]"
-          >
-            Markeer verstoring
-          </button>
-        )}
-
         <button
           onClick={finish}
           className={
@@ -117,6 +108,17 @@ export default function RustcontroleLogger({
         >
           {done ? "Afronden" : valueCount === 0 ? "Annuleren" : "Nu stoppen"}
         </button>
+
+        {/* Verstoring klein en onderaan: vlak onder het invoerveld werd ze per
+            ongeluk aangetikt (24/09), wat een lege rustcontrole opleverde. */}
+        {!done && (
+          <button
+            onClick={() => markDisturbance()}
+            className="w-full py-2 text-xs text-muted underline decoration-panel-border underline-offset-2"
+          >
+            Er was een verstoring
+          </button>
+        )}
       </div>
     </div>
   );
