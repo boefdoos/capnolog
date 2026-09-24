@@ -55,7 +55,11 @@ export default function RustcontroleLogger({
   const elapsedSec = startedAt != null ? (Date.now() - startedAt) / 1000 : 0;
   const cuesFired = restCueCount(elapsedSec);
   const valueCount = entries.filter((e) => e.type === "reading").length;
-  const done = valueCount >= TARGET_VALUES || (elapsedSec >= REST_MEASUREMENT_SEC && valueCount > 0);
+  // Klaar pas bij twee waarden: het tweede signaal valt op 110 s, een vaste
+  // eindtijd liet te weinig tijd om die waarde nog in te tikken. Na de
+  // meettijd kan je wel zelf afronden met één waarde.
+  const done = valueCount >= TARGET_VALUES;
+  const canFinishEarly = !done && valueCount > 0 && elapsedSec >= REST_MEASUREMENT_SEC;
   // Scherm aan tot de meting klaar is, anders vallen de signalen weg.
   useWakeLock(!done);
 
@@ -109,7 +113,13 @@ export default function RustcontroleLogger({
               : "w-full rounded-lg py-3 text-xs text-muted underline decoration-panel-border underline-offset-2"
           }
         >
-          {done ? "Afronden" : valueCount === 0 ? "Annuleren" : "Nu stoppen"}
+          {done
+            ? "Afronden"
+            : valueCount === 0
+              ? "Annuleren"
+              : canFinishEarly
+                ? `Afronden met ${valueCount} waarde`
+                : "Nu stoppen"}
         </button>
       </div>
     </div>
