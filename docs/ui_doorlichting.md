@@ -2,7 +2,7 @@
 
 **Datum:** 23 september 2026
 **Basis:** alle schermen doorlopen in Chrome op telefoonbreedte (414 px), live versie, account van Thomas, naast de code
-**Status:** stap 1 (beginscherm per fase en Trajectscherm) en stap 2 (sessiescherm) gebouwd op 23 en 24/09, stap 3 open
+**Status:** stap 1 tot 3 gebouwd op 23 en 24/09. Nog open: B4 (één definitie van "sessie telt mee" voor gemiddelden) en B9 (contrast van kleine tekst)
 
 ---
 
@@ -151,4 +151,11 @@ Dit scherm is ook de plek voor de begeleider: per cliënt dezelfde tijdlijn.
 - Afrondscherm bundelt gevoel, grafiek, statistieken, compensatiemelding, band en log, plus export. Zonder gelogde waarden: "Er wordt niets opgeslagen", en het gevoel kan dan niet gekozen worden, zodat er geen lege sessie ontstaat (A1).
 - Statistiekenrij tekent haar eigen kader, dus geen leeg kader meer zonder data (S5).
 - As van de grafiek heet "ademfrequentie (/min)" (S6).
+
+## 8. Gebouwd in stap 3
+
+- Geschiedenis toont per rij het type (Oefensessie, Rustcontrole, Nulmeting), rust- en nulmetingen in amber. Filter per type bovenaan zodra er meer dan één type is (G1).
+- Hele rij is de link naar het detail, verwijderen enkel nog in het detail (G2).
+- Export in een eigen blok onderaan: periode (laatste 7 of 30 dagen) en twee knoppen, "Samenvatting per sessie" en "Alle meetwaarden" (G3). "metingen" heet per rij "waarden".
+- Sessiedetail, eigen en bij Begeleiding, vermeldt het type onder de datum.
 

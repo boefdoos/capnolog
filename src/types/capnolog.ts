@@ -55,6 +55,12 @@ export const FEELING_COLORS: Record<SessionFeeling, string> = {
 // protocol, zelfde meetscherm als een rustcontrole.
 export type SessionType = "cart" | "rustcontrole" | "nulmeting";
 
+export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
+  cart: "Oefensessie",
+  rustcontrole: "Rustcontrole",
+  nulmeting: "Nulmeting",
+};
+
 export interface SessionMeta {
   id: string;
   createdAt: number; // epoch ms

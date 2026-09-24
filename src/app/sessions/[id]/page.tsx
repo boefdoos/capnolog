@@ -9,6 +9,7 @@ import Co2Chart from "@/components/Co2Chart";
 import EntryTable from "@/components/EntryTable";
 import StatsRow from "@/components/StatsRow";
 import { useSessionDetail } from "@/lib/useSessionDetail";
+import { SESSION_TYPE_LABELS } from "@/types/capnolog";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { deleteSessionCompletely } from "@/lib/sessionActions";
 
@@ -42,6 +43,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
           <h1 className="mt-1 text-[19px] font-semibold tracking-wide">
             {meta ? new Date(meta.createdAt).toLocaleString("nl-BE") : "..."}
           </h1>
+          {meta && <p className="text-[12.5px] text-muted">{SESSION_TYPE_LABELS[meta.sessionType]}</p>}
         </div>
         <div className="flex items-center gap-3">
           {entries.length > 0 && (

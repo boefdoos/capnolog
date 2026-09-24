@@ -9,6 +9,7 @@ import EntryTable from "@/components/EntryTable";
 import StatsRow from "@/components/StatsRow";
 import { useClientName } from "@/lib/useCoachClients";
 import { useSessionDetail } from "@/lib/useSessionDetail";
+import { SESSION_TYPE_LABELS } from "@/types/capnolog";
 import { exportSessionCsv } from "@/lib/exportCsv";
 
 /** Sessiedetail voor de begeleider (P13): zelfde weergave als de eigen
@@ -40,6 +41,7 @@ function ClientSessionInner({
           <h1 className="mt-1 text-[19px] font-semibold tracking-wide">
             {meta ? new Date(meta.createdAt).toLocaleString("nl-BE") : "..."}
           </h1>
+          {meta && <p className="text-[12.5px] text-muted">{SESSION_TYPE_LABELS[meta.sessionType]}</p>}
         </div>
         {entries.length > 0 && (
           <button

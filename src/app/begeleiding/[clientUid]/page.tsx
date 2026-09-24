@@ -11,13 +11,8 @@ import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useClientName } from "@/lib/useCoachClients";
 import { useSessionsList } from "@/lib/useSessionsList";
-import type { SessionType } from "@/types/capnolog";
+import { SESSION_TYPE_LABELS } from "@/types/capnolog";
 
-const TYPE_LABELS: Record<SessionType, string> = {
-  cart: "CART",
-  rustcontrole: "Rustcontrole",
-  nulmeting: "Nulmeting",
-};
 
 /**
  * Overzicht van één cliënt voor de begeleider (P13). Uitdrukkelijk
@@ -66,7 +61,7 @@ function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: str
                   <span className="text-muted">
                     {new Date(s.createdAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
                     {" · "}
-                    {TYPE_LABELS[s.sessionType]}
+                    {SESSION_TYPE_LABELS[s.sessionType]}
                   </span>
                 </span>
                 <span className="font-mono text-xs text-muted">
