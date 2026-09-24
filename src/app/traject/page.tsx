@@ -66,7 +66,7 @@ function TrajectInner({ uid }: { uid: string }) {
           />
 
           <div className="panel">
-            <h2 className="mb-2 text-[11px] uppercase tracking-wide text-muted">Losse meting</h2>
+            <h2 className="mb-2 text-xs uppercase tracking-wide text-muted">Losse meting</h2>
             <p className="mb-3 text-xs text-muted">Buiten de geplande momenten, bijvoorbeeld tijdens een afspraak.</p>
             <div className="flex gap-2.5">
               <button
@@ -91,7 +91,7 @@ function TrajectInner({ uid }: { uid: string }) {
           </div>
 
           <div className="panel">
-            <h2 className="mb-2 text-[11px] uppercase tracking-wide text-muted">Protocol</h2>
+            <h2 className="mb-2 text-xs uppercase tracking-wide text-muted">Protocol</h2>
             {!confirming ? (
               <button
                 onClick={() => setConfirming(true)}

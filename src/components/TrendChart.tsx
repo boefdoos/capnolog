@@ -71,14 +71,14 @@ export default function TrendChart({
           x: {
             type: "linear",
             ticks: {
-              color: "#7C8C86",
-              font: { size: 10 },
+              color: "#9AA8A2",
+              font: { size: 11 },
               callback: (v) => new Date(Number(v)).toLocaleDateString("nl-BE", { day: "numeric", month: "short" }),
             },
             grid: { display: false },
           },
           y: {
-            ticks: { color: "#7C8C86", font: { size: 10 } },
+            ticks: { color: "#9AA8A2", font: { size: 11 } },
             grid: { color: "rgba(255,255,255,0.04)" },
           },
         },
@@ -213,7 +213,7 @@ export default function TrendChart({
 
   return (
     <div className="panel">
-      <div className="mb-1 text-[11px] uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
+      <div className="mb-1 text-xs uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
       <div className="relative h-40 w-full">
         <canvas ref={canvasRef} />
         {trend.cart.length < 2 && trend.rustcontrole.length === 0 && trend.nulmeting.length === 0 && (
@@ -241,7 +241,7 @@ type LegendItem = { color: string; label: string; zone?: boolean } | false;
  * uit elkaar te houden (docs/ui_doorlichting.md B6). */
 function Legend({ items }: { items: LegendItem[] }) {
   return (
-    <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1 text-[11px] text-muted">
+    <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted">
       {items.filter((i): i is Exclude<LegendItem, false> => Boolean(i)).map((i) => (
         <span key={i.label} className="flex items-center gap-1.5">
           <span

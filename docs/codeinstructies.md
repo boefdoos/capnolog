@@ -271,7 +271,7 @@ De laatste vijf minuten zonder pacing zijn de transferfase. Therapeutisch is dat
 
 Twee keer één waarde intikken haalt dus het dagdoel. Voor persoonlijk gebruik is dat hooguit vervelend, voor een programma waarin adherentie een uitkomstmaat is, is het onbruikbaar. Voeg een minimumduur of een minimumaantal metingen toe voor een sessie meetelt. Na P1b is een minimumduur logischer dan een minimumaantal metingen.
 
-**Gebouwd.** Een CART-sessie telt mee voor het dagdoel vanaf 10 minuten tussen start en laatste log (`MIN_SESSION_SEC_FOR_DAILY_GOAL`, getoetst op `lastTSec`).
+**Gebouwd.** Een CART-sessie telt mee voor het dagdoel vanaf 10 minuten tussen start en laatste log (`MIN_CART_SESSION_SEC`, getoetst op `lastTSec`). Sinds 24/09 geldt dezelfde drempel ook voor gemiddelden, band, evolutie en compensatiedetectie (UI-doorlichting B4).
 
 ### P10. RR gemeten in plaats van afgeleid
 

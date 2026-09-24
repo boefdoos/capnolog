@@ -52,7 +52,7 @@ export default function KpaInput({
 
   return (
     <div className="panel">
-      <label htmlFor="kpaInput" className="mb-2 block text-[11px] uppercase tracking-wide text-muted">
+      <label htmlFor="kpaInput" className="mb-2 block text-xs uppercase tracking-wide text-muted">
         ETCO2 (kPa)
       </label>
       <div className="flex gap-2">

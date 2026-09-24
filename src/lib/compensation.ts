@@ -1,4 +1,5 @@
 import type { SessionMeta } from "@/types/capnolog";
+import { countsAsCartSession } from "./useAverages";
 
 const PRIOR_SESSIONS_WINDOW = 5;
 const MIN_PRIOR_SESSIONS = 3;
@@ -61,7 +62,7 @@ export function checkCompensation(
   if (current.avgRR == null || current.avgKpa == null) return empty;
 
   const baseline = priorCartSessions
-    .filter((s) => s.sessionType === "cart" && s.readingCount >= 2)
+    .filter((s) => countsAsCartSession(s) && s.readingCount >= 2)
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, PRIOR_SESSIONS_WINDOW);
   if (baseline.length < MIN_PRIOR_SESSIONS) return empty;

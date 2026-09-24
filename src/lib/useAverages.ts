@@ -10,13 +10,18 @@ import {
   DEFAULT_BAND_LOW,
   DEVICE_MIN_KPA,
   MIN_SESSIONS_FOR_BASELINE,
-  MIN_SESSION_SEC_FOR_DAILY_GOAL,
+  MIN_CART_SESSION_SEC,
   type NulmetingBaseline,
   type SessionMeta,
   type SessionType,
 } from "@/types/capnolog";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Eén definitie van "deze oefensessie telt mee" (B4), zie MIN_CART_SESSION_SEC. */
+export function countsAsCartSession(s: SessionMeta): boolean {
+  return s.sessionType === "cart" && s.readingCount > 0 && s.lastTSec >= MIN_CART_SESSION_SEC;
+}
 
 export interface WindowAverage {
   avgKpa: number | null;
@@ -40,9 +45,7 @@ export interface BaselineBand {
  * (docs/codeinstructies.md P2).
  */
 function computeWindow(sessions: SessionMeta[], sinceMs: number): WindowAverage {
-  const inWindow = sessions.filter(
-    (s) => s.sessionType === "cart" && s.createdAt >= sinceMs && s.readingCount > 0
-  );
+  const inWindow = sessions.filter((s) => countsAsCartSession(s) && s.createdAt >= sinceMs);
   const readingCount = inWindow.reduce((sum, s) => sum + s.readingCount, 0);
   const kpaSum = inWindow.reduce((sum, s) => sum + s.kpaSum, 0);
   if (!readingCount) {
@@ -97,7 +100,7 @@ function windowBand(cartSessions: SessionMeta[], endMs: number): RawBand | null 
  * de vaste terugvalband. Enkel CART-sessies (P2).
  */
 function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
-  const cart = allSessions.filter((s) => s.sessionType === "cart" && s.readingCount > 0);
+  const cart = allSessions.filter(countsAsCartSession);
   const raw = windowBand(cart, Date.now()) ?? bandFromSessions(cart);
   if (!raw) {
     const n = cart.reduce((sum, s) => sum + s.readingCount, 0);
@@ -130,7 +133,13 @@ export interface Trend {
 
 function trendPoints(sessions: SessionMeta[], type: SessionType, sinceMs: number): TrendPoint[] {
   return sessions
-    .filter((s) => s.sessionType === type && s.createdAt >= sinceMs && s.readingCount > 0)
+    .filter(
+      (s) =>
+        s.sessionType === type &&
+        s.createdAt >= sinceMs &&
+        s.readingCount > 0 &&
+        (type !== "cart" || countsAsCartSession(s))
+    )
     .map((s) => ({ date: s.createdAt, avgKpa: s.kpaSum / s.readingCount }))
     .sort((a, b) => a.date - b.date);
 }
@@ -149,19 +158,13 @@ function computeTrend(sessions: SessionMeta[]): Trend {
 }
 
 /** Aantal voltooide CART-sessies sinds lokale middernacht. Voltooid = minstens
- * MIN_SESSION_SEC_FOR_DAILY_GOAL tussen start en laatste log (P9). Het
+ * MIN_CART_SESSION_SEC tussen start en laatste log (P9). Het
  * CART-doel van 2x/dag gaat over oefensessies, een rustcontrole telt daar
  * niet in mee (P2). */
 function computeSessionsToday(sessions: SessionMeta[]): number {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
-  return sessions.filter(
-    (s) =>
-      s.sessionType === "cart" &&
-      s.createdAt >= startOfDay.getTime() &&
-      s.readingCount > 0 &&
-      s.lastTSec >= MIN_SESSION_SEC_FOR_DAILY_GOAL
-  ).length;
+  return sessions.filter((s) => countsAsCartSession(s) && s.createdAt >= startOfDay.getTime()).length;
 }
 
 /** Samenvatting van alle nulmetingen tot nu (P12). Bij de protocolstart wordt

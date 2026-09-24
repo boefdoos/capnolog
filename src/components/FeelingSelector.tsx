@@ -13,7 +13,7 @@ export default function FeelingSelector({
 }) {
   return (
     <div className="panel">
-      <label className="mb-2 block text-[11px] uppercase tracking-wide text-muted">Algemeen gevoel</label>
+      <label className="mb-2 block text-xs uppercase tracking-wide text-muted">Algemeen gevoel</label>
       <div className="flex flex-wrap gap-2">
         {OPTIONS.map((opt) => {
           const selected = value === opt;

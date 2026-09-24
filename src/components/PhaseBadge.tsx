@@ -53,7 +53,7 @@ export default function PhaseBadge({
         )
       )}
 
-      <div className="mt-1 text-[11px] text-muted">{cueDescription}</div>
+      <div className="mt-1 text-xs text-muted">{cueDescription}</div>
     </div>
   );
 }

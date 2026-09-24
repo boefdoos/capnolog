@@ -51,7 +51,7 @@ export default function TrajectOverview({
   return (
     <div className="space-y-3.5">
       <div className="panel">
-        <h2 className="mb-1 text-[11px] uppercase tracking-wide text-muted">Nulmeting</h2>
+        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Nulmeting</h2>
         {nulmetingBaseline ? (
           <Row
             label={`${nulmetingBaseline.meanKpa.toFixed(2)} ± ${nulmetingBaseline.sdKpa.toFixed(2)} kPa`}
@@ -69,7 +69,7 @@ export default function TrajectOverview({
       </div>
 
       <div className="panel">
-        <h2 className="mb-1 text-[11px] uppercase tracking-wide text-muted">CART-protocol</h2>
+        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">CART-protocol</h2>
         {startDate == null ? (
           <Row label="Nog niet gestart" value="" />
         ) : (
@@ -92,7 +92,7 @@ export default function TrajectOverview({
       </div>
 
       <div className="panel">
-        <h2 className="mb-1 text-[11px] uppercase tracking-wide text-muted">Rustcontroles</h2>
+        <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Rustcontroles</h2>
         {rustcontrole.moments.length === 0 ? (
           <Row label="Volgen na het protocol" value="" />
         ) : (

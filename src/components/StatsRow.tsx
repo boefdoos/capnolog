@@ -61,7 +61,7 @@ export default function StatsRow({
     <div className="panel space-y-3">
       {avg != null && (
         <div className="rounded-lg border border-trace/40 bg-[#0D1210] px-4 py-3.5 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-muted">Gemiddelde ETCO2</div>
+          <div className="text-[11px] uppercase tracking-wide text-muted">Gemiddelde ETCO2</div>
           <div className="mt-1 flex items-baseline justify-center gap-2">
             <span className="font-mono text-4xl text-trace" style={{ textShadow: "0 0 16px rgba(94,234,160,0.3)" }}>
               {avg.toFixed(1)}
@@ -70,7 +70,7 @@ export default function StatsRow({
           </div>
           <div className="mt-0.5 text-xs text-muted">{(avg * KPA_TO_MMHG).toFixed(0)} mmHg</div>
           {feeling && (
-            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-panel-border px-2.5 py-1 text-[11px] text-muted">
+            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-panel-border px-2.5 py-1 text-xs text-muted">
               <span
                 className="inline-block h-2 w-2 rounded-full"
                 style={{ backgroundColor: FEELING_COLORS[feeling] }}
@@ -83,7 +83,7 @@ export default function StatsRow({
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {chips.map(([k, v]) => (
           <div key={k} className="rounded-lg border border-panel-border bg-[#0D1210] px-2.5 py-2">
-            <div className="text-[10px] uppercase tracking-wide text-muted">{k}</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted">{k}</div>
             <div className="mt-0.5 font-mono text-base text-text">{v}</div>
           </div>
         ))}

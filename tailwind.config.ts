@@ -9,7 +9,7 @@ const config: Config = {
         panel: "#121815",
         "panel-border": "#223028",
         text: "#E7EEEA",
-        muted: "#7C8C86",
+        muted: "#9AA8A2", // B9: 7:1 contrast op panel, was #7C8C86 (5:1)
         trace: "#5EEAA0",
         amber: "#F2B84B",
         teal: "#4FD1C5",

@@ -36,7 +36,7 @@ export default function NowCard({
     const complete = nulmetingCount >= NULMETING_TARGET_SESSIONS;
     return (
       <div className="panel">
-        <div className="text-[11px] uppercase tracking-wide text-muted">Nulmeting</div>
+        <div className="text-xs uppercase tracking-wide text-muted">Nulmeting</div>
         <div className="mt-1 text-lg text-text">
           {nulmetingCount} van {NULMETING_TARGET_SESSIONS} rustmetingen
         </div>
@@ -66,7 +66,7 @@ export default function NowCard({
   if (phase.kind === "cart") {
     return (
       <div className="panel">
-        <div className="text-[11px] uppercase tracking-wide text-muted">CART-protocol &middot; week {phase.week} van 4</div>
+        <div className="text-xs uppercase tracking-wide text-muted">CART-protocol &middot; week {phase.week} van 4</div>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="font-mono text-3xl text-trace">{phase.targetRR}</span>
           <span className="text-sm text-muted">/min streefdoel</span>
@@ -83,7 +83,7 @@ export default function NowCard({
 
   return (
     <div className="panel">
-      <div className="text-[11px] uppercase tracking-wide text-muted">Na het protocol</div>
+      <div className="text-xs uppercase tracking-wide text-muted">Na het protocol</div>
       {rustcontrole.availableNow ? (
         <>
           <div className="mt-1 text-lg text-text">Rustcontrole beschikbaar</div>

@@ -90,7 +90,7 @@ export default function RustcontroleLogger({
 
       <div className="space-y-3.5">
         <div className="panel">
-          <div className="text-[11px] uppercase tracking-wide text-muted">
+          <div className="text-xs uppercase tracking-wide text-muted">
             Waarde {Math.min(valueCount + (done ? 0 : 1), TARGET_VALUES)} van {TARGET_VALUES}
           </div>
           <div className="mt-1 text-base text-text">{status}</div>

@@ -127,13 +127,13 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
         scales: {
           x: {
             type: "linear",
-            title: { display: true, text: "tijd (mm:ss)", color: "#7C8C86", font: { size: 11 } },
-            ticks: { color: "#7C8C86", callback: (v) => fmtTime(Number(v)) },
+            title: { display: true, text: "tijd (mm:ss)", color: "#9AA8A2", font: { size: 11 } },
+            ticks: { color: "#9AA8A2", callback: (v) => fmtTime(Number(v)) },
             grid: { color: "rgba(255,255,255,0.04)" },
           },
           y: {
-            title: { display: true, text: "kPa", color: "#7C8C86", font: { size: 11 } },
-            ticks: { color: "#7C8C86" },
+            title: { display: true, text: "kPa", color: "#9AA8A2", font: { size: 11 } },
+            ticks: { color: "#9AA8A2" },
             grid: { color: "rgba(255,255,255,0.04)" },
           },
           y1: {

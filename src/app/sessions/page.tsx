@@ -104,14 +104,14 @@ function SessionsListInner({ uid }: { uid: string }) {
                   </span>
                   <span
                     className={
-                      "rounded-full border px-2 py-0.5 text-[10px] font-semibold " +
+                      "rounded-full border px-2 py-0.5 text-[11px] font-semibold " +
                       (s.sessionType === "cart" ? "border-panel-border text-muted" : "border-amber/60 text-amber")
                     }
                   >
                     {SESSION_TYPE_LABELS[s.sessionType]}
                   </span>
                   {s.feeling && (
-                    <span className="flex items-center gap-1 text-[11px] text-muted">
+                    <span className="flex items-center gap-1 text-xs text-muted">
                       <span
                         className="inline-block h-2 w-2 rounded-full"
                         style={{ backgroundColor: FEELING_COLORS[s.feeling] }}
@@ -128,7 +128,7 @@ function SessionsListInner({ uid }: { uid: string }) {
               {avgKpa != null && (
                 <div className="shrink-0 text-right">
                   <div className="font-mono text-xl text-trace">{avgKpa.toFixed(1)}</div>
-                  <div className="text-[10px] text-muted">kPa</div>
+                  <div className="text-[11px] text-muted">kPa</div>
                 </div>
               )}
             </Link>
@@ -138,7 +138,7 @@ function SessionsListInner({ uid }: { uid: string }) {
 
       {!loading && sessions.length > 0 && (
         <div className="panel mt-6">
-          <h2 className="mb-1 text-[11px] uppercase tracking-wide text-muted">Exporteren</h2>
+          <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Exporteren</h2>
           <p className="mb-3 text-xs text-muted">CSV-bestand, bijvoorbeeld voor je begeleider of huisarts.</p>
           <div className="mb-3 flex gap-2">
             {(["week", "month"] as const).map((p) => (

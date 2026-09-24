@@ -28,7 +28,7 @@ export default function EntryTable({
           {["#", "Tijd", "kPa", "mmHg", "\u0394", sampleN > 1 ? "Tempo" : "RR", ""].map((h) => (
             <th
               key={h}
-              className="border-b border-panel-border px-2 py-1.5 text-left text-[10px] uppercase tracking-wide text-muted"
+              className="border-b border-panel-border px-2 py-1.5 text-left text-[11px] uppercase tracking-wide text-muted"
             >
               {h}
             </th>

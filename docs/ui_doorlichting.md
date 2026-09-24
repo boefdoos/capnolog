@@ -2,7 +2,7 @@
 
 **Datum:** 23 september 2026
 **Basis:** alle schermen doorlopen in Chrome op telefoonbreedte (414 px), live versie, account van Thomas, naast de code
-**Status:** stap 1 tot 3 gebouwd op 23 en 24/09. Nog open: B4 (één definitie van "sessie telt mee" voor gemiddelden) en B9 (contrast van kleine tekst)
+**Status:** alle punten gebouwd op 23 en 24/09
 
 ---
 
@@ -158,4 +158,9 @@ Dit scherm is ook de plek voor de begeleider: per cliënt dezelfde tijdlijn.
 - Hele rij is de link naar het detail, verwijderen enkel nog in het detail (G2).
 - Export in een eigen blok onderaan: periode (laatste 7 of 30 dagen) en twee knoppen, "Samenvatting per sessie" en "Alle meetwaarden" (G3). "metingen" heet per rij "waarden".
 - Sessiedetail, eigen en bij Begeleiding, vermeldt het type onder de datum.
+
+## 9. B4 en B9
+
+- **B4.** Eén definitie: een oefensessie telt mee vanaf 10 minuten (`MIN_CART_SESSION_SEC`, `countsAsCartSession` in `useAverages`). Geldt voor dagteller, week- en maandgemiddelde, referentieband, de CART-reeks in de evolutie en de vergelijkingsbasis van de compensatiedetectie. Gevolg: afgebroken sessies korter dan 10 minuten (bij Thomas onder meer 27/07 7:39 en 06/08 8:05) wegen niet meer mee.
+- **B9.** Grijstint `muted` van #7C8C86 naar #9AA8A2 (contrast op de kaarten van ongeveer 5:1 naar 7:1), ook in de grafieklabels. Kleinste tekst is nu 11 px (was 10), wat 11 px was is 12 px.
 

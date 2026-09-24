@@ -50,7 +50,7 @@ export default function TabBar({ uid }: { uid: string }) {
               prefetch={false}
               aria-current={t.active ? "page" : undefined}
               className={
-                "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold " +
+                "flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-semibold " +
                 (t.active ? "text-trace" : "text-muted hover:text-text")
               }
             >
