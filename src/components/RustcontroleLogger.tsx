@@ -71,7 +71,7 @@ export default function RustcontroleLogger({
   const status = done
     ? "Klaar. Je kunt afronden."
     : cuesFired > valueCount
-      ? `Lees de EMMA af en tik waarde ${valueCount + 1} in.`
+      ? `Lees de ETCO2-waarde af en tik waarde ${valueCount + 1} in.`
       : valueCount === 0
         ? "Zit stil en adem gewoon. Bij het geluidssignaal lees je de ETCO2-waarde af."
         : "Blijf stil zitten tot het tweede signaal.";
