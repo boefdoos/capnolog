@@ -8,6 +8,12 @@ const ICONS: Record<string, JSX.Element> = {
   vandaag: <circle cx="12" cy="12" r="4.5" />,
   traject: <path d="M4 18h4l3-12h2l3 12h4" />,
   geschiedenis: <path d="M5 7h14M5 12h14M5 17h9" />,
+  account: (
+    <>
+      <circle cx="12" cy="8.5" r="3.5" />
+      <path d="M5 19.5c1-3.3 3.7-5 7-5s6 1.7 7 5" />
+    </>
+  ),
   begeleiding: (
     <>
       <circle cx="9" cy="9" r="3" />
@@ -32,6 +38,7 @@ export default function TabBar({ uid }: { uid: string }) {
     ...(clients.length > 0
       ? [{ key: "begeleiding", href: "/begeleiding", label: "Begeleiding", active: pathname.startsWith("/begeleiding") }]
       : []),
+    { key: "account", href: "/account", label: "Account", active: pathname.startsWith("/account") },
   ];
 
   return (

@@ -7,7 +7,6 @@ import TabBar from "@/components/TabBar";
 import TrajectOverview from "@/components/TrajectOverview";
 import { computeTrajectPhase, protocolEndDate } from "@/lib/traject";
 import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
-import { useAuth } from "@/lib/useAuth";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { formatRustcontroleDate } from "@/lib/useRustcontrole";
 import { unlockAudioContext } from "@/lib/pacer";
@@ -25,7 +24,6 @@ function TrajectInner({ uid }: { uid: string }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [measuring, setMeasuring] = useState<"rustcontrole" | "nulmeting" | null>(null);
-  const { logOut } = useAuth();
 
   if (measuring) {
     return <RustcontroleLogger uid={uid} band={band} kind={measuring} onDone={() => setMeasuring(null)} />;
@@ -133,12 +131,6 @@ function TrajectInner({ uid }: { uid: string }) {
           </div>
         </div>
       )}
-
-      <div className="mt-8 text-center">
-        <button onClick={() => logOut()} className="text-xs text-muted hover:text-danger">
-          Uitloggen
-        </button>
-      </div>
 
       <TabBar uid={uid} />
     </div>

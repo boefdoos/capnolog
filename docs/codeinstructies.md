@@ -341,6 +341,8 @@ Wat wel vóór een tweede cliënt af moet: de cliënt moet in de app kunnen zien
 
 **Getest op 23/09** tegen de live regels, via de Firestore REST API met het token van Thomas als begeleider en een testaccount (`BoLqTgb6…`, displayName "Testcliënt") als cliënt. Resultaten: zonder koppeling lezen van cliëntdoc en sessies 403; met koppeling lezen 200; een sessie schrijven bij de cliënt 403; `coachUids` van de cliënt wijzigen 403. De cliënt verschijnt bij Begeleiding met naam en tijdlijn. Nog niet getest: inloggen als de cliënt zelf en daar loggen.
 
+**Tab Account (24/09).** De cliënt ziet onder Account wie leesrecht heeft (`coachUids` op het eigen document) en kan dat per begeleider intrekken (`arrayRemove`, binnen de bestaande regels want enkel de eigenaar schrijft). Een naam voor de begeleider komt uit `coachNames` ({ uid: naam }) op het document van de cliënt, met de hand te zetten bij het koppelen, want het document van de begeleider is voor de cliënt niet leesbaar. Zonder naam toont de app "Begeleider" plus de eerste zes tekens van de uid. Uitloggen staat ook hier. Daarmee is het punt "de cliënt moet kunnen zien wie toegang heeft en die kunnen intrekken" gebouwd.
+
 Oorspronkelijke notitie: de regels zijn niet getest. Er is geen emulator in de repo, en geen Java of Firebase CLI op de ontwikkelmachine. Ze moeten bovendien met de hand gepubliceerd worden in de Firebase-console, want er is geen `firebase.json`. Test ze in de Rules Playground op deze vier gevallen:
 1. Een begeleider leest `users/{client}/sessions/x` terwijl zijn uid in `coachUids` staat: toegelaten.
 2. Dezelfde begeleider leest een cliënt waar hij niet in `coachUids` staat: geweigerd.
