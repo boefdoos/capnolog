@@ -28,11 +28,16 @@ function downloadCsv(csv: string, filenamePrefix: string) {
  * query zou een export bij >50 sessies in de gekozen periode stilzwijgend
  * een deel ervan missen, ongeacht het datumfilter erna.
  */
-export async function fetchSessionsInPeriod(uid: string, sinceMs: number): Promise<SessionMeta[]> {
+export async function fetchSessionsInPeriod(
+  uid: string,
+  sinceMs: number,
+  untilMs: number = Date.now() + 24 * 60 * 60 * 1000
+): Promise<SessionMeta[]> {
   const db = getFirebaseDb();
   const q = query(
     collection(db, "users", uid, "sessions"),
     where("createdAt", ">=", Timestamp.fromMillis(sinceMs)),
+    where("createdAt", "<", Timestamp.fromMillis(untilMs)),
     orderBy("createdAt", "desc"),
     limit(1000)
   );

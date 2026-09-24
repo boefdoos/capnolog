@@ -4,45 +4,80 @@ import Link from "next/link";
 import { useState } from "react";
 import AuthGate from "@/components/AuthGate";
 import TabBar from "@/components/TabBar";
+import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { fmtTime } from "@/lib/format";
 import { exportFullPeriodCsv, exportSessionsOverviewCsv, fetchSessionsInPeriod } from "@/lib/exportCsv";
 import { FEELING_COLORS, FEELING_LABELS, SESSION_TYPE_LABELS, type SessionType } from "@/types/capnolog";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const PROTOCOL_TARGETS = [13, 11, 9, 6];
+
+interface ExportPeriod {
+  key: string;
+  label: string;
+  fileTag: string;
+  from: number;
+  to: number;
+}
+
+function fmtDay(ms: number): string {
+  return new Date(ms).toLocaleDateString("nl-BE", { day: "numeric", month: "short" });
+}
+
+/**
+ * Exportperiodes: het volledige traject, en elke week afzonderlijk. Weken
+ * tellen vanaf de protocolstart, zodat week 1 tot 4 de protocolweken zijn;
+ * zonder protocol gewone kalenderweken vanaf maandag. Nieuwste week eerst.
+ */
+function exportPeriods(startDate: number | null): ExportPeriod[] {
+  const now = Date.now();
+  const all: ExportPeriod = { key: "traject", label: "Volledig traject", fileTag: "traject", from: 0, to: now + DAY_MS };
+  const anchorDate = new Date(startDate ?? now);
+  anchorDate.setHours(0, 0, 0, 0);
+  if (startDate == null) anchorDate.setDate(anchorDate.getDate() - ((anchorDate.getDay() + 6) % 7));
+  const anchor = anchorDate.getTime();
+  const weeks: ExportPeriod[] = [];
+  for (let n = 1; anchor + (n - 1) * 7 * DAY_MS <= now; n++) {
+    const from = anchor + (n - 1) * 7 * DAY_MS;
+    const to = from + 7 * DAY_MS;
+    const range = `${fmtDay(from)} – ${fmtDay(to - DAY_MS)}`;
+    const target = startDate != null && n <= 4 ? ` · ${PROTOCOL_TARGETS[n - 1]}/min` : "";
+    weeks.push({
+      key: `week-${n}`,
+      label: startDate != null ? `Week ${n}${target} (${range})` : `Week van ${range}`,
+      fileTag: startDate != null ? `week${n}` : `week-${new Date(from).toISOString().slice(0, 10)}`,
+      from,
+      to,
+    });
+  }
+  return [all, ...weeks.reverse()];
+}
+
 function SessionsListInner({ uid }: { uid: string }) {
   const { sessions, loading } = useSessionsList(uid);
   const [filter, setFilter] = useState<"alle" | SessionType>("alle");
-  const [exportPeriod, setExportPeriod] = useState<"week" | "month">("week");
   const presentTypes = (["cart", "rustcontrole", "nulmeting"] as const).filter((t) =>
     sessions.some((s) => s.sessionType === t)
   );
   const visible = filter === "alle" ? sessions : sessions.filter((s) => s.sessionType === filter);
-  const [exportingFull, setExportingFull] = useState<"week" | "month" | null>(null);
-  const [exportingOverview, setExportingOverview] = useState<"week" | "month" | null>(null);
+  const { startDate } = useCartProtocol(uid);
+  const periods = exportPeriods(startDate);
+  const [periodKey, setPeriodKey] = useState("traject");
+  const period = periods.find((p) => p.key === periodKey) ?? periods[0];
+  const [exporting, setExporting] = useState<"samenvatting" | "volledig" | null>(null);
 
-  async function handleOverviewExport(period: "week" | "month") {
-    setExportingOverview(period);
+  async function handleExport(kind: "samenvatting" | "volledig") {
+    setExporting(kind);
     try {
-      const sinceMs = Date.now() - (period === "week" ? 7 : 30) * 24 * 60 * 60 * 1000;
-      const inPeriod = await fetchSessionsInPeriod(uid, sinceMs);
-      exportSessionsOverviewCsv(inPeriod, `etco2-overzicht-${period === "week" ? "week" : "maand"}`);
+      const inPeriod = await fetchSessionsInPeriod(uid, period.from, period.to);
+      const name = `etco2-${kind}-${period.fileTag}`;
+      if (kind === "samenvatting") exportSessionsOverviewCsv(inPeriod, name);
+      else await exportFullPeriodCsv(uid, inPeriod, name);
     } catch {
       window.alert("Exporteren mislukt, probeer opnieuw.");
     } finally {
-      setExportingOverview(null);
-    }
-  }
-
-  async function handleFullExport(period: "week" | "month") {
-    setExportingFull(period);
-    try {
-      const sinceMs = Date.now() - (period === "week" ? 7 : 30) * 24 * 60 * 60 * 1000;
-      const inPeriod = await fetchSessionsInPeriod(uid, sinceMs);
-      await exportFullPeriodCsv(uid, inPeriod, `etco2-volledig-${period === "week" ? "week" : "maand"}`);
-    } catch {
-      window.alert("Exporteren mislukt, probeer opnieuw.");
-    } finally {
-      setExportingFull(null);
+      setExporting(null);
     }
   }
 
@@ -140,34 +175,34 @@ function SessionsListInner({ uid }: { uid: string }) {
         <div className="panel mt-6">
           <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Exporteren</h2>
           <p className="mb-3 text-xs text-muted">CSV-bestand, bijvoorbeeld voor je begeleider of huisarts.</p>
-          <div className="mb-3 flex gap-2">
-            {(["week", "month"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setExportPeriod(p)}
-                className={
-                  "rounded-full border px-3 py-1.5 text-xs font-semibold " +
-                  (exportPeriod === p ? "border-trace text-trace" : "border-panel-border text-muted")
-                }
-              >
-                {p === "week" ? "Laatste 7 dagen" : "Laatste 30 dagen"}
-              </button>
-            ))}
-          </div>
+          <label className="mb-3 block space-y-1.5">
+            <span className="text-xs text-muted">Periode</span>
+            <select
+              value={period.key}
+              onChange={(e) => setPeriodKey(e.target.value)}
+              className="w-full rounded-lg border border-panel-border bg-[#0D1210] px-3.5 py-2.5 text-sm text-text outline-none focus:border-trace"
+            >
+              {periods.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
-              onClick={() => handleOverviewExport(exportPeriod)}
-              disabled={exportingOverview !== null}
+              onClick={() => handleExport("samenvatting")}
+              disabled={exporting !== null}
               className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-text disabled:opacity-50"
             >
-              {exportingOverview ? "bezig..." : "Samenvatting per sessie"}
+              {exporting === "samenvatting" ? "bezig..." : "Samenvatting per sessie"}
             </button>
             <button
-              onClick={() => handleFullExport(exportPeriod)}
-              disabled={exportingFull !== null}
+              onClick={() => handleExport("volledig")}
+              disabled={exporting !== null}
               className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-text disabled:opacity-50"
             >
-              {exportingFull ? "bezig..." : "Alle meetwaarden"}
+              {exporting === "volledig" ? "bezig..." : "Alle meetwaarden"}
             </button>
           </div>
         </div>
