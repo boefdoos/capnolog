@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import AuthGate from "@/components/AuthGate";
 import TabBar from "@/components/TabBar";
 import TrajectOverview from "@/components/TrajectOverview";
-import TrendChart from "@/components/TrendChart";
 import { fmtTime } from "@/lib/format";
 import { useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
@@ -19,7 +18,7 @@ import { SESSION_TYPE_LABELS } from "@/types/capnolog";
  * alleen-lezen: geen verwijderknoppen, geen protocolstart, geen backfill.
  */
 function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: string }) {
-  const { week, month, band, trend, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
+  const { band, trend, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
   const { startDate, nulmetingBaseline } = useCartProtocol(clientUid);
   const { sessions, loading } = useSessionsList(clientUid);
   const clientName = useClientName(clientUid);
@@ -40,10 +39,9 @@ function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: str
           startDate={startDate}
           sessions={allSessions}
           nulmetingBaseline={nulmetingBaseline}
-          week={week}
-          month={month}
+          trend={trend}
+          band={band}
         />
-        <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
 
         {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
         <div className="space-y-2">

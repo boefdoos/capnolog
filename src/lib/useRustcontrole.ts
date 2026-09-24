@@ -3,7 +3,7 @@ import type { SessionMeta } from "@/types/capnolog";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const CART_PROTOCOL_DAYS = 28;
-const AVAILABLE_FROM_DAYS_BEFORE = 3;
+export const AVAILABLE_FROM_DAYS_BEFORE = 3;
 
 function startOfDay(ms: number): number {
   const d = new Date(ms);

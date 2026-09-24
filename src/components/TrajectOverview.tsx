@@ -1,10 +1,22 @@
 "use client";
 
-import AveragesCard from "./AveragesCard";
+import TrendChart from "./TrendChart";
 import { CART_WEEK_TARGETS, cartWeekStartDate, computeTrajectPhase, protocolEndDate } from "@/lib/traject";
-import { computeNulmetingSummary, type WindowAverage } from "@/lib/useAverages";
-import { computeRustcontroleStatus } from "@/lib/useRustcontrole";
+import { type BaselineBand, computeNulmetingSummary, countsAsCartSession, type Trend } from "@/lib/useAverages";
+import { AVAILABLE_FROM_DAYS_BEFORE, computeRustcontroleStatus } from "@/lib/useRustcontrole";
 import { NULMETING_TARGET_SESSIONS, type NulmetingBaseline, type SessionMeta } from "@/types/capnolog";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Gemiddelde kPa over een reeks sessies, gewogen per waarde. */
+function meanKpa(sessions: SessionMeta[]): number | null {
+  const n = sessions.reduce((sum, s) => sum + s.readingCount, 0);
+  return n ? sessions.reduce((sum, s) => sum + s.kpaSum, 0) / n : null;
+}
+
+function fmtKpa(v: number | null): string {
+  return v == null ? "" : ` · ${v.toFixed(1)} kPa`;
+}
 
 const RUSTCONTROLE_LABELS = ["+1 week", "+1 maand", "+2 maanden", "+6 maanden", "+12 maanden"];
 
@@ -27,7 +39,8 @@ function Row({ label, value, current }: { label: string; value: string; current?
 
 /**
  * Tijdlijn van het traject: nulmeting, de vier CART-weken en de vijf
- * rustcontroles, plus de gemiddelden (docs/ui_doorlichting.md §3.2). Zowel
+ * rustcontroles, elk met hun gemiddelde kPa, plus de evolutiegrafiek
+ * (docs/ui_doorlichting.md §3.2). Zowel
  * op het eigen Trajectscherm als, alleen-lezen, per cliënt bij Begeleiding.
  * Een voorbij moment zonder meting krijgt geen status, enkel zijn datum.
  */
@@ -35,18 +48,40 @@ export default function TrajectOverview({
   startDate,
   sessions,
   nulmetingBaseline,
-  week,
-  month,
+  trend,
+  band,
 }: {
   startDate: number | null;
   sessions: SessionMeta[];
   nulmetingBaseline: NulmetingBaseline | null;
-  week: WindowAverage;
-  month: WindowAverage;
+  trend: Trend;
+  band: BaselineBand;
 }) {
   const phase = computeTrajectPhase(startDate);
   const nulmetingNow = computeNulmetingSummary(sessions);
   const rustcontrole = computeRustcontroleStatus(startDate, sessions);
+  const cartSessions = sessions.filter(countsAsCartSession);
+  const rustSessions = sessions
+    .filter((s) => s.sessionType === "rustcontrole" && s.readingCount > 0)
+    .sort((a, b) => a.createdAt - b.createdAt);
+
+  // Gemiddelde per protocolweek: het verloop in de volgorde van het protocol.
+  function weekMean(weekNr: number): number | null {
+    if (startDate == null) return null;
+    const from = cartWeekStartDate(startDate, weekNr);
+    return meanKpa(cartSessions.filter((s) => s.createdAt >= from && s.createdAt < from + 7 * DAY_MS));
+  }
+
+  // Waarde van een rustcontrolemoment: de eerste rustcontrole die ervoor telt,
+  // vanaf het venster van dit moment tot het venster van het volgende.
+  function momentMean(i: number): number | null {
+    const window = (d: number) => d - AVAILABLE_FROM_DAYS_BEFORE * DAY_MS;
+    const from = window(rustcontrole.moments[i].date);
+    const next = rustcontrole.moments[i + 1];
+    const to = next ? window(next.date) : Infinity;
+    const first = rustSessions.find((s) => s.createdAt >= from && s.createdAt < to);
+    return first ? meanKpa([first]) : null;
+  }
 
   return (
     <div className="space-y-3.5">
@@ -81,7 +116,7 @@ export default function TrajectOverview({
                 <Row
                   key={weekNr}
                   label={`Week ${weekNr} · ${target}/min`}
-                  value={`vanaf ${fmtDate(cartWeekStartDate(startDate, weekNr))}${current ? " · nu" : ""}`}
+                  value={`vanaf ${fmtDate(cartWeekStartDate(startDate, weekNr))}${current ? " · nu" : ""}${fmtKpa(weekMean(weekNr))}`}
                   current={current}
                 />
               );
@@ -102,7 +137,7 @@ export default function TrajectOverview({
               <Row
                 key={m.date}
                 label={RUSTCONTROLE_LABELS[i] ?? ""}
-                value={`${fmtDate(m.date, true)}${m.done ? " · gedaan" : ""}`}
+                value={`${fmtDate(m.date, true)}${m.done ? fmtKpa(momentMean(i)) || " · gedaan" : ""}`}
                 current={isNext}
               />
             );
@@ -110,7 +145,7 @@ export default function TrajectOverview({
         )}
       </div>
 
-      <AveragesCard week={week} month={month} />
+      <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
     </div>
   );
 }

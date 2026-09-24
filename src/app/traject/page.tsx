@@ -19,7 +19,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * en waar een losse meting buiten het venster kan.
  */
 function TrajectInner({ uid }: { uid: string }) {
-  const { week, month, band, sessions, loading: averagesLoading } = useAverages(uid);
+  const { band, trend, sessions, loading: averagesLoading } = useAverages(uid);
   const { startDate, nulmetingBaseline, loading: protocolLoading, activate } = useCartProtocol(uid);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -59,8 +59,8 @@ function TrajectInner({ uid }: { uid: string }) {
             startDate={startDate}
             sessions={sessions}
             nulmetingBaseline={nulmetingBaseline}
-            week={week}
-            month={month}
+            trend={trend}
+            band={band}
           />
 
           <div className="panel">
