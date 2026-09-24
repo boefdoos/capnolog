@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   type User,
@@ -20,6 +22,9 @@ function mapAuthError(err: unknown): string {
   }
   if (code === "auth/too-many-requests") return "Te veel pogingen, probeer straks opnieuw.";
   if (code === "auth/invalid-email") return "Ongeldig e-mailadres.";
+  if (code === "auth/email-already-in-use") return "Er bestaat al een account met dit e-mailadres. Meld je aan.";
+  if (code === "auth/weak-password") return "Kies een wachtwoord van minstens 6 tekens.";
+  if (code === "auth/missing-email") return "Vul eerst je e-mailadres in.";
   return "Aanmelden mislukt.";
 }
 
@@ -51,9 +56,33 @@ export function useAuth() {
     }
   }
 
+  /** Enkel bereikbaar via een uitnodigingslink (/uitnodiging/[code]). */
+  async function signUp(email: string, password: string) {
+    setError(null);
+    try {
+      await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+    } catch (err) {
+      setError(mapAuthError(err));
+      throw err;
+    }
+  }
+
+  /** Stuurt een mail om het wachtwoord opnieuw in te stellen, in het Nederlands. */
+  async function resetPassword(email: string) {
+    setError(null);
+    try {
+      const auth = getFirebaseAuth();
+      auth.languageCode = "nl";
+      await sendPasswordResetEmail(auth, email);
+    } catch (err) {
+      setError(mapAuthError(err));
+      throw err;
+    }
+  }
+
   async function logOut() {
     await signOut(getFirebaseAuth());
   }
 
-  return { user, loading, configured, error, signIn, logOut };
+  return { user, loading, configured, error, signIn, signUp, resetPassword, logOut };
 }

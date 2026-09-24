@@ -1,6 +1,6 @@
 "use client";
 
-import { arrayRemove, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { arrayRemove, deleteDoc, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 
@@ -38,7 +38,12 @@ export function useOwnAccess(uid: string | null) {
   /** Trekt de leestoegang van één begeleider in. Enkel de cliënt kan dit. */
   async function revoke(coachUid: string) {
     if (!uid) return;
-    await updateDoc(doc(getFirebaseDb(), "users", uid), { coachUids: arrayRemove(coachUid) });
+    const db = getFirebaseDb();
+    await updateDoc(doc(db, "users", uid), { coachUids: arrayRemove(coachUid) });
+    // Koppeling opruimen zodat de cliënt uit de lijst van de begeleider
+    // verdwijnt. Leesrecht is hierboven al ingetrokken, dus een fout hier
+    // (bv. handmatig gekoppeld, geen link) is onschuldig.
+    await deleteDoc(doc(db, "links", `${coachUid}_${uid}`)).catch(() => {});
   }
 
   return { coaches, loading, revoke };

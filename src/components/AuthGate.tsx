@@ -9,7 +9,8 @@ export default function AuthGate({
 }: {
   children: (user: User) => React.ReactNode;
 }) {
-  const { user, loading, configured, error, signIn } = useAuth();
+  const { user, loading, configured, error, signIn, resetPassword } = useAuth();
+  const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -71,6 +72,25 @@ export default function AuthGate({
           </button>
         </form>
         {error && <div className="max-w-xs text-center text-xs text-danger">{error}</div>}
+        {resetSent ? (
+          <div className="max-w-xs text-center text-xs text-muted">
+            Als er een account bestaat voor {email}, krijg je een mail om je wachtwoord opnieuw in te stellen.
+          </div>
+        ) : (
+          <button
+            onClick={async () => {
+              try {
+                await resetPassword(email);
+                setResetSent(true);
+              } catch {
+                // foutmelding zit al in de hook
+              }
+            }}
+            className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+          >
+            Wachtwoord vergeten?
+          </button>
+        )}
       </div>
     );
   }

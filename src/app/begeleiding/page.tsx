@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AuthGate from "@/components/AuthGate";
+import InviteClient from "@/components/InviteClient";
 import TabBar from "@/components/TabBar";
 import { useCoachClients } from "@/lib/useCoachClients";
 
@@ -33,6 +34,10 @@ function ClientsInner({ uid }: { uid: string }) {
             {c.name}
           </Link>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <InviteClient coachUid={uid} />
       </div>
       <TabBar uid={uid} />
     </div>
