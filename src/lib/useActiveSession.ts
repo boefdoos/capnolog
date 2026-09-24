@@ -23,7 +23,6 @@ import type {
   SessionMeta,
   SessionPhase,
   SessionType,
-  SighSubtype,
   StoredEntry,
 } from "@/types/capnolog";
 
@@ -146,39 +145,6 @@ export function useActiveSession(
     });
   }
 
-  async function markDisturbance() {
-    if (!uid) return;
-    const { id, createdAt } = await ensureSession();
-    const tSec = nowTSec(createdAt);
-    const db = getFirebaseDb();
-    await addDoc(collection(db, "users", uid, "sessions", id, "entries"), {
-      type: "marker",
-      tSec,
-      ...phaseField(tSec),
-      createdAt: Date.now(),
-    });
-    await updateDoc(doc(db, "users", uid, "sessions", id), { lastTSec: tSec });
-  }
-
-  async function logSigh(subtype: SighSubtype) {
-    if (!uid) return;
-    const { id, createdAt } = await ensureSession();
-    const tSec = nowTSec(createdAt);
-    const db = getFirebaseDb();
-    await addDoc(collection(db, "users", uid, "sessions", id, "entries"), {
-      type: "sigh",
-      subtype,
-      tSec,
-      ...phaseField(tSec),
-      createdAt: Date.now(),
-    });
-    await updateDoc(doc(db, "users", uid, "sessions", id), {
-      sighTotalCount: increment(1),
-      sighSuccessCount: increment(subtype === "success" ? 1 : 0),
-      lastTSec: tSec,
-    });
-  }
-
   /**
    * Rechtstreeks van het EMMA-scherm afgelezen ademfrequentie (P10), een
    * eigen entry-type los van `readingCount`/`kpaSum`: telt dus niet mee in
@@ -249,8 +215,6 @@ export function useActiveSession(
     begin,
     entries,
     logReading,
-    markDisturbance,
-    logSigh,
     logRR,
     deleteEntry,
     setFeeling,

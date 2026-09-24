@@ -31,7 +31,7 @@ export default function RustcontroleLogger({
   kind?: "rustcontrole" | "nulmeting";
   onDone: () => void;
 }) {
-  const { entries, logReading, markDisturbance, startNewSession, startedAt, begin } = useActiveSession(
+  const { entries, logReading, startNewSession, startedAt, begin } = useActiveSession(
     uid,
     band,
     kind
@@ -108,17 +108,6 @@ export default function RustcontroleLogger({
         >
           {done ? "Afronden" : valueCount === 0 ? "Annuleren" : "Nu stoppen"}
         </button>
-
-        {/* Verstoring klein en onderaan: vlak onder het invoerveld werd ze per
-            ongeluk aangetikt (24/09), wat een lege rustcontrole opleverde. */}
-        {!done && (
-          <button
-            onClick={() => markDisturbance()}
-            className="w-full py-2 text-xs text-muted underline decoration-panel-border underline-offset-2"
-          >
-            Er was een verstoring
-          </button>
-        )}
       </div>
     </div>
   );

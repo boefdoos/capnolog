@@ -5,7 +5,6 @@ import BandInfo from "./BandInfo";
 import Co2Chart from "./Co2Chart";
 import CompensationNote from "./CompensationNote";
 import EntryTable from "./EntryTable";
-import EventButtons from "./EventButtons";
 import FeelingSelector from "./FeelingSelector";
 import KpaInput from "./KpaInput";
 import NowCard from "./NowCard";
@@ -53,8 +52,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
     meta,
     entries,
     logReading,
-    markDisturbance,
-    logSigh,
     logRR,
     deleteEntry,
     setFeeling,
@@ -230,8 +227,9 @@ export default function SessionLogger({ uid }: { uid: string }) {
     );
   }
 
-  // Tijdens het oefenen enkel wat je nodig hebt: fase en streefdoel, het
-  // invoerveld, verstoring en zucht. Geen grafiek of cijfers, de feedback
+  // Tijdens het oefenen enkel wat je nodig hebt: fase en streefdoel en het
+  // invoerveld. Zucht en verstoring zijn weg sinds 24/09: geen deel van
+  // CATCH of CART, en nergens in een berekening gebruikt. Geen grafiek of cijfers, de feedback
   // zit op het EMMA-scherm zelf (docs/ui_doorlichting.md §3.3).
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -258,16 +256,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
         {showRRInput && (
           <RRInput onLog={(rrValue) => logRR(rrValue)} onLogged={bumpRefocus} refocusToken={rrFocusToken} />
         )}
-        <EventButtons
-          onMarkDisturbance={() => {
-            markDisturbance();
-            bumpRefocus();
-          }}
-          onSigh={(subtype) => {
-            logSigh(subtype);
-            bumpRefocus();
-          }}
-        />
 
         <button
           onClick={() => setViewMode("review")}

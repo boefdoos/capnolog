@@ -164,3 +164,9 @@ Dit scherm is ook de plek voor de begeleider: per cliënt dezelfde tijdlijn.
 - **B4.** Eén definitie: een oefensessie telt mee vanaf 10 minuten (`MIN_CART_SESSION_SEC`, `countsAsCartSession` in `useAverages`). Geldt voor dagteller, week- en maandgemiddelde, referentieband, de CART-reeks in de evolutie en de vergelijkingsbasis van de compensatiedetectie. Gevolg: afgebroken sessies korter dan 10 minuten (bij Thomas onder meer 27/07 7:39 en 06/08 8:05) wegen niet meer mee.
 - **B9.** Grijstint `muted` van #7C8C86 naar #9AA8A2 (contrast op de kaarten van ongeveer 5:1 naar 7:1), ook in de grafieklabels. Kleinste tekst is nu 11 px (was 10), wat 11 px was is 12 px.
 
+## 10. Zucht en verstoring geschrapt (24/09)
+
+Beslissing van Thomas. Zucht (en het percentage "zucht gelukt", vroeger BSR) hoort niet bij CATCH of CART en was een eigen toevoeging. Met loggen om de 30 seconden zegt een zuchtteller weinig. Verstoring: in een rustmeting van twee waarden is opnieuw meten beter dan een vlag, en in de oefensessie verwijder je een afwijkende waarde op het afrondscherm. Geen van beide werd in een berekening gebruikt. Oude zuchten en verstoringen blijven leesbaar in log, grafiek, geschiedenis en export.
+
+Daarbij: een rustcontrole telt enkel als gedaan met minstens één waarde. Een testsessie met enkel een verstoring markeerde de momenten van 31/08 en 24/09 als gedaan.
+

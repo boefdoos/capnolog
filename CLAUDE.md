@@ -23,7 +23,7 @@ Deployment via Vercel op elke push naar `main`. Firebase-config staat in `.env.l
 ## Datamodel
 
 `users/{uid}/sessions/{sessionId}` met metadata en aggregaten, subcollectie
-`entries/{entryId}` met `type` ("reading" | "marker" | "sigh"), `subtype`, `tSec`, `kpa`.
+`entries/{entryId}` met `type` ("reading" | "rr", en in oudere sessies ook "marker" en "sigh", die sinds 24/09 niet meer gelogd worden), `subtype`, `tSec`, `kpa`.
 
 `idx`, `delta`, `mmHg` en `rr` worden client-side afgeleid in `deriveEntries`
 (`src/lib/format.ts`) en worden nooit opgeslagen. Aggregaten (`readingCount`, `kpaSum`,
