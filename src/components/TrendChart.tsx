@@ -103,11 +103,23 @@ export default function TrendChart({
     const minX = xs.length ? Math.min(...xs) : Date.now() - 30 * 24 * 60 * 60 * 1000;
     const maxX = xs.length ? Math.max(...xs) : Date.now();
 
+    // De band verloopt mee: per oefensessie de band die toen gold (bevroren
+    // bij de start), vastgehouden tot de volgende sessie. Zonder sessies de
+    // huidige band over de hele breedte.
+    const bandSteps = (pick: (p: { bandLow: number; bandHigh: number }) => number, current: number) =>
+      trend.cart.length
+        ? [
+            ...trend.cart.map((p) => ({ x: p.date, y: pick(p) })),
+            { x: maxX, y: pick(trend.cart[trend.cart.length - 1]) },
+          ]
+        : [
+            { x: minX, y: current },
+            { x: maxX, y: current },
+          ];
+
     const bandTop: ChartDataset<"line"> = {
-      data: [
-        { x: minX, y: band.high },
-        { x: maxX, y: band.high },
-      ],
+      data: bandSteps((p) => p.bandHigh, band.high),
+      stepped: "after",
       borderColor: "#3A5048",
       borderDash: [4, 4],
       borderWidth: 1,
@@ -116,10 +128,8 @@ export default function TrendChart({
       order: 3,
     };
     const bandBottom: ChartDataset<"line"> = {
-      data: [
-        { x: minX, y: band.low },
-        { x: maxX, y: band.low },
-      ],
+      data: bandSteps((p) => p.bandLow, band.low),
+      stepped: "after",
       borderColor: "#3A5048",
       borderDash: [4, 4],
       borderWidth: 1,

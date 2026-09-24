@@ -123,6 +123,9 @@ function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
 export interface TrendPoint {
   date: number; // epoch ms (session createdAt)
   avgKpa: number;
+  // Band die bij de start van die sessie gold (bevroren op het sessiedocument).
+  bandLow: number;
+  bandHigh: number;
 }
 
 export interface Trend {
@@ -140,7 +143,12 @@ function trendPoints(sessions: SessionMeta[], type: SessionType, sinceMs: number
         s.readingCount > 0 &&
         (type !== "cart" || countsAsCartSession(s))
     )
-    .map((s) => ({ date: s.createdAt, avgKpa: s.kpaSum / s.readingCount }))
+    .map((s) => ({
+      date: s.createdAt,
+      avgKpa: s.kpaSum / s.readingCount,
+      bandLow: s.bandLow,
+      bandHigh: s.bandHigh,
+    }))
     .sort((a, b) => a.date - b.date);
 }
 
