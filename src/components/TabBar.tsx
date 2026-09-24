@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { useCoachClients } from "@/lib/useCoachClients";
 
 const ICONS: Record<string, JSX.Element> = {
@@ -22,6 +23,31 @@ const ICONS: Record<string, JSX.Element> = {
   ),
 };
 
+// Laatst gekende "heeft cliënten" per gebruiker. Zonder dit verdwijnt de tab
+// Begeleiding na elke navigatie of herlaad even, tot Firestore antwoordt.
+// Het geheugen overleeft navigatie, localStorage ook een herlaad.
+const hasClientsMemory = new Map<string, boolean>();
+const storageKey = (uid: string) => `capnolog.hasClients.${uid}`;
+
+function readHasClients(uid: string): boolean {
+  const known = hasClientsMemory.get(uid);
+  if (known != null) return known;
+  try {
+    return localStorage.getItem(storageKey(uid)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeHasClients(uid: string, value: boolean) {
+  hasClientsMemory.set(uid, value);
+  try {
+    localStorage.setItem(storageKey(uid), value ? "1" : "0");
+  } catch {
+    // Opslag geblokkeerd (privévenster), enkel het geheugen blijft.
+  }
+}
+
 /**
  * Vaste tabbalk onderaan de hoofdschermen. Niet tonen tijdens een sessie of
  * meting: één tik zou de oefening verlaten (docs/ui_doorlichting.md S7).
@@ -29,13 +55,17 @@ const ICONS: Record<string, JSX.Element> = {
  */
 export default function TabBar({ uid }: { uid: string }) {
   const pathname = usePathname();
-  const { clients } = useCoachClients(uid);
+  const { clients, loading } = useCoachClients(uid);
+  const hasClients = loading ? readHasClients(uid) : clients.length > 0;
+  useEffect(() => {
+    if (!loading) writeHasClients(uid, clients.length > 0);
+  }, [uid, loading, clients.length]);
 
   const tabs = [
     { key: "vandaag", href: "/", label: "Vandaag", active: pathname === "/" },
     { key: "traject", href: "/traject", label: "Traject", active: pathname.startsWith("/traject") },
     { key: "geschiedenis", href: "/sessions", label: "Geschiedenis", active: pathname.startsWith("/sessions") },
-    ...(clients.length > 0
+    ...(hasClients
       ? [{ key: "begeleiding", href: "/begeleiding", label: "Begeleiding", active: pathname.startsWith("/begeleiding") }]
       : []),
     { key: "account", href: "/account", label: "Account", active: pathname.startsWith("/account") },
