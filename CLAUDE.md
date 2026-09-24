@@ -84,8 +84,12 @@ CART-sessies: een gedaalde ademfrequentie zonder gestegen CO2 wijst op compensat
 (trager maar dieper ademen zonder echte hypoventilatie-respons) in plaats van geslaagde
 training.
 
-**Firestore-rules** (`firestore.rules`) staan lezen/schrijven enkel toe binnen het
-eigen `users/{uid}`-pad, er is verder geen schemavalidatie.
+**Firestore-rules** (`firestore.rules`, met de hand te publiceren in de console, er is
+geen `firebase.json`). Schrijven enkel binnen het eigen `users/{uid}`-pad. Lezen ook
+door een begeleider wiens uid in `coachUids` op het document van de cliënt staat
+(P13), alleen-lezen. `invites/{code}` (uitnodigingslinks, `get` zonder account, nooit
+`list`) en `links/{coachUid}_{clientUid}` (lijst van de begeleider, geeft zelf geen
+leesrecht). Verder geen schemavalidatie.
 
 ## Schrijfwijze
 
@@ -114,7 +118,7 @@ weekberekening anders blijft hangen wanneer de app dagenlang openstaat.
 ## Werkdocumenten
 
 `docs/codeinstructies.md` bevat de volledige codereview met genummerde werkpunten
-P1 tot P11, per punt de bestandsverwijzing en de bewijsbasis. Lees dat voor je aan
+P1 tot P13, per punt de bestandsverwijzing en de bewijsbasis. Lees dat voor je aan
 een van die punten begint, en werk het bij wanneer een punt af is.
 
 `docs/plan_post_trial_rustcontroles.md` is het oorspronkelijke plan voor de
