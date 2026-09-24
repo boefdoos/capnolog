@@ -18,7 +18,7 @@ import { SESSION_TYPE_LABELS } from "@/types/capnolog";
  * alleen-lezen: geen verwijderknoppen, geen protocolstart, geen backfill.
  */
 function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: string }) {
-  const { band, trend, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
+  const { band, trendAll, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
   const { startDate, nulmetingBaseline } = useCartProtocol(clientUid);
   const { sessions, loading } = useSessionsList(clientUid);
   const clientName = useClientName(clientUid);
@@ -39,7 +39,7 @@ function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: str
           startDate={startDate}
           sessions={allSessions}
           nulmetingBaseline={nulmetingBaseline}
-          trend={trend}
+          trend={trendAll}
           band={band}
         />
 

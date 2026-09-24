@@ -145,7 +145,13 @@ export default function TrajectOverview({
         )}
       </div>
 
-      <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />
+      <TrendChart
+        trend={trend}
+        band={band}
+        nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null}
+        title="Evolutie (volledig traject)"
+        large
+      />
     </div>
   );
 }

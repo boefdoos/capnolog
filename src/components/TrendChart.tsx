@@ -22,12 +22,17 @@ export default function TrendChart({
   trend,
   band,
   nulmetingMeanKpa = null,
+  title = "Evolutie (30 dagen)",
+  large = false,
 }: {
   trend: Trend;
   band: BaselineBand;
   // Bevroren nulmetingsgemiddelde (P12): het vertrekpunt, blijft zichtbaar
   // ook als de nulmetingen zelf buiten het venster van 30 dagen vallen.
   nulmetingMeanKpa?: number | null;
+  title?: string;
+  // Hoger op het Trajectscherm, waar de grafiek om te bestuderen is.
+  large?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
@@ -213,8 +218,8 @@ export default function TrendChart({
 
   return (
     <div className="panel">
-      <div className="mb-1 text-xs uppercase tracking-wide text-muted">Evolutie (30 dagen)</div>
-      <div className="relative h-40 w-full">
+      <div className="mb-1 text-xs uppercase tracking-wide text-muted">{title}</div>
+      <div className={"relative w-full " + (large ? "h-64" : "h-40")}>
         <canvas ref={canvasRef} />
         {trend.cart.length < 2 && trend.rustcontrole.length === 0 && trend.nulmeting.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-muted">

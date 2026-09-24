@@ -148,8 +148,8 @@ function trendPoints(sessions: SessionMeta[], type: SessionType, sinceMs: number
  * chronologisch, voor een evolutie-grafiek op het startscherm. Twee aparte
  * reeksen (P2): gestuurde CART-sessies en ongestuurde rustcontroles meten
  * niet hetzelfde en horen niet in één lijn samengevoegd te worden. */
-function computeTrend(sessions: SessionMeta[]): Trend {
-  const monthAgo = Date.now() - 30 * DAY_MS;
+function computeTrend(sessions: SessionMeta[], sinceMs: number = Date.now() - 30 * DAY_MS): Trend {
+  const monthAgo = sinceMs;
   return {
     cart: trendPoints(sessions, "cart", monthAgo),
     rustcontrole: trendPoints(sessions, "rustcontrole", monthAgo),
@@ -231,6 +231,8 @@ export function useAverages(uid: string | null, { readOnly = false }: { readOnly
   const band = useMemo(() => computeBaselineBand(sessions), [sessions]);
   const sessionsToday = useMemo(() => computeSessionsToday(sessions), [sessions]);
   const trend = useMemo(() => computeTrend(sessions), [sessions]);
+  // Volledig verloop sinds de eerste sessie, voor het Trajectscherm.
+  const trendAll = useMemo(() => computeTrend(sessions, 0), [sessions]);
 
-  return { week, month, band, sessionsToday, trend, sessions, loading };
+  return { week, month, band, sessionsToday, trend, trendAll, sessions, loading };
 }
