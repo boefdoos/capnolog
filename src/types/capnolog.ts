@@ -104,11 +104,13 @@ export interface NulmetingBaseline {
   frozenAt: number; // epoch ms
 }
 
-// CART-doelbereik (Ritz et al., CHEST 2014, methodesectie): 40-42 mmHg.
-// Vast trajectdoel, in tegenstelling tot de meebewegende referentieband
-// hierboven: dit is normocapnie, geen persoonlijke baseline (P3).
-export const CART_GOAL_KPA_LOW = 5.33;
-export const CART_GOAL_KPA_HIGH = 5.6;
+// Gezond bereik: de gangbare klinische referentie voor CO2 bij gezonde
+// volwassenen, 35-45 mmHg (4,67-6,00 kPa). Algemene referentie, geen bron
+// specifiek voor chronische hyperventilatie. Vervangt sinds 24/09 het
+// CART-doel van 40-42 mmHg uit CATCH (astma): geen rechtstreekse koppeling
+// aan CHV, en een gemiddelde van 38 mmHg is al normocapnisch (Thomas).
+export const HEALTHY_KPA_LOW = 4.67;
+export const HEALTHY_KPA_HIGH = 6.0;
 
 // CART-protocol (Meuret et al. 2008): richtwaarden, geen harde grens. Meer
 // oefenen dan dit mag altijd; minder wordt gesignaleerd, niet geblokkeerd.

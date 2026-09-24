@@ -203,6 +203,8 @@ export const CART_GOAL_KPA_HIGH = 5.60;
 
 Toon dat als een vaste horizontale zone op `TrendChart`, die nooit meebeweegt. Dat is waar het traject naartoe werkt, en het is de maatstaf waaraan de rustcontrolereeks afgemeten moet worden.
 
+**Gewijzigd op 24/09.** Het CART-doel van 40-42 mmHg is weggelaten: het komt uit CATCH, een astmastudie, en er is geen rechtstreekse koppeling aan chronische hyperventilatie. Bovendien lag Thomas' gemiddelde (ongeveer 38 mmHg) al in het normale bereik, zodat de zone vooral demotiveerde. In de plaats toont de grafiek het gezonde bereik, 35-45 mmHg (4,67-6,00 kPa, `HEALTHY_KPA_LOW`/`HIGH`), de gangbare klinische referentie voor gezonde volwassenen. Bewijsniveau: algemene klinische referentie, geen CHV-specifieke bron. Naamgeving: CART is de methode (Meuret et al. 2008, paniekstoornis), CATCH is één studie die CART bij astma toepaste (Ritz et al. 2014).
+
 Ter oriëntatie: `DEFAULT_BAND_LOW` staat op 3,8 en `DEFAULT_BAND_HIGH` op 4,9 kPa, dus 28,5 tot 36,8 mmHg. De bovengrens van de terugvalband ligt onder de ondergrens van het CART-doel. Voor een terugvalwaarde bij te weinig data is dat verdedigbaar, maar het maakt duidelijk waarom een absoluut anker apart nodig is.
 
 ### P4. Compensatiedetectie

@@ -13,7 +13,7 @@ import {
 } from "chart.js";
 import { useEffect, useRef } from "react";
 import type { BaselineBand, Trend } from "@/lib/useAverages";
-import { CART_GOAL_KPA_HIGH, CART_GOAL_KPA_LOW } from "@/types/capnolog";
+import { HEALTHY_KPA_HIGH, HEALTHY_KPA_LOW } from "@/types/capnolog";
 
 // Filler is nodig voor de ingekleurde band en doelzone (fill: "-1").
 Chart.register(LinearScale, CategoryScale, LineController, LineElement, PointElement, Tooltip, Filler);
@@ -66,7 +66,7 @@ export default function TrendChart({
                 const value = `${(item.parsed.y as number).toFixed(1)} kPa`;
                 if (item.dataset.label === "Rustcontrole") return `Rustcontrole · ${value}`;
                 if (item.dataset.label === "Nulmeting") return `Nulmeting · ${value}`;
-                if (item.dataset.label === "CART-doel") return `CART-doel · ${value}`;
+                if (item.dataset.label === "Gezond bereik") return `Gezond bereik · ${value}`;
                 return value;
               },
             },
@@ -164,13 +164,13 @@ export default function TrendChart({
       pointBackgroundColor: "#F2B84B",
       order: 0,
     };
-    // Vast trajectdoel (P3), beweegt nooit mee met de data: normocapnie
-    // volgens het CART-protocol, niet Thomas' persoonlijke referentieband.
+    // Vaste referentie (P3), beweegt nooit mee met de data: het gezonde
+    // bereik (35-45 mmHg), niet de persoonlijke referentieband.
     const goalTop: ChartDataset<"line"> = {
-      label: "CART-doel",
+      label: "Gezond bereik",
       data: [
-        { x: minX, y: CART_GOAL_KPA_HIGH },
-        { x: maxX, y: CART_GOAL_KPA_HIGH },
+        { x: minX, y: HEALTHY_KPA_HIGH },
+        { x: maxX, y: HEALTHY_KPA_HIGH },
       ],
       borderColor: "#4FD1C5",
       borderDash: [2, 3],
@@ -180,10 +180,10 @@ export default function TrendChart({
       order: 5,
     };
     const goalBottom: ChartDataset<"line"> = {
-      label: "CART-doel",
+      label: "Gezond bereik",
       data: [
-        { x: minX, y: CART_GOAL_KPA_LOW },
-        { x: maxX, y: CART_GOAL_KPA_LOW },
+        { x: minX, y: HEALTHY_KPA_LOW },
+        { x: maxX, y: HEALTHY_KPA_LOW },
       ],
       borderColor: "#4FD1C5",
       borderDash: [2, 3],
@@ -242,7 +242,7 @@ export default function TrendChart({
           trend.cart.length > 0 && { color: "#5EEAA0", label: "Oefensessie" },
           trend.rustcontrole.length > 0 && { color: "#F2B84B", label: "Rustcontrole" },
           (trend.nulmeting.length > 0 || nulmetingMeanKpa != null) && { color: "#8B93F0", label: "Nulmeting" },
-          { color: "#4FD1C5", label: "CART-doel", zone: true },
+          { color: "#4FD1C5", label: "Gezond bereik", zone: true },
           { color: "#5EEAA0", label: "Jouw band", zone: true },
         ]}
       />
