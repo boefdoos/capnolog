@@ -138,7 +138,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
           },
           y1: {
             position: "right",
-            title: { display: true, text: "RR (/min)", color: "#8B93F0", font: { size: 11 } },
+            title: { display: true, text: "ademfrequentie (/min)", color: "#8B93F0", font: { size: 11 } },
             ticks: { color: "#8B93F0" },
             grid: { display: false },
           },
@@ -252,7 +252,7 @@ export default function Co2Chart({ entries, bandLow, bandHigh, sampleN = 1 }: Pr
     }
     const y1 = chart.options.scales?.y1 as { title?: { text?: string } } | undefined;
     if (y1?.title) {
-      y1.title.text = sampleN > 1 ? "Tempo (afgeleid) / RR (/min)" : "RR (/min)";
+      y1.title.text = "ademfrequentie (/min)";
     }
     chart.update();
   }, [entries, bandLow, bandHigh, sampleN]);

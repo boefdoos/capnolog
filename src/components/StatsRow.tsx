@@ -54,11 +54,11 @@ export default function StatsRow({
 
   if (sighs.length) {
     const success = sighs.filter((s) => s.subtype === "success").length;
-    chips.push(["BSR", `${Math.round((success / sighs.length) * 100)}%`]);
+    chips.push(["Zucht gelukt", `${Math.round((success / sighs.length) * 100)}%`]);
   }
 
   return (
-    <div className="space-y-3">
+    <div className="panel space-y-3">
       {avg != null && (
         <div className="rounded-lg border border-trace/40 bg-[#0D1210] px-4 py-3.5 text-center">
           <div className="text-[10px] uppercase tracking-wide text-muted">Gemiddelde ETCO2</div>

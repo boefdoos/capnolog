@@ -2,7 +2,7 @@
 
 **Datum:** 23 september 2026
 **Basis:** alle schermen doorlopen in Chrome op telefoonbreedte (414 px), live versie, account van Thomas, naast de code
-**Status:** stap 1 (beginscherm per fase en Trajectscherm) gebouwd op 23/09, stap 2 en 3 open
+**Status:** stap 1 (beginscherm per fase en Trajectscherm) en stap 2 (sessiescherm) gebouwd op 23 en 24/09, stap 3 open
 
 ---
 
@@ -142,3 +142,13 @@ Dit scherm is ook de plek voor de begeleider: per cliënt dezelfde tijdlijn.
 - Legende onder de evolutiegrafiek (B6).
 - Vaste tabbalk onderaan (Vandaag, Traject, Geschiedenis, Begeleiding), verborgen tijdens sessie of meting (S7).
 - Klok start bij de tik op Start in plaats van bij de eerste log (S1, R1). Rustmeting (nulmeting en rustcontrole) heeft een vaste vorm: 2 minuten, twee waarden op 60 en 110 s met een geluidssignaal, voortgang "waarde 1 van 2" en een duidelijk einde (R2). De stille rust in de oefensessie volgt dezelfde tijden.
+
+## 7. Gebouwd in stap 2
+
+- Sessiescherm tijdens het oefenen: fasekaart, invoerveld, RR-veld waar nodig, twee knoppen (Verstoring, Zucht). Geen grafiek, statistieken, band, gevoel, log of links meer (S3, S7).
+- "Sessie beëindigen" onderaan en klein, groen en groot vanaf 17 minuten (S2).
+- Zucht is één knop, daarna "Zucht gelukt" of "Niet gelukt" in neutrale kleuren (S4). "BSR" heet nu "zucht gelukt".
+- Afrondscherm bundelt gevoel, grafiek, statistieken, compensatiemelding, band en log, plus export. Zonder gelogde waarden: "Er wordt niets opgeslagen", en het gevoel kan dan niet gekozen worden, zodat er geen lege sessie ontstaat (A1).
+- Statistiekenrij tekent haar eigen kader, dus geen leeg kader meer zonder data (S5).
+- As van de grafiek heet "ademfrequentie (/min)" (S6).
+

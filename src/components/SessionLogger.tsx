@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import BandInfo from "./BandInfo";
 import Co2Chart from "./Co2Chart";
@@ -96,7 +95,6 @@ export default function SessionLogger({ uid }: { uid: string }) {
       setViewMode("review");
     }
   }, [viewMode, cartTargetReached, meta]);
-  const inRestPhase = cues.phase === "rest";
   // RR van de EMMA enkel in de ongestuurde fasen, één waarde per fase (P10):
   // tijdens gepaced ademen dicteert de pacer het tempo, daar valt niets te
   // meten. Het veld verdwijnt zodra de waarde voor deze fase gelogd is.
@@ -170,44 +168,55 @@ export default function SessionLogger({ uid }: { uid: string }) {
   if (viewMode === "review") {
     return (
       <div className="mx-auto max-w-2xl p-4 pb-10">
-        <header className="mb-4 border-b border-panel-border pb-3.5">
-          <h1 className="text-[19px] font-semibold tracking-wide">Sessie afronden</h1>
-          <p className="text-[12.5px] text-muted">Laatste controle voor je afsluit</p>
+        <header className="mb-4 flex items-end justify-between border-b border-panel-border pb-3.5">
+          <div>
+            <h1 className="text-[19px] font-semibold tracking-wide">Sessie afronden</h1>
+            <p className="text-[12.5px] text-muted">Laatste controle voor je afsluit</p>
+          </div>
+          {hasSession && (
+            <button
+              onClick={() => exportSessionCsv(entries, meta?.createdAt ?? Date.now(), "co2-sessie", meta?.feeling)}
+              className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+            >
+              Exporteer CSV
+            </button>
+          )}
         </header>
 
+        {/* Alles wat tijdens het oefenen weg is (gevoel, grafiek, cijfers,
+            band, log), staat hier (docs/ui_doorlichting.md §3.3). */}
         <div className="space-y-3.5">
-          <FeelingSelector value={meta?.feeling} onChange={setFeeling} />
+          {hasSession ? (
+            <>
+              <FeelingSelector value={meta?.feeling} onChange={setFeeling} />
 
-          <div className="panel">
-            <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
-          </div>
+              <div className="panel">
+                <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
+              </div>
 
-          <div className="panel">
-            <StatsRow
-              entries={entries}
-              liveDurationFrom={meta?.createdAt ?? null}
-              feeling={meta?.feeling}
-              sampleN={sampleN}
-            />
-          </div>
+              <StatsRow entries={entries} feeling={meta?.feeling} sampleN={sampleN} />
 
-          <CompensationNote check={compensation} />
+              <CompensationNote check={compensation} />
 
-          <div className="panel">
-            <div className="mb-2.5 flex items-center justify-between">
-              <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted">
-                Log &middot; verwijder eventuele anomalieën
-              </h2>
-            </div>
-            <EntryTable entries={entries} onDelete={deleteEntry} sampleN={sampleN} />
-          </div>
+              <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />
+
+              <div className="panel">
+                <h2 className="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">
+                  Log &middot; verwijder eventuele anomalieën
+                </h2>
+                <EntryTable entries={entries} onDelete={deleteEntry} sampleN={sampleN} />
+              </div>
+            </>
+          ) : (
+            <div className="panel text-sm text-muted">Nog geen waarden gelogd. Er wordt niets opgeslagen.</div>
+          )}
 
           <div className="space-y-2">
             <button
               onClick={confirmEndSession}
               className="w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
             >
-              Bevestig en beëindig sessie
+              {hasSession ? "Bevestig en beëindig sessie" : "Sessie sluiten"}
             </button>
             <button
               onClick={() => setViewMode("active")}
@@ -221,44 +230,24 @@ export default function SessionLogger({ uid }: { uid: string }) {
     );
   }
 
+  // Tijdens het oefenen enkel wat je nodig hebt: fase en streefdoel, het
+  // invoerveld, verstoring en zucht. Geen grafiek of cijfers, de feedback
+  // zit op het EMMA-scherm zelf (docs/ui_doorlichting.md §3.3).
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
       <header className="mb-3 flex items-end justify-between border-b border-panel-border pb-3.5">
         <div>
-          <h1 className="text-[19px] font-semibold tracking-wide">ETCO2-sessie</h1>
-          <p className="text-[12.5px] text-muted">Oefensessie met de EMMA</p>
+          <h1 className="text-[19px] font-semibold tracking-wide">Oefensessie</h1>
+          <p className="text-[12.5px] text-muted">
+            {cartTargetReached ? "17 minuten bereikt" : `${CART_TARGET_MINUTES} minuten`}
+          </p>
         </div>
-        <div className="text-right">
-          <div className="font-mono text-2xl text-trace" style={{ textShadow: "0 0 14px rgba(94,234,160,0.35)" }}>
-            {duration}
-          </div>
-          <div className="text-[10px] text-muted">
-            {cartTargetReached ? "\u2713 CART-doel (17:00) bereikt" : `doel ${CART_TARGET_MINUTES}:00`}
-          </div>
-        </div>
+        <div className="font-mono text-2xl text-trace">{duration}</div>
       </header>
 
-      {cues.phase && <div className="mb-2.5"><PhaseBadge cues={cues} target={cartTarget} /></div>}
-
-      <button
-        onClick={() => setViewMode("review")}
-        className="mb-2.5 w-full rounded-lg border border-amber bg-amber/10 py-3 text-sm font-semibold text-amber active:scale-[0.99]"
-      >
-        Beëindig sessie
-      </button>
-
-      <nav className="mb-4 flex gap-3 text-xs text-muted">
-        <Link href="/sessions" prefetch={false} className="underline decoration-panel-border underline-offset-2 hover:text-text">
-          Geschiedenis
-        </Link>
-        {hasSession && (
-          <button onClick={() => exportSessionCsv(entries, meta?.createdAt ?? Date.now(), "co2-sessie", meta?.feeling)} className="hover:text-text">
-            Exporteer CSV
-          </button>
-        )}
-      </nav>
-
       <div className="space-y-3.5">
+        {cues.phase && <PhaseBadge cues={cues} target={cartTarget} />}
+
         <KpaInput
           onLog={logReading}
           onLogged={() => {
@@ -279,41 +268,17 @@ export default function SessionLogger({ uid }: { uid: string }) {
             bumpRefocus();
           }}
         />
-        <FeelingSelector
-          value={meta?.feeling}
-          onChange={(feeling) => {
-            setFeeling(feeling);
-            bumpRefocus();
-          }}
-        />
 
-        {/* Tijdens stille rust geen grafiek, statistieken of band: die fase is
-            de ongestuurde baseline-meting, en live feedback lokt sturen uit. */}
-        {!inRestPhase && (
-          <>
-            <div className="panel">
-              <Co2Chart entries={entries} bandLow={chartBand.low} bandHigh={chartBand.high} sampleN={sampleN} />
-            </div>
-
-            <div className="panel">
-              <StatsRow
-                entries={entries}
-                liveDurationFrom={meta?.createdAt ?? null}
-                feeling={meta?.feeling}
-                sampleN={sampleN}
-              />
-            </div>
-
-            <BandInfo band={meta ? { ...band, low: meta.bandLow, high: meta.bandHigh } : band} />
-          </>
-        )}
-
-        <div className="panel">
-          <div className="mb-2.5 flex items-center justify-between">
-            <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted">Log</h2>
-          </div>
-          <EntryTable entries={entries} onDelete={deleteEntry} sampleN={sampleN} />
-        </div>
+        <button
+          onClick={() => setViewMode("review")}
+          className={
+            cartTargetReached
+              ? "w-full rounded-lg bg-trace py-3.5 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
+              : "w-full py-3 text-xs text-muted underline decoration-panel-border underline-offset-2"
+          }
+        >
+          Sessie beëindigen
+        </button>
       </div>
     </div>
   );

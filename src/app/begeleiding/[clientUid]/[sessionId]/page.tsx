@@ -58,9 +58,7 @@ function ClientSessionInner({
           <div className="panel">
             <Co2Chart entries={entries} bandLow={meta?.bandLow ?? 3.8} bandHigh={meta?.bandHigh ?? 4.9} sampleN={sampleN} />
           </div>
-          <div className="panel">
-            <StatsRow entries={entries} feeling={meta?.feeling} sampleN={sampleN} />
-          </div>
+          <StatsRow entries={entries} feeling={meta?.feeling} sampleN={sampleN} />
           <div className="panel">
             <h2 className="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Log</h2>
             <EntryTable entries={entries} sampleN={sampleN} />

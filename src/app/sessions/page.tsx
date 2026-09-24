@@ -144,7 +144,7 @@ function SessionsListInner({ uid }: { uid: string }) {
                   {bsrPct != null && (
                     <>
                       {" "}
-                      &middot; BSR {bsrPct}%
+                      &middot; zucht gelukt {bsrPct}%
                     </>
                   )}
                 </div>

@@ -1,5 +1,14 @@
 "use client";
 
+import { useState } from "react";
+
+const buttonClass =
+  "flex-1 rounded-lg border border-panel-border px-3.5 py-3 text-sm font-semibold text-text active:scale-95";
+
+/**
+ * Verstoring en zucht. De zucht is één knop met daarna de keuze, in neutrale
+ * kleuren: rood voor "mislukt" was een oordeel (docs/ui_doorlichting.md S4).
+ */
 export default function EventButtons({
   onMarkDisturbance,
   onSigh,
@@ -7,29 +16,41 @@ export default function EventButtons({
   onMarkDisturbance: () => void;
   onSigh: (subtype: "success" | "fail") => void;
 }) {
+  const [choosingSigh, setChoosingSigh] = useState(false);
+
+  function sigh(subtype: "success" | "fail") {
+    onSigh(subtype);
+    setChoosingSigh(false);
+  }
+
   return (
-    <div className="panel">
-      <label className="mb-2 block text-[11px] uppercase tracking-wide text-muted">Gebeurtenissen</label>
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={onMarkDisturbance}
-          className="rounded-lg border border-amber px-3.5 py-2.5 text-sm font-semibold text-amber active:scale-95"
-        >
-          Markeer verstoring
-        </button>
-        <button
-          onClick={() => onSigh("success")}
-          className="rounded-lg border border-teal px-3.5 py-2.5 text-sm font-semibold text-teal active:scale-95"
-        >
-          Zucht: geslaagd
-        </button>
-        <button
-          onClick={() => onSigh("fail")}
-          className="rounded-lg border border-danger px-3.5 py-2.5 text-sm font-semibold text-danger active:scale-95"
-        >
-          Zucht: mislukt
-        </button>
-      </div>
+    <div className="flex gap-2.5">
+      {choosingSigh ? (
+        <>
+          <button onClick={() => sigh("success")} className={buttonClass}>
+            Zucht gelukt
+          </button>
+          <button onClick={() => sigh("fail")} className={buttonClass}>
+            Niet gelukt
+          </button>
+          <button
+            onClick={() => setChoosingSigh(false)}
+            aria-label="Annuleer"
+            className="rounded-lg border border-panel-border px-3.5 py-3 text-sm text-muted active:scale-95"
+          >
+            &times;
+          </button>
+        </>
+      ) : (
+        <>
+          <button onClick={onMarkDisturbance} className={buttonClass}>
+            Verstoring
+          </button>
+          <button onClick={() => setChoosingSigh(true)} className={buttonClass}>
+            Zucht
+          </button>
+        </>
+      )}
     </div>
   );
 }

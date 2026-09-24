@@ -71,9 +71,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
               sampleN={meta?.logEveryNthBreath ?? 1}
             />
           </div>
-          <div className="panel">
-            <StatsRow entries={entries} feeling={meta?.feeling} sampleN={meta?.logEveryNthBreath ?? 1} />
-          </div>
+          <StatsRow entries={entries} feeling={meta?.feeling} sampleN={meta?.logEveryNthBreath ?? 1} />
           <div className="panel">
             <h2 className="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Log</h2>
             <EntryTable entries={entries} sampleN={meta?.logEveryNthBreath ?? 1} />
