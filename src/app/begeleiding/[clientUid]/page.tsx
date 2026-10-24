@@ -11,6 +11,7 @@ import { useCartProtocol } from "@/lib/useCartProtocol";
 import { useClientName } from "@/lib/useCoachClients";
 import { useSessionsList } from "@/lib/useSessionsList";
 import { SESSION_TYPE_LABELS } from "@/types/capnolog";
+import Loading from "@/components/Loading";
 
 
 /**
@@ -24,7 +25,7 @@ function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: str
     nulmetingBaseline,
   });
   const { sessions, loading } = useSessionsList(clientUid);
-  const clientName = useClientName(clientUid);
+  const clientName = useClientName(coachUid, clientUid);
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -33,7 +34,7 @@ function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: str
           <Link href="/begeleiding" prefetch={false} className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text">
             &lsaquo; Cliënten
           </Link>
-          <h1 className="mt-1 text-[19px] font-semibold tracking-wide">{clientName}</h1>
+          <h1 className="mt-1 text-[19px] font-semibold tracking-wide">{clientName ?? "\u00a0"}</h1>
         </div>
       </header>
 
@@ -46,7 +47,7 @@ function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: str
           band={band}
         />
 
-        {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
+        {loading && <Loading />}
         <div className="space-y-2">
           {sessions.map((s) => {
             const avgKpa = s.readingCount > 0 ? s.kpaSum / s.readingCount : null;

@@ -9,6 +9,7 @@ import { useSessionsList } from "@/lib/useSessionsList";
 import { fmtTime } from "@/lib/format";
 import { exportFullPeriodCsv, exportSessionsOverviewCsv, fetchSessionsInPeriod } from "@/lib/exportCsv";
 import { FEELING_COLORS, FEELING_LABELS, SESSION_TYPE_LABELS, type SessionType } from "@/types/capnolog";
+import Loading from "@/components/Loading";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PROTOCOL_TARGETS = [13, 11, 9, 6];
@@ -90,7 +91,7 @@ function SessionsListInner({ uid }: { uid: string }) {
         </div>
       </header>
 
-      {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
+      {loading && <Loading />}
       {!loading && !sessions.length && (
         <div className="py-6 text-center text-xs text-muted">Nog niets gelogd.</div>
       )}

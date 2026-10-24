@@ -10,6 +10,7 @@ import { computeNulmetingSummary, useAverages } from "@/lib/useAverages";
 import { useCartProtocol } from "@/lib/useCartProtocol";
 import { formatRustcontroleDate } from "@/lib/useRustcontrole";
 import { unlockAudioContext } from "@/lib/pacer";
+import Loading from "@/components/Loading";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -52,7 +53,7 @@ function TrajectInner({ uid }: { uid: string }) {
       </header>
 
       {!ready ? (
-        <div className="py-6 text-center text-xs text-muted">...</div>
+        <Loading />
       ) : (
         <div className="space-y-3.5">
           <TrajectOverview

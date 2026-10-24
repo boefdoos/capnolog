@@ -27,6 +27,7 @@ import { breathSamplingForTarget } from "@/lib/sessionPhase";
 import { computeAvgKpa, computeAvgRR, fmtTime } from "@/lib/format";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { CART_TARGET_MINUTES } from "@/types/capnolog";
+import Loading from "./Loading";
 
 type ViewMode = "idle" | "active" | "review" | "rustcontrole" | "nulmeting";
 
@@ -156,7 +157,9 @@ export default function SessionLogger({ uid }: { uid: string }) {
               }}
             />
           ) : (
-            <div className="panel py-10 text-center text-xs text-muted">...</div>
+            <div className="panel py-4">
+              <Loading />
+            </div>
           )}
 
           <TrendChart trend={trend} band={band} nulmetingMeanKpa={nulmetingBaseline?.meanKpa ?? null} />

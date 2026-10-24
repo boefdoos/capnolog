@@ -12,6 +12,7 @@ import { useSessionDetail } from "@/lib/useSessionDetail";
 import { SESSION_TYPE_LABELS } from "@/types/capnolog";
 import { exportSessionCsv } from "@/lib/exportCsv";
 import { deleteSessionCompletely } from "@/lib/sessionActions";
+import Loading from "@/components/Loading";
 
 function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string }) {
   const { meta, entries, loading } = useSessionDetail(uid, sessionId);
@@ -61,7 +62,7 @@ function SessionDetailInner({ uid, sessionId }: { uid: string; sessionId: string
         </div>
       </header>
 
-      {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
+      {loading && <Loading />}
 
       {!loading && (
         <div className="space-y-3.5">

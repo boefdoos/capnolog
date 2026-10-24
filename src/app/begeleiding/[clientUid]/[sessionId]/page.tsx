@@ -11,6 +11,7 @@ import { useClientName } from "@/lib/useCoachClients";
 import { useSessionDetail } from "@/lib/useSessionDetail";
 import { SESSION_TYPE_LABELS } from "@/types/capnolog";
 import { exportSessionCsv } from "@/lib/exportCsv";
+import Loading from "@/components/Loading";
 
 /** Sessiedetail voor de begeleider (P13): zelfde weergave als de eigen
  * geschiedenis, zonder verwijderen. */
@@ -25,7 +26,7 @@ function ClientSessionInner({
 }) {
   const { meta, entries, loading } = useSessionDetail(clientUid, sessionId);
   const sampleN = meta?.logEveryNthBreath ?? 1;
-  const clientName = useClientName(clientUid);
+  const clientName = useClientName(coachUid, clientUid);
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -36,7 +37,7 @@ function ClientSessionInner({
             prefetch={false}
             className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
           >
-            &lsaquo; {clientName}
+            &lsaquo; {clientName ?? "Terug"}
           </Link>
           <h1 className="mt-1 text-[19px] font-semibold tracking-wide">
             {meta ? new Date(meta.createdAt).toLocaleString("nl-BE") : "..."}
@@ -53,7 +54,7 @@ function ClientSessionInner({
         )}
       </header>
 
-      {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
+      {loading && <Loading />}
 
       {!loading && (
         <div className="space-y-3.5">

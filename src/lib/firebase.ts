@@ -2,7 +2,17 @@
 
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { type Auth, getAuth } from "firebase/auth";
-import { type Firestore, getFirestore, doc, getDoc } from "firebase/firestore";
+import {
+  type Firestore,
+  clearIndexedDbPersistence,
+  doc,
+  getDoc,
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  terminate,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -35,9 +45,44 @@ export function getFirebaseAuth(): Auth {
   return auth;
 }
 
+// Lokale cache in IndexedDB: bij een koude start (op iOS vaak, de PWA wordt
+// geregeld uit het geheugen gegooid) toont de app meteen de gegevens van de
+// vorige keer en synct ze daarna, in plaats van eerst op het netwerk te
+// wachten voor alle sessies. Meerdere tabbladen delen dezelfde cache. Waar
+// IndexedDB niet beschikbaar is (privévenster), valt Firestore zelf terug op
+// een cache in het geheugen.
 export function getFirebaseDb(): Firestore {
-  if (!db) db = getFirestore(ensureApp());
+  if (!db) {
+    const firebaseApp = ensureApp();
+    try {
+      db = initializeFirestore(firebaseApp, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      });
+    } catch {
+      // Al geïnitialiseerd, bijvoorbeeld na een hot reload in dev.
+      db = getFirestore(firebaseApp);
+    }
+  }
   return db;
+}
+
+/**
+ * Wist de lokale cache na het afmelden: het zijn gezondheidsgegevens, en een
+ * toestel kan gedeeld zijn (tablet in de praktijk, ook de begeleider heeft
+ * cliëntdata in zijn cache). Lukt het wissen niet, bijvoorbeeld omdat een
+ * ander tabblad de cache nog open heeft, dan blijft ze staan tot de volgende
+ * keer; de regels laten zonder aanmelding toch niets meer lezen.
+ */
+export async function clearLocalData(): Promise<void> {
+  if (!db) return;
+  const current = db;
+  db = null;
+  try {
+    await terminate(current);
+    await clearIndexedDbPersistence(current);
+  } catch {
+    // zie hierboven
+  }
 }
 
 /**

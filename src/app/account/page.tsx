@@ -6,6 +6,7 @@ import AuthGate from "@/components/AuthGate";
 import TabBar from "@/components/TabBar";
 import { useAuth } from "@/lib/useAuth";
 import { useOwnAccess } from "@/lib/useOwnAccess";
+import Loading from "@/components/Loading";
 
 /**
  * Account: wie je gegevens kan lezen, met intrekken (P13, vereist vóór een
@@ -38,7 +39,7 @@ function AccountInner({ user }: { user: User }) {
         <div className="panel">
           <h2 className="mb-1 text-xs uppercase tracking-wide text-muted">Wie kan je gegevens lezen</h2>
           {loading ? (
-            <div className="py-2 text-xs text-muted">...</div>
+            <Loading />
           ) : coaches.length === 0 ? (
             <p className="py-1.5 text-sm text-text">Niemand. Je gegevens zijn enkel voor jou zichtbaar.</p>
           ) : (

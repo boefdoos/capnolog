@@ -3,6 +3,7 @@
 import type { User } from "firebase/auth";
 import { useState } from "react";
 import { useAuth } from "@/lib/useAuth";
+import Loading from "./Loading";
 
 export default function AuthGate({
   children,
@@ -24,7 +25,7 @@ export default function AuthGate({
   }
 
   if (loading) {
-    return <div className="flex min-h-dvh items-center justify-center text-muted text-sm">...</div>;
+    return <Loading fullScreen />;
   }
 
   if (!user) {

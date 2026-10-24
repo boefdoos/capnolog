@@ -5,6 +5,7 @@ import AuthGate from "@/components/AuthGate";
 import InviteClient from "@/components/InviteClient";
 import TabBar from "@/components/TabBar";
 import { useCoachClients } from "@/lib/useCoachClients";
+import Loading from "@/components/Loading";
 
 function ClientsInner({ uid }: { uid: string }) {
   const { clients, loading } = useCoachClients(uid);
@@ -18,7 +19,7 @@ function ClientsInner({ uid }: { uid: string }) {
         </div>
       </header>
 
-      {loading && <div className="py-6 text-center text-xs text-muted">...</div>}
+      {loading && <Loading />}
       {!loading && !clients.length && (
         <div className="py-6 text-center text-xs text-muted">Nog geen cliënten die toegang gaven.</div>
       )}

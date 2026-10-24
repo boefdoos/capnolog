@@ -9,7 +9,7 @@ import {
   type User,
 } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { getFirebaseAuth, isFirebaseConfigured } from "./firebase";
+import { clearLocalData, getFirebaseAuth, isFirebaseConfigured } from "./firebase";
 
 function mapAuthError(err: unknown): string {
   const code = (err as { code?: string })?.code ?? "";
@@ -80,8 +80,14 @@ export function useAuth() {
     }
   }
 
+  /** Na het afmelden de lokale cache wissen en de pagina herladen: lopende
+   * listeners hangen aan de gestopte Firestore-instantie, een herlaadbeurt
+   * begint proper. Zelfde adres, zodat afmelden op een uitnodigingspagina
+   * de uitnodiging niet verliest. */
   async function logOut() {
     await signOut(getFirebaseAuth());
+    await clearLocalData();
+    window.location.reload();
   }
 
   return { user, loading, configured, error, signIn, signUp, resetPassword, logOut };
