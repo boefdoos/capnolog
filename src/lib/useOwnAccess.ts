@@ -29,7 +29,7 @@ export function useOwnAccess(uid: string | null) {
       const data = snap.data();
       const coachUids = (data?.coachUids as string[] | undefined) ?? [];
       const names = (data?.coachNames as Record<string, string> | undefined) ?? {};
-      setCoaches(coachUids.map((c) => ({ uid: c, name: names[c] ?? `Begeleider ${c.slice(0, 6)}` })));
+      setCoaches(coachUids.map((c) => ({ uid: c, name: names[c] || "Begeleider zonder naam" })));
       setLoading(false);
     });
     return () => unsub();

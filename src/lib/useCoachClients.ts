@@ -4,6 +4,9 @@ import { collection, doc, getDoc, onSnapshot, query, where } from "firebase/fire
 import { useEffect, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 
+// Nooit een stuk van het account-ID tonen: dat leest als een foute code.
+export const UNNAMED_CLIENT = "Cliënt zonder naam";
+
 export interface CoachClient {
   uid: string;
   name: string;
@@ -45,7 +48,7 @@ export function useCoachClients(uid: string | null) {
           try {
             const clientSnap = await getDoc(doc(db, "users", clientUid));
             const displayName = clientSnap.data()?.displayName as string | undefined;
-            return { uid: clientUid, name: displayName || linkName || clientUid.slice(0, 6) };
+            return { uid: clientUid, name: displayName || linkName || UNNAMED_CLIENT };
           } catch {
             // Geen leesrecht (meer): toegang niet verleend of ingetrokken.
             return null;
@@ -91,16 +94,31 @@ export function useCoachClients(uid: string | null) {
   return { clients, loading };
 }
 
-/** Weergavenaam van één cliënt, met dezelfde terugval als in de lijst. */
-export function useClientName(clientUid: string): string {
-  const [name, setName] = useState(clientUid.slice(0, 6));
+/** Weergavenaam van één cliënt, met dezelfde terugval als in de lijst:
+ * displayName op het document van de cliënt, dan de naam uit de uitnodiging
+ * (links). `null` zolang dat laadt, zodat er niets flitst. */
+export function useClientName(coachUid: string, clientUid: string): string | null {
+  const [name, setName] = useState<string | null>(null);
   useEffect(() => {
-    getDoc(doc(getFirebaseDb(), "users", clientUid))
-      .then((snap) => {
-        const displayName = snap.data()?.displayName as string | undefined;
-        if (displayName) setName(displayName);
-      })
-      .catch(() => {});
-  }, [clientUid]);
+    let cancelled = false;
+    const db = getFirebaseDb();
+    async function load() {
+      const fromUser = await getDoc(doc(db, "users", clientUid))
+        .then((snap) => snap.data()?.displayName as string | undefined)
+        .catch(() => undefined);
+      if (fromUser) return fromUser;
+      const fromLink = await getDoc(doc(db, "links", `${coachUid}_${clientUid}`))
+        .then((snap) => snap.data()?.clientName as string | undefined)
+        .catch(() => undefined);
+      return fromLink || UNNAMED_CLIENT;
+    }
+    setName(null);
+    void load().then((n) => {
+      if (!cancelled) setName(n);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [coachUid, clientUid]);
   return name;
 }
