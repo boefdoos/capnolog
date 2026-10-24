@@ -21,7 +21,7 @@ Vraag Thomas welk punt hij wil aanpakken voor je begint. Bouw niet de hele lijst
 | P1 | Af. Beginscherm toont ook de datum van de volgende rustcontrole | `c97c493`, `6de544b` |
 | P1b | Af. Bemonstering, pacer, fasecues | `5a93169`, `c0cc35c`, `5a2dae1` |
 | P2 | Af | `654317c` |
-| P3 | Af | `654317c` |
+| P3 | Af. Gezond bereik 35-45 mmHg in plaats van het CART-doel uit CATCH | `654317c`, `51895f0` |
 | P4 | Af, gebruikt de afgeleide RR met N-correctie | `f2efa30` |
 | P5 | Af. Venster van 4 weken, vloer die nooit daalt | `122673b` |
 | P6 | Niet bouwen. Thomas kiest voor de kalender zoals in CATCH | |
@@ -37,7 +37,7 @@ De beschrijvingen hieronder zijn het oorspronkelijke reviewverslag. Waar de bouw
 
 **Projectgegevens.** Repo `boefdoos/capnolog`, branch `main`. Next.js 14 App Router, TypeScript, Tailwind 3, Firebase Auth en Firestore, Chart.js 4. Buildcheck: `npx next build`. Deployment via Vercel op elke push naar `main`.
 
-**Datamodel.** `users/{uid}/sessions/{sessionId}` met metadata en aggregaten, subcollectie `entries/{entryId}` met `type` ("reading" | "marker" | "sigh"), `subtype`, `tSec`, `kpa`. De velden `idx`, `delta`, `mmHg` en `rr` worden client-side afgeleid in `deriveEntries` en nooit opgeslagen. Protocolinstellingen staan in `users/{uid}/settings/protocol`.
+**Datamodel.** `users/{uid}/sessions/{sessionId}` met metadata en aggregaten, subcollectie `entries/{entryId}` met `type` ("reading" | "rr", in oudere sessies ook "marker" en "sigh", sinds 24/09 niet meer gelogd), `subtype`, `tSec`, `kpa`. De velden `idx`, `delta`, `mmHg` en `rr` worden client-side afgeleid in `deriveEntries` en nooit opgeslagen. Protocolinstellingen staan in `users/{uid}/settings/protocol`.
 
 P1 voegt `sessionType` toe op het sessiedocument, P1b en P10 voegen een entry-type `"rr"` toe met een veld `rrValue` en een sessieveld `logEveryNthBreath`. P12 voegt `nulmeting` toe als derde `sessionType` plus een bevroren baselinewaarde op gebruikersniveau, P13 voegt een koppeling tussen begeleider en cliënt toe.
 
