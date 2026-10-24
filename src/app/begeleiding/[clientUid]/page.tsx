@@ -18,8 +18,11 @@ import { SESSION_TYPE_LABELS } from "@/types/capnolog";
  * alleen-lezen: geen verwijderknoppen, geen protocolstart, geen backfill.
  */
 function ClientInner({ coachUid, clientUid }: { coachUid: string; clientUid: string }) {
-  const { band, trendAll, sessions: allSessions } = useAverages(clientUid, { readOnly: true });
   const { startDate, nulmetingBaseline } = useCartProtocol(clientUid);
+  const { band, trendAll, sessions: allSessions } = useAverages(clientUid, {
+    readOnly: true,
+    nulmetingBaseline,
+  });
   const { sessions, loading } = useSessionsList(clientUid);
   const clientName = useClientName(clientUid);
 

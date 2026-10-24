@@ -31,13 +31,15 @@ import { CART_TARGET_MINUTES } from "@/types/capnolog";
 type ViewMode = "idle" | "active" | "review" | "rustcontrole" | "nulmeting";
 
 export default function SessionLogger({ uid }: { uid: string }) {
-  const { band, sessionsToday, trend, sessions, loading: averagesLoading } = useAverages(uid);
   const {
     startDate: cartStartDate,
     target: cartTarget,
     nulmetingBaseline,
     loading: protocolLoading,
   } = useCartProtocol(uid);
+  const { band, sessionsToday, trend, sessions, loading: averagesLoading } = useAverages(uid, {
+    nulmetingBaseline,
+  });
   const phase = computeTrajectPhase(cartStartDate);
   // Zolang protocol of sessies nog laden, geen protocol- of nulmetingregel:
   // anders staat er even "CART-protocol starten", en één tik daarop zou de

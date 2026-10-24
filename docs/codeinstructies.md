@@ -359,7 +359,7 @@ Uit de programmaontwerpnota, nog niet gepland als bouwwerk:
 
 - Fase-besef over twaalf weken, met bewust afnemende meetintensiteit in fase 3
 - Uitvoer voor de huisarts: nulmeting, verloop, slotmeting op één pagina
-- Bandberekening en progressie afgeleid uit de nulmeting van de individuele gebruiker in plaats van uit constanten. De huidige standaardwaarden zijn gekalibreerd op één persoon, en die persoon is Thomas.
+- Progressie afgeleid uit de nulmeting van de individuele gebruiker in plaats van uit constanten. De huidige standaardwaarden zijn gekalibreerd op één persoon, en die persoon is Thomas. *De band is gebouwd (24/10): zolang er minder dan `MIN_SESSIONS_FOR_BASELINE` CART-sessies zijn, valt de referentieband terug op de bevroren nulmeting (gemiddelde ± 1 SD, vanaf 4 meetmomenten), en pas daaronder op de vaste terugvalband. De nulmeting zet geen vloer (P5): ze is een vertrekpunt, geen bereikt niveau. Het weekdoel (13/11/9/6) blijft een vaste kalender, zie P6.*
 
 Op langere termijn lost eigen hardware met een data-uitgang het probleem uit P1b volledig op: een sidestream-opstelling met Bluetooth maakt manueel loggen overbodig. Dat is een apart traject van maanden en het mag P1b niet ophouden.
 

@@ -33,7 +33,9 @@ export interface WindowAverage {
 export interface BaselineBand {
   low: number;
   high: number;
-  source: "baseline" | "default";
+  // "baseline": eigen CART-sessies, "nulmeting": bevroren startweek,
+  // "default": vaste terugvalband.
+  source: "baseline" | "nulmeting" | "default";
   readingCount: number;
   // Ondergrens opgetrokken tot het beste eerder bereikte niveau (P5).
   floorApplied: boolean;
@@ -96,13 +98,29 @@ function windowBand(cartSessions: SessionMeta[], endMs: number): RawBand | null 
  * beneden trekt. Je zit dan tijdelijk onder je band, dat is de bedoeling.
  * De vloer is de hoogste ondergrens die ooit bereikt werd over een venster
  * met minstens MIN_SESSIONS_FOR_FLOOR sessies.
- * Zonder genoeg recente data: band over alle CART-sessies ooit, en daaronder
- * de vaste terugvalband. Enkel CART-sessies (P2).
+ * Zonder genoeg recente data: band over alle CART-sessies ooit. Daaronder de
+ * bevroren nulmeting (gemiddelde ± 1 SD), zodat een cliënt in de eerste dagen
+ * zijn eigen vertrekpunt ziet in plaats van de vaste terugvalband, die op
+ * Thomas gekalibreerd is. Die nulmeting zet geen vloer: ze is een vertrekpunt,
+ * geen niveau dat in de oefening bereikt werd. Enkel CART-sessies (P2).
  */
-function computeBaselineBand(allSessions: SessionMeta[]): BaselineBand {
+function computeBaselineBand(
+  allSessions: SessionMeta[],
+  nulmetingBaseline: NulmetingBaseline | null
+): BaselineBand {
   const cart = allSessions.filter(countsAsCartSession);
   const raw = windowBand(cart, Date.now()) ?? bandFromSessions(cart);
   if (!raw) {
+    if (nulmetingBaseline && nulmetingBaseline.sessionCount >= MIN_SESSIONS_FOR_BASELINE) {
+      const { meanKpa, sdKpa, readingCount } = nulmetingBaseline;
+      return {
+        low: Math.max(DEVICE_MIN_KPA, meanKpa - sdKpa),
+        high: meanKpa + sdKpa,
+        source: "nulmeting",
+        readingCount,
+        floorApplied: false,
+      };
+    }
     const n = cart.reduce((sum, s) => sum + s.readingCount, 0);
     return { low: DEFAULT_BAND_LOW, high: DEFAULT_BAND_HIGH, source: "default", readingCount: n, floorApplied: false };
   }
@@ -196,8 +214,16 @@ export function computeNulmetingSummary(
 /**
  * `readOnly`: voor de begeleidersweergave (P13). Slaat de zelfherstellende
  * backfill over, want een begeleider mag niet schrijven in cliëntdata.
+ * `nulmetingBaseline`: terugval voor de referentieband zolang er te weinig
+ * CART-sessies zijn (zie computeBaselineBand).
  */
-export function useAverages(uid: string | null, { readOnly = false }: { readOnly?: boolean } = {}) {
+export function useAverages(
+  uid: string | null,
+  {
+    readOnly = false,
+    nulmetingBaseline = null,
+  }: { readOnly?: boolean; nulmetingBaseline?: NulmetingBaseline | null } = {}
+) {
   const [sessions, setSessions] = useState<SessionMeta[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -236,7 +262,10 @@ export function useAverages(uid: string | null, { readOnly = false }: { readOnly
 
   const week = useMemo(() => computeWindow(sessions, Date.now() - 7 * DAY_MS), [sessions]);
   const month = useMemo(() => computeWindow(sessions, Date.now() - 30 * DAY_MS), [sessions]);
-  const band = useMemo(() => computeBaselineBand(sessions), [sessions]);
+  const band = useMemo(
+    () => computeBaselineBand(sessions, nulmetingBaseline),
+    [sessions, nulmetingBaseline]
+  );
   const sessionsToday = useMemo(() => computeSessionsToday(sessions), [sessions]);
   const trend = useMemo(() => computeTrend(sessions), [sessions]);
   // Volledig verloop sinds de eerste sessie, voor het Trajectscherm.

@@ -11,6 +11,8 @@ export default function BandInfo({ band }: { band: BaselineBand }) {
           (laatste 4 weken, gemiddelde &plusmn; 1 SD
           {band.floorApplied ? ", ondergrens op je beste niveau tot nu" : ""})
         </>
+      ) : band.source === "nulmeting" ? (
+        <>(je startweek, gemiddelde &plusmn; 1 SD, tot je genoeg oefeningen hebt)</>
       ) : (
         <>(standaard, nog te weinig data voor een eigen baseline)</>
       )}
