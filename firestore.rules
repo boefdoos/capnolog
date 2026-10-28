@@ -156,7 +156,7 @@ service cloud.firestore {
     // Koppelingen: enkel zodat de begeleider zijn cliënten kan oplijsten. Ze
     // geven zelf geen leesrecht, dat komt enkel uit `coachUids` hierboven.
     // Aanmaken kan enkel de cliënt, met een geldige, onverbruikte uitnodiging
-    // van precies die begeleider.
+    // van precies die begeleider, die in dezelfde batch verbruikt wordt.
     match /links/{linkId} {
       allow read: if request.auth != null
         && (resource.data.coachUid == request.auth.uid || resource.data.clientUid == request.auth.uid);
@@ -167,7 +167,10 @@ service cloud.firestore {
         && linkId == request.resource.data.coachUid + '_' + request.auth.uid
         && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.coachUid
           == request.resource.data.coachUid
-        && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == null;
+        && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == null
+        // In dezelfde batch verbruikt, op naam van deze cliënt: zo levert één
+        // uitnodiging maar één koppeling op.
+        && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == request.auth.uid;
       allow delete: if request.auth != null
         && (resource.data.coachUid == request.auth.uid || resource.data.clientUid == request.auth.uid);
     }

@@ -343,6 +343,30 @@ describe("cliëntuitnodigingen (invites)", () => {
     await assertSucceeds(acceptClientInviteBatch(as("nieuweklant"), "nieuweklant", "KLANT"));
   });
 
+  it("een koppeling zonder de uitnodiging te verbruiken lukt niet", async () => {
+    await assertFails(
+      setDoc(doc(as("vreemde"), "links/kine_vreemde"), {
+        coachUid: "kine",
+        clientUid: "vreemde",
+        clientName: "Vreemde",
+        inviteCode: "KLANT",
+      })
+    );
+  });
+
+  it("eenzelfde uitnodiging levert maar één koppeling op", async () => {
+    await assertSucceeds(acceptClientInviteBatch(as("nieuweklant"), "nieuweklant", "KLANT"));
+    await assertFails(acceptClientInviteBatch(as("vreemde"), "vreemde", "KLANT"));
+    await assertFails(
+      setDoc(doc(as("vreemde"), "links/kine_vreemde"), {
+        coachUid: "kine",
+        clientUid: "vreemde",
+        clientName: "Vreemde",
+        inviteCode: "KLANT",
+      })
+    );
+  });
+
   it("een koppeling zonder geldige uitnodiging van die begeleider lukt niet", async () => {
     await assertFails(
       setDoc(doc(as("vreemde"), "links/thomas_vreemde"), {
