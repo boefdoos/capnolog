@@ -22,7 +22,7 @@ export default function CoachInvitePage() {
   const router = useRouter();
   const { user, loading: authLoading, configured, error, signIn, signUp, logOut } = useAuth();
   const [invite, setInvite] = useState<CoachInvite | null | undefined>(undefined);
-  const [mode, setMode] = useState<"new" | "existing">("new");
+  const [mode, setMode] = useState<"choose" | "new" | "existing">("choose");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,8 +65,10 @@ export default function CoachInvitePage() {
     try {
       if (mode === "new") await signUp(email, password);
       else await signIn(email, password);
-    } catch {
-      // foutmelding zit al in de hook
+    } catch (err) {
+      // Foutmelding zit al in de hook. Bestaat het adres al, dan meteen naar
+      // aanmelden, met het adres ingevuld.
+      if ((err as { code?: string })?.code === "auth/email-already-in-use") setMode("existing");
     } finally {
       setBusy(false);
     }
@@ -147,6 +149,21 @@ export default function CoachInvitePage() {
         </button>
       </>
     );
+  } else if (mode === "choose") {
+    body = (
+      <>
+        <p className="text-sm text-text">Heb je al een CapnoLog-account?</p>
+        <button onClick={() => setMode("existing")} className={primaryClass}>
+          Ja, aanmelden
+        </button>
+        <button
+          onClick={() => setMode("new")}
+          className="w-full rounded-lg border border-panel-border py-3.5 text-sm font-semibold text-text active:scale-[0.99]"
+        >
+          Nee, account aanmaken
+        </button>
+      </>
+    );
   } else {
     body = (
       <form
@@ -192,10 +209,10 @@ export default function CoachInvitePage() {
         </button>
         <button
           type="button"
-          onClick={() => setMode(mode === "new" ? "existing" : "new")}
+          onClick={() => setMode("choose")}
           className="w-full text-xs text-muted underline decoration-panel-border underline-offset-2"
         >
-          {mode === "new" ? "Ik heb al een account" : "Nieuw account aanmaken"}
+          Terug
         </button>
       </form>
     );

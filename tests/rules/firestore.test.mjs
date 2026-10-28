@@ -343,6 +343,37 @@ describe("cliëntuitnodigingen (invites)", () => {
     await assertSucceeds(acceptClientInviteBatch(as("nieuweklant"), "nieuweklant", "KLANT"));
   });
 
+  it("een begeleider of de admin kan geen cliëntuitnodiging aanvaarden", async () => {
+    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), "coaches/kine2"), { name: "Kine 2" }));
+    await assertFails(acceptClientInviteBatch(as("kine2"), "kine2", "KLANT"));
+    await assertFails(acceptClientInviteBatch(as("thomas"), "thomas", "KLANT"));
+    await assertFails(
+      updateDoc(doc(as("kine2"), "invites/KLANT"), { usedBy: "kine2", usedAt: serverTimestamp() })
+    );
+    // De uitnodiging blijft bruikbaar voor de echte cliënt.
+    await assertSucceeds(acceptClientInviteBatch(as("nieuweklant"), "nieuweklant", "KLANT"));
+  });
+
+  it("een cliënt heeft meerdere begeleiders, en intrekken bij de ene raakt de andere niet", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, "coaches/kine2"), { name: "Kine 2" });
+      await setDoc(doc(db, "invites/KLANT2"), {
+        coachUid: "kine2",
+        coachName: "Kine 2",
+        clientName: "Cliënt",
+        expiresAt: future(),
+        usedBy: null,
+      });
+    });
+    await assertSucceeds(acceptClientInviteBatch(as("client"), "client", "KLANT2", "kine2"));
+    await assertSucceeds(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+    await assertSucceeds(getDoc(doc(as("kine2"), "users/client/sessions/s1")));
+    await assertSucceeds(updateDoc(doc(as("client"), "users/client"), { coachUids: ["kine"] }));
+    await assertSucceeds(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+    await assertFails(getDoc(doc(as("kine2"), "users/client/sessions/s1")));
+  });
+
   it("een koppeling zonder de uitnodiging te verbruiken lukt niet", async () => {
     await assertFails(
       setDoc(doc(as("vreemde"), "links/kine_vreemde"), {
