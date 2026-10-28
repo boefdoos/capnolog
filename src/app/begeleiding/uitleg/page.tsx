@@ -32,8 +32,8 @@ function UitlegInner({ uid }: { uid: string }) {
           >
             &lsaquo; Cliënten
           </Link>
-          <h1 className="mt-1 text-[19px] font-semibold tracking-wide">Hoe werkt het</h1>
-          <p className="text-[12.5px] text-muted">Uitleg voor de begeleidende kinesitherapeut</p>
+          <h1 className="mt-1 text-[19px] font-semibold tracking-wide">Uitleg</h1>
+          <p className="text-[12.5px] text-muted">Voor de begeleidende kinesitherapeut</p>
         </div>
         <button
           onClick={() => window.print()}
@@ -44,7 +44,7 @@ function UitlegInner({ uid }: { uid: string }) {
       </header>
 
       <div className="space-y-3.5">
-        <Section title="Wat je cliënt doet">
+        <Section title="Verloop">
           <p>
             Het programma heeft drie delen. De cliënt meet met een Masimo EMMA-capnograaf en tikt de waarden in
             de app in. De EMMA geeft tijdens het oefenen zelf de feedback, de app houdt het verloop bij.
@@ -75,7 +75,7 @@ function UitlegInner({ uid }: { uid: string }) {
           </p>
         </Section>
 
-        <Section title="Waarom de app zo weinig toont">
+        <Section title="Weinig meldingen">
           <p>
             Er zijn geen herinneringen, geen aftellers, geen meldingen over gemiste oefeningen en geen badges.
             Dat is bewust. Bij chronische hyperventilatie kan veel meten en opvolgen het piekeren over de
@@ -84,7 +84,7 @@ function UitlegInner({ uid }: { uid: string }) {
           </p>
         </Section>
 
-        <Section title="Waarop het steunt">
+        <Section title="Bronnen">
           <p>
             De CO2-training volgt de CART-methode (capnometry-assisted respiratory training). Het werkzame deel
             is minder ventileren, zodat de CO2-waarde stijgt. Trager ademen op zich is niet genoeg.
@@ -109,7 +109,7 @@ function UitlegInner({ uid }: { uid: string }) {
           </p>
         </Section>
 
-        <Section title="Hoe je de cijfers leest">
+        <Section title="Cijfers">
           <p>
             Waarden staan in kPa, zoals de EMMA ze toont. 1 kPa is ongeveer 7,5 mmHg. De EMMA toont 0,0 tot 9,9
             kPa.
@@ -129,7 +129,7 @@ function UitlegInner({ uid }: { uid: string }) {
             definitie binnen.
           </p>
           <p>
-            <strong>Oefeningen en rustmetingen zijn aparte reeksen.</strong> Tijdens een oefening stuurt de
+            <strong>Twee reeksen.</strong> Tijdens een oefening stuurt de
             cliënt de ademhaling, en daar stijgt de CO2-waarde sneller dan in rust. Of het rustniveau echt
             verschuift, zie je aan de rustmetingen van de opvolging, niet aan de oefeningen. Rustmetingen tellen
             daarom nergens mee in gemiddelden of in het persoonlijk bereik, en staan apart op de grafiek. Het
@@ -157,16 +157,16 @@ function UitlegInner({ uid }: { uid: string }) {
 
         <Section title="Praktisch">
           <p>
-            <strong>Een cliënt uitnodigen.</strong> Onder Begeleiding vul je de naam van de cliënt en je eigen
+            <strong>Uitnodigen.</strong> Onder Begeleiding vul je de naam van de cliënt en je eigen
             naam in, en maak je een link. Die is 14 dagen geldig en werkt één keer. De cliënt maakt daarmee een
             eigen account aan met een eigen wachtwoord.
           </p>
           <p>
-            <strong>Wat je ziet.</strong> De startweek, de vier weken training met het gemiddelde per week, de
+            <strong>Overzicht.</strong> De startweek, de vier weken training met het gemiddelde per week, de
             opvolgmomenten, de evolutie over het hele traject, en elke oefening en rustmeting in detail.
           </p>
           <p>
-            <strong>Enkel meekijken.</strong> Je kunt niets wijzigen, verwijderen of starten. De cliënt kan je
+            <strong>Rechten.</strong> Je kunt niets wijzigen, verwijderen of starten. De cliënt kan je
             toegang op elk moment intrekken onder Account, en dan verdwijnt de cliënt uit je lijst.
           </p>
           <p>
