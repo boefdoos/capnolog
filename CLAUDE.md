@@ -13,9 +13,11 @@ PWA, geoptimaliseerd voor telefoon en tablet.
 npm run dev      # lokaal draaien
 npx next build   # buildcheck, moet slagen voor een push
 npm run lint
+npm run test:rules   # regeltests tegen de Firestore-emulator, vraagt Java (P14)
 ```
 
-Geen testsuite aanwezig, `npx next build` is de enige geautomatiseerde validatie-gate.
+Twee validatie-gates: `npx next build`, en `npm run test:rules` bij elke wijziging aan
+`firestore.rules` (tests in `tests/rules/`). Verder geen testsuite.
 
 Deployment via Vercel op elke push naar `main`. Firebase-config staat in `.env.local`
 (zie `.env.example`), nooit committen.
@@ -84,8 +86,8 @@ CART-sessies: een gedaalde ademfrequentie zonder gestegen CO2 wijst op compensat
 (trager maar dieper ademen zonder echte hypoventilatie-respons) in plaats van geslaagde
 training.
 
-**Firestore-rules** (`firestore.rules`, met de hand te publiceren in de console, er is
-geen `firebase.json`). Schrijven enkel binnen het eigen `users/{uid}`-pad. Lezen ook
+**Firestore-rules** (`firestore.rules`, met de hand te publiceren in de console;
+`firebase.json` dient enkel voor de emulator, er wordt niets mee gedeployed). Schrijven enkel binnen het eigen `users/{uid}`-pad. Lezen ook
 door een begeleider wiens uid in `coachUids` op het document van de cliënt staat
 (P13), alleen-lezen. `invites/{code}` (uitnodigingslinks, `get` zonder account, nooit
 `list`) en `links/{coachUid}_{clientUid}` (lijst van de begeleider, geeft zelf geen
