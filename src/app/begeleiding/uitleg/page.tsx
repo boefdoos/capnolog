@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import AuthGate from "@/components/AuthGate";
 import TabBar from "@/components/TabBar";
 
@@ -20,6 +21,34 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+/**
+ * Het afdrukvenster opent op iOS soms pas na lange tijd, zonder dat de pagina
+ * reageert. Meteen tonen dat er iets gebeurt, en een tweede tik negeren: die
+ * zette anders telkens een extra afdrukopdracht in de wachtrij.
+ */
+function PrintButton() {
+  const [opening, setOpening] = useState(false);
+  function print() {
+    if (opening) return;
+    setOpening(true);
+    // Eerst de nieuwe knoptekst laten tekenen, dan pas het (blokkerende)
+    // afdrukvenster openen.
+    setTimeout(() => {
+      window.print();
+      setOpening(false);
+    }, 50);
+  }
+  return (
+    <button
+      onClick={print}
+      disabled={opening}
+      className="shrink-0 rounded-lg border border-panel-border px-3 py-2 text-xs text-muted hover:text-text disabled:opacity-60 print:hidden"
+    >
+      {opening ? "Afdrukvenster openen\u2026" : "Afdrukken of pdf"}
+    </button>
+  );
+}
+
 function UitlegInner({ uid }: { uid: string }) {
   return (
     <div className="mx-auto max-w-2xl p-4 pb-24 print:max-w-none print:p-0">
@@ -35,12 +64,7 @@ function UitlegInner({ uid }: { uid: string }) {
           <h1 className="mt-1 text-[19px] font-semibold tracking-wide">Uitleg</h1>
           <p className="text-[12.5px] text-muted">Voor de begeleidende kinesitherapeut</p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="shrink-0 rounded-lg border border-panel-border px-3 py-2 text-xs text-muted hover:text-text print:hidden"
-        >
-          Afdrukken of pdf
-        </button>
+        <PrintButton />
       </header>
 
       <div className="space-y-3.5">
