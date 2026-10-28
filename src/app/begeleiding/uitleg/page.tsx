@@ -84,6 +84,8 @@ function PrintButton() {
 function UitlegInner({ uid }: { uid: string }) {
   return (
     <div id={PRINT_ROOT_ID} className="mx-auto max-w-2xl p-4 pb-24 print:max-w-none print:p-0">
+      {/* Enkel op papier: op het scherm staat de naam al in de app zelf. */}
+      <div className="mb-3 hidden text-2xl font-semibold tracking-wide text-text print:block">CapnoLog</div>
       <header className="mb-4 flex items-end justify-between gap-3 border-b border-panel-border pb-3.5">
         <div>
           <Link
