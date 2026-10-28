@@ -53,7 +53,7 @@ function AccountInner({ user }: { user: User }) {
               {coaches.map((c) => (
                 <div key={c.uid} className="border-t border-panel-border py-2.5 first:border-t-0">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-text">{c.name}</span>
+                    <span className="text-sm text-text">{c.name ?? "\u00a0"}</span>
                     {confirming !== c.uid && (
                       <button
                         onClick={() => setConfirming(c.uid)}
@@ -66,7 +66,7 @@ function AccountInner({ user }: { user: User }) {
                   {confirming === c.uid && (
                     <div className="mt-2.5 space-y-2.5">
                       <p className="text-sm text-muted">
-                        {c.name} kan daarna je gegevens niet meer lezen. Opnieuw toegang geven gebeurt via je
+                        {c.name ?? "Deze begeleider"} kan daarna je gegevens niet meer lezen. Opnieuw toegang geven gebeurt via je
                         begeleider.
                       </p>
                       <div className="flex gap-2.5">
