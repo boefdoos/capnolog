@@ -27,7 +27,8 @@ export default function InvitePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [acceptFailed, setAcceptFailed] = useState(false);
+  // Foutcode van Firebase bij een mislukte koppeling, zichtbaar op het scherm.
+  const [acceptError, setAcceptError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!configured) return;
@@ -46,12 +47,13 @@ export default function InvitePage() {
 
   async function accept(uid: string) {
     if (!invite) return;
-    setAcceptFailed(false);
+    setAcceptError(null);
     try {
       await acceptInvite(uid, invite, name.trim() || invite.clientName);
       router.push("/");
-    } catch {
-      setAcceptFailed(true);
+    } catch (err) {
+      console.error("Uitnodiging aanvaarden mislukt", err);
+      setAcceptError((err as { code?: string })?.code ?? "onbekend");
     }
   }
 
@@ -113,7 +115,7 @@ export default function InvitePage() {
           <span className="text-xs text-muted">Je naam</span>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        {acceptFailed && <p className="text-xs text-danger">Koppelen mislukt, probeer opnieuw.</p>}
+        {acceptError && <p className="text-xs text-danger">Koppelen mislukt ({acceptError}), probeer opnieuw.</p>}
         <button onClick={() => accept(user.uid)} disabled={!name.trim()} className={primaryClass}>
           Akkoord, koppel met {invite.coachName}
         </button>
@@ -164,7 +166,7 @@ export default function InvitePage() {
           />
         </label>
         {error && <p className="text-xs text-danger">{error}</p>}
-        {acceptFailed && <p className="text-xs text-danger">Koppelen mislukt, probeer opnieuw.</p>}
+        {acceptError && <p className="text-xs text-danger">Koppelen mislukt ({acceptError}), probeer opnieuw.</p>}
         <button type="submit" disabled={busy} className={primaryClass}>
           {busy ? "..." : mode === "new" ? "Account aanmaken" : "Aanmelden en koppelen"}
         </button>

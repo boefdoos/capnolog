@@ -331,6 +331,18 @@ describe("cliëntuitnodigingen (invites)", () => {
     await assertSucceeds(getDoc(doc(as("kine"), "users/nieuweklant")));
   });
 
+  it("een cliënt die al gekoppeld was, koppelt opnieuw met een nieuwe uitnodiging", async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), "links/kine_nieuweklant"), {
+        coachUid: "kine",
+        clientUid: "nieuweklant",
+        clientName: "Oud",
+        inviteCode: "OUD",
+      })
+    );
+    await assertSucceeds(acceptClientInviteBatch(as("nieuweklant"), "nieuweklant", "KLANT"));
+  });
+
   it("een koppeling zonder geldige uitnodiging van die begeleider lukt niet", async () => {
     await assertFails(
       setDoc(doc(as("vreemde"), "links/thomas_vreemde"), {

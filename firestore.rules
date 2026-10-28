@@ -160,7 +160,9 @@ service cloud.firestore {
     match /links/{linkId} {
       allow read: if request.auth != null
         && (resource.data.coachUid == request.auth.uid || resource.data.clientUid == request.auth.uid);
-      allow create: if request.auth != null
+      // Ook update: een cliënt die opnieuw koppelt met een nieuwe uitnodiging
+      // van dezelfde begeleider, terwijl de oude koppeling nog bestaat.
+      allow create, update: if request.auth != null
         && request.resource.data.clientUid == request.auth.uid
         && linkId == request.resource.data.coachUid + '_' + request.auth.uid
         && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.coachUid
