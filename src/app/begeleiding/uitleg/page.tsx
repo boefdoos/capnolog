@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import AuthGate from "@/components/AuthGate";
 import TabBar from "@/components/TabBar";
 
@@ -21,37 +20,70 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+const PRINT_ROOT_ID = "uitleg-afdruk";
+const PRINT_FRAME_ID = "uitleg-afdruk-frame";
+
 /**
- * Het afdrukvenster opent op iOS soms pas na lange tijd, zonder dat de pagina
- * reageert. Meteen tonen dat er iets gebeurt, en een tweede tik negeren: die
- * zette anders telkens een extra afdrukopdracht in de wachtrij.
+ * Afdrukken via een onzichtbaar iframe met een kopie van de tekst en de
+ * stijlen, niet via window.print() op de pagina zelf. Safari stelt een
+ * afdrukopdracht vanuit JavaScript uit tot de pagina klaar is met laden, en
+ * de open verbinding van Firestore houdt de pagina daar "aan het laden":
+ * het afdrukvenster kwam pas na lange tijd (Cmd+P was wel meteen). Het
+ * iframe heeft geen Firestore. Alles gebeurt synchroon binnen de tik.
  */
-function PrintButton() {
-  const [opening, setOpening] = useState(false);
-  function print() {
-    if (opening) return;
-    setOpening(true);
-    // Eerst de nieuwe knoptekst laten tekenen, dan pas het (blokkerende)
-    // afdrukvenster openen.
-    setTimeout(() => {
-      window.print();
-      setOpening(false);
-    }, 50);
+function printUitleg() {
+  const root = document.getElementById(PRINT_ROOT_ID);
+  if (!root) return;
+  const css = Array.from(document.styleSheets)
+    .map((sheet) => {
+      try {
+        return Array.from(sheet.cssRules)
+          .map((r) => r.cssText)
+          .join("\n");
+      } catch {
+        return ""; // stylesheet van een ander domein, niet leesbaar
+      }
+    })
+    .join("\n");
+
+  // Het vorige afdrukframe pas nu opruimen: weghalen terwijl het
+  // afdrukvenster nog open staat, kan het afdrukken afbreken.
+  document.getElementById(PRINT_FRAME_ID)?.remove();
+  const frame = document.createElement("iframe");
+  frame.id = PRINT_FRAME_ID;
+  frame.setAttribute("aria-hidden", "true");
+  Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "0", height: "0", border: "0" });
+  document.body.appendChild(frame);
+  const win = frame.contentWindow;
+  const doc = frame.contentDocument;
+  if (!win || !doc) {
+    frame.remove();
+    window.print();
+    return;
   }
+  doc.open();
+  doc.write(
+    `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>CapnoLog, uitleg voor de begeleider</title><style>${css}</style></head><body>${root.outerHTML}</body></html>`
+  );
+  doc.close();
+  win.focus();
+  win.print();
+}
+
+function PrintButton() {
   return (
     <button
-      onClick={print}
-      disabled={opening}
-      className="shrink-0 rounded-lg border border-panel-border px-3 py-2 text-xs text-muted hover:text-text disabled:opacity-60 print:hidden"
+      onClick={printUitleg}
+      className="shrink-0 rounded-lg border border-panel-border px-3 py-2 text-xs text-muted hover:text-text print:hidden"
     >
-      {opening ? "Afdrukvenster openen\u2026" : "Afdrukken of pdf"}
+      Afdrukken of pdf
     </button>
   );
 }
 
 function UitlegInner({ uid }: { uid: string }) {
   return (
-    <div className="mx-auto max-w-2xl p-4 pb-24 print:max-w-none print:p-0">
+    <div id={PRINT_ROOT_ID} className="mx-auto max-w-2xl p-4 pb-24 print:max-w-none print:p-0">
       <header className="mb-4 flex items-end justify-between gap-3 border-b border-panel-border pb-3.5">
         <div>
           <Link
