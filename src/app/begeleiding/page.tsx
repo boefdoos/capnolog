@@ -17,11 +17,27 @@ function ClientsInner({ uid }: { uid: string }) {
           <h1 className="text-[19px] font-semibold tracking-wide">Begeleiding</h1>
           <p className="text-[12.5px] text-muted">Cliënten, alleen-lezen</p>
         </div>
+        <Link
+          href="/begeleiding/uitleg"
+          prefetch={false}
+          className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+        >
+          Hoe werkt het
+        </Link>
       </header>
 
       {loading && <Loading />}
       {!loading && !clients.length && (
-        <div className="py-6 text-center text-xs text-muted">Nog geen cliënten die toegang gaven.</div>
+        <div className="panel space-y-2 text-sm text-text">
+          <p>Nog geen cliënten die toegang gaven.</p>
+          <p className="text-xs text-muted">
+            Nieuw als begeleider? Lees eerst{" "}
+            <Link href="/begeleiding/uitleg" prefetch={false} className="text-text underline underline-offset-2">
+              hoe het programma en de app werken
+            </Link>
+            , en nodig daarna hieronder een cliënt uit.
+          </p>
+        </div>
       )}
 
       <div className="space-y-2">
