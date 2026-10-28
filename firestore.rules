@@ -18,10 +18,76 @@ service cloud.firestore {
         && request.auth.uid in get(clientDoc).data.get('coachUids', []);
     }
 
+    // Admin (Thomas): `admins/{uid}`, met de hand aangemaakt in de console.
+    // Maakt uitnodigingen voor begeleiders.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Begeleider: `coaches/{uid}` bestaat (via een begeleidersuitnodiging),
+    // of admin.
+    function isCoach() {
+      return request.auth != null
+        && (exists(/databases/$(database)/documents/coaches/$(request.auth.uid)) || isAdmin());
+    }
+
+    // De aangemelde gebruiker gaf deze begeleider zelf toegang.
+    function isClientOf(coachUid) {
+      let ownDoc = /databases/$(database)/documents/users/$(request.auth.uid);
+      return request.auth != null
+        && exists(ownDoc)
+        && coachUid in get(ownDoc).data.get('coachUids', []);
+    }
+
     // {document=**} matcht in rules v2 ook users/{uid} zelf.
     match /users/{uid}/{document=**} {
       allow read: if isOwner(uid) || isCoachOf(uid);
       allow write: if isOwner(uid);
+    }
+
+    match /admins/{uid} {
+      allow get: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // Rol en naam van een begeleider. Ontstaat enkel samen met het verbruiken
+    // van een geldige begeleidersuitnodiging, behalve voor de admin. Daarna
+    // kan enkel de naam nog wijzigen. Een cliënt mag de naam lezen van een
+    // begeleider aan wie hij zelf toegang gaf.
+    match /coaches/{uid} {
+      allow get: if isOwner(uid) || isAdmin() || isClientOf(uid);
+      allow list: if isAdmin();
+      allow create: if isOwner(uid) && (
+        (isAdmin() && request.resource.data.keys().hasOnly(['name']))
+        || (
+          request.resource.data.keys().hasOnly(['name', 'inviteCode', 'createdAt'])
+          && get(/databases/$(database)/documents/coachInvites/$(request.resource.data.inviteCode)).data.usedBy == null
+          && request.time < get(/databases/$(database)/documents/coachInvites/$(request.resource.data.inviteCode)).data.expiresAt
+          && getAfter(/databases/$(database)/documents/coachInvites/$(request.resource.data.inviteCode)).data.usedBy == uid
+        )
+      );
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']);
+      allow delete: if isAdmin();
+    }
+
+    // Begeleidersuitnodigingen: enkel de admin maakt ze. Opvragen per code
+    // zonder account, nooit een lijst. Verbruiken kan één keer, voor de
+    // vervaldatum, en enkel samen met het aanmaken van `coaches/{uid}`.
+    match /coachInvites/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isAdmin()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.usedBy == null;
+      allow update: if request.auth != null
+        && resource.data.usedBy == null
+        && request.time < resource.data.expiresAt
+        && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy', 'usedAt'])
+        && existsAfter(/databases/$(database)/documents/coaches/$(request.auth.uid));
+      allow delete: if isAdmin();
     }
 
     // Uitnodigingen: een begeleider maakt ze voor zichzelf. Opvragen per code
@@ -31,7 +97,7 @@ service cloud.firestore {
     match /invites/{code} {
       allow get: if true;
       allow list: if false;
-      allow create: if request.auth != null
+      allow create: if isCoach()
         && request.resource.data.coachUid == request.auth.uid
         && request.resource.data.usedBy == null;
       allow update: if request.auth != null

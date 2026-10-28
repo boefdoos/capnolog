@@ -6,6 +6,8 @@ import AuthGate from "@/components/AuthGate";
 import TabBar from "@/components/TabBar";
 import { useAuth } from "@/lib/useAuth";
 import { useOwnAccess } from "@/lib/useOwnAccess";
+import { useRole } from "@/lib/useRole";
+import InviteCoach from "@/components/InviteCoach";
 import Loading from "@/components/Loading";
 
 /**
@@ -15,6 +17,7 @@ import Loading from "@/components/Loading";
 function AccountInner({ user }: { user: User }) {
   const { coaches, loading, revoke } = useOwnAccess(user.uid);
   const { logOut } = useAuth();
+  const { isAdmin } = useRole(user.uid);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -88,6 +91,8 @@ function AccountInner({ user }: { user: User }) {
             </>
           )}
         </div>
+
+        {isAdmin && <InviteCoach adminUid={user.uid} />}
 
         <button
           onClick={() => logOut()}

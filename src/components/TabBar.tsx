@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useCoachClients } from "@/lib/useCoachClients";
+import { useRole } from "@/lib/useRole";
 
 const ICONS: Record<string, JSX.Element> = {
   vandaag: <circle cx="12" cy="12" r="4.5" />,
@@ -51,7 +52,9 @@ function writeHasClients(uid: string, value: boolean) {
 /**
  * Vaste tabbalk onderaan de hoofdschermen. Niet tonen tijdens een sessie of
  * meting: één tik zou de oefening verlaten (docs/ui_doorlichting.md S7).
- * Begeleiding verschijnt enkel voor wie cliënten heeft (P13).
+ * Begeleiding verschijnt voor begeleiders en voor wie cliënten heeft (P13).
+ * Een begeleider die geen admin is, ziet enkel Begeleiding en Account: de
+ * schermen om zelf te oefenen horen bij een cliënt.
  */
 export default function TabBar({ uid }: { uid: string }) {
   const pathname = usePathname();
@@ -61,11 +64,18 @@ export default function TabBar({ uid }: { uid: string }) {
     if (!loading) writeHasClients(uid, clients.length > 0);
   }, [uid, loading, clients.length]);
 
+  const role = useRole(uid);
+  const coachOnly = role.isCoach && !role.isAdmin;
+
   const tabs = [
-    { key: "vandaag", href: "/", label: "Vandaag", active: pathname === "/" },
-    { key: "traject", href: "/traject", label: "Traject", active: pathname.startsWith("/traject") },
-    { key: "geschiedenis", href: "/sessions", label: "Geschiedenis", active: pathname.startsWith("/sessions") },
-    ...(hasClients
+    ...(coachOnly
+      ? []
+      : [
+          { key: "vandaag", href: "/", label: "Vandaag", active: pathname === "/" },
+          { key: "traject", href: "/traject", label: "Traject", active: pathname.startsWith("/traject") },
+          { key: "geschiedenis", href: "/sessions", label: "Geschiedenis", active: pathname.startsWith("/sessions") },
+        ]),
+    ...(hasClients || role.isCoach
       ? [{ key: "begeleiding", href: "/begeleiding", label: "Begeleiding", active: pathname.startsWith("/begeleiding") }]
       : []),
     { key: "account", href: "/account", label: "Account", active: pathname.startsWith("/account") },

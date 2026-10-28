@@ -89,7 +89,11 @@ geen `firebase.json`). Schrijven enkel binnen het eigen `users/{uid}`-pad. Lezen
 door een begeleider wiens uid in `coachUids` op het document van de cliënt staat
 (P13), alleen-lezen. `invites/{code}` (uitnodigingslinks, `get` zonder account, nooit
 `list`) en `links/{coachUid}_{clientUid}` (lijst van de begeleider, geeft zelf geen
-leesrecht). Verder geen schemavalidatie.
+leesrecht). Rollen: `admins/{uid}` (Thomas, met de hand in de console), `coaches/{uid}`
+(ontstaat enkel samen met het verbruiken van een `coachInvites/{code}` van een admin;
+naam leesbaar voor de eigen cliënten). Enkel een begeleider of admin kan cliënten
+uitnodigen. Een begeleider die geen admin is, ziet enkel Begeleiding en Account
+(`useRole`, `src/lib/useRole.ts`). Verder geen schemavalidatie.
 
 ## Schrijfwijze
 

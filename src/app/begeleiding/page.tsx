@@ -5,10 +5,12 @@ import AuthGate from "@/components/AuthGate";
 import InviteClient from "@/components/InviteClient";
 import TabBar from "@/components/TabBar";
 import { useCoachClients } from "@/lib/useCoachClients";
+import { useRole } from "@/lib/useRole";
 import Loading from "@/components/Loading";
 
 function ClientsInner({ uid }: { uid: string }) {
   const { clients, loading } = useCoachClients(uid);
+  const { isCoach } = useRole(uid);
 
   return (
     <div className="mx-auto max-w-2xl p-4 pb-10">
@@ -53,9 +55,11 @@ function ClientsInner({ uid }: { uid: string }) {
         ))}
       </div>
 
-      <div className="mt-6">
-        <InviteClient coachUid={uid} />
-      </div>
+      {isCoach && (
+        <div className="mt-6">
+          <InviteClient coachUid={uid} />
+        </div>
+      )}
       <TabBar uid={uid} />
     </div>
   );

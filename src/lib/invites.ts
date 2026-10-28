@@ -16,7 +16,7 @@ export interface Invite {
   usedBy: string | null;
 }
 
-function randomCode(length = 10): string {
+export function randomCode(length = 10): string {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("");
@@ -29,7 +29,7 @@ export function inviteUrl(code: string): string {
 /**
  * Begeleider maakt een uitnodiging (P13). De code is lang genoeg om niet te
  * raden; wie ze heeft, kan één account koppelen, binnen INVITE_DAYS dagen.
- * De eigen naam wordt ook als displayName bewaard, voor een volgende keer.
+ * De eigen naam wordt ook als displayName en op `coaches` bewaard.
  */
 export async function createInvite(coachUid: string, coachName: string, clientName: string): Promise<string> {
   const db = getFirebaseDb();
@@ -43,6 +43,8 @@ export async function createInvite(coachUid: string, coachName: string, clientNa
     usedBy: null,
   });
   await setDoc(doc(db, "users", coachUid), { displayName: coachName }, { merge: true });
+  // Ook op `coaches`, waar cliënten de naam kunnen lezen (useOwnAccess).
+  await setDoc(doc(db, "coaches", coachUid), { name: coachName }, { merge: true }).catch(() => {});
   return code;
 }
 
