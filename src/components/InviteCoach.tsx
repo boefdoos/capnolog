@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { coachInviteUrl, createCoachInvite } from "@/lib/coachInvites";
+import InviteLinkActions from "./InviteLinkActions";
 
 const inputClass =
   "w-full rounded-lg border border-panel-border bg-[#0D1210] px-3.5 py-2.5 text-sm text-text outline-none focus:border-trace";
@@ -15,7 +16,6 @@ export default function InviteCoach({ adminUid }: { adminUid: string }) {
   const [coachName, setCoachName] = useState("");
   const [link, setLink] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
 
   async function create() {
@@ -31,30 +31,10 @@ export default function InviteCoach({ adminUid }: { adminUid: string }) {
     }
   }
 
-  async function share() {
-    if (!link) return;
-    const text = `Je bent uitgenodigd als begeleider in CapnoLog. Maak hier je account aan: ${link}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Uitnodiging CapnoLog", text });
-        return;
-      }
-    } catch {
-      // Delen geannuleerd, val terug op kopiëren.
-    }
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-    } catch {
-      // Klembord geblokkeerd; de link staat zichtbaar en is te selecteren.
-    }
-  }
-
   function reset() {
     setOpen(false);
     setLink(null);
     setCoachName("");
-    setCopied(false);
   }
 
   if (!open) {
@@ -76,23 +56,7 @@ export default function InviteCoach({ adminUid }: { adminUid: string }) {
           <p className="text-sm text-text">
             Stuur deze link naar {coachName || "de begeleider"}. Hij is 14 dagen geldig en werkt één keer.
           </p>
-          <div className="break-all rounded-lg border border-panel-border bg-[#0D1210] px-3.5 py-2.5 font-mono text-xs text-text">
-            {link}
-          </div>
-          <div className="flex gap-2.5">
-            <button
-              onClick={share}
-              className="flex-1 rounded-lg bg-trace py-3 text-sm font-semibold text-[#06120B] active:scale-[0.99]"
-            >
-              {copied ? "Gekopieerd" : "Link delen"}
-            </button>
-            <button
-              onClick={reset}
-              className="flex-1 rounded-lg border border-panel-border py-3 text-sm font-semibold text-muted"
-            >
-              Klaar
-            </button>
-          </div>
+          <InviteLinkActions link={link} shareText={`Je bent uitgenodigd als begeleider in CapnoLog. Maak hier je account aan: ${link}`} onDone={reset} />
         </>
       ) : (
         <>
