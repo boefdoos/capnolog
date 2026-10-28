@@ -239,24 +239,33 @@ export function useAverages(
     // geschiedenis. Een limiet van 1000 is een ruime veiligheidsmarge voor
     // persoonlijk gebruik, geen praktische impact.
     const q = query(collection(db, "users", uid, "sessions"), orderBy("createdAt", "desc"), limit(1000));
-    const unsub = onSnapshot(q, (snap) => {
-      const all = snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>));
-      setSessions(all);
-      setLoading(false);
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const all = snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>));
+        setSessions(all);
+        setLoading(false);
 
-      // Zelfherstel: sessies die aangemaakt zijn voor kpaSum/kpaSumSq
-      // bestonden hebben readingCount>0 maar kpaSum en/of kpaSumSq bleven
-      // op 0 staan, wat het gemiddelde en vooral de referentieband (die op
-      // kpaSumSq steunt voor de standaarddeviatie) vertekent. Stil
-      // herberekenen vanuit de echte entries; de listener hierboven pikt
-      // de correctie vanzelf weer op.
-      if (readOnly) return;
-      all.forEach((s) => {
-        if (s.readingCount > 0 && (s.kpaSum === 0 || s.kpaSumSq === 0)) {
-          backfillSessionAggregates(uid, s.id).catch(() => {});
-        }
-      });
-    });
+        // Zelfherstel: sessies die aangemaakt zijn voor kpaSum/kpaSumSq
+        // bestonden hebben readingCount>0 maar kpaSum en/of kpaSumSq bleven
+        // op 0 staan, wat het gemiddelde en vooral de referentieband (die op
+        // kpaSumSq steunt voor de standaarddeviatie) vertekent. Stil
+        // herberekenen vanuit de echte entries; de listener hierboven pikt
+        // de correctie vanzelf weer op.
+        if (readOnly) return;
+        all.forEach((s) => {
+          if (s.readingCount > 0 && (s.kpaSum === 0 || s.kpaSumSq === 0)) {
+            backfillSessionAggregates(uid, s.id).catch(() => {});
+          }
+        });
+      },
+      (err) => {
+        // Geweigerd of afgebroken (bv. afgemeld in een ander tabblad): niet
+        // eindeloos blijven laden.
+        console.error("useAverages", err);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [uid, readOnly]);
 

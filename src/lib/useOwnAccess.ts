@@ -51,33 +51,42 @@ export function useOwnAccess(uid: string | null) {
     // Namen die al opgezocht worden, zodat een volgende snapshot niet
     // opnieuw dezelfde aanvraag start.
     const pending = new Set<string>();
-    const unsub = onSnapshot(doc(db, "users", uid), (snap) => {
-      const data = snap.data();
-      const coachUids = (data?.coachUids as string[] | undefined) ?? [];
-      const names = (data?.coachNames as Record<string, string> | undefined) ?? {};
-      // Lijst meteen tonen, ook als een naam nog ontbreekt: niet wachten op
-      // de server voor iets wat enkel een naam is.
-      setCoaches(coachUids.map((c) => ({ uid: c, name: names[c] || null })));
-      setLoading(false);
+    const unsub = onSnapshot(
+      doc(db, "users", uid),
+      (snap) => {
+        const data = snap.data();
+        const coachUids = (data?.coachUids as string[] | undefined) ?? [];
+        const names = (data?.coachNames as Record<string, string> | undefined) ?? {};
+        // Lijst meteen tonen, ook als een naam nog ontbreekt: niet wachten op
+        // de server voor iets wat enkel een naam is.
+        setCoaches(coachUids.map((c) => ({ uid: c, name: names[c] || null })));
+        setLoading(false);
 
-      coachUids
-        .filter((c) => !names[c] && !pending.has(c))
-        .forEach((c) => {
-          pending.add(c);
-          getDoc(doc(db, "coaches", c))
-            .then((s) => s.data()?.name as string | undefined)
-            .catch(() => undefined)
-            .then((name) => {
-              const shown = name || UNNAMED_COACH;
-              setCoaches((prev) => prev.map((x) => (x.uid === c ? { ...x, name: shown } : x)));
-              // Op het eigen document bewaren, zodat het de volgende keer
-              // meteen klopt. De snapshot die daarop volgt, zoekt niets meer op.
-              if (name) {
-                updateDoc(doc(db, "users", uid), { [`coachNames.${c}`]: name }).catch(() => {});
-              }
-            });
-        });
-    });
+        coachUids
+          .filter((c) => !names[c] && !pending.has(c))
+          .forEach((c) => {
+            pending.add(c);
+            getDoc(doc(db, "coaches", c))
+              .then((s) => s.data()?.name as string | undefined)
+              .catch(() => undefined)
+              .then((name) => {
+                const shown = name || UNNAMED_COACH;
+                setCoaches((prev) => prev.map((x) => (x.uid === c ? { ...x, name: shown } : x)));
+                // Op het eigen document bewaren, zodat het de volgende keer
+                // meteen klopt. De snapshot die daarop volgt, zoekt niets meer op.
+                if (name) {
+                  updateDoc(doc(db, "users", uid), { [`coachNames.${c}`]: name }).catch(() => {});
+                }
+              });
+          });
+      },
+      (err) => {
+        // Geweigerd of afgebroken (bv. afgemeld in een ander tabblad): niet
+        // eindeloos blijven laden.
+        console.error("useOwnAccess", err);
+        setLoading(false);
+      }
+    );
     // Geldige toestemmingen voor begeleiding, per begeleider de vroegste.
     const unsubConsents = onSnapshot(
       query(

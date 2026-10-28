@@ -22,10 +22,19 @@ export function useSessionsList(uid: string | null) {
       orderBy("createdAt", "desc"),
       limit(50)
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setSessions(snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>)));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setSessions(snap.docs.map((d) => parseSessionMeta(d.id, d.data() as Record<string, unknown>)));
+        setLoading(false);
+      },
+      (err) => {
+        // Geweigerd of afgebroken (bv. afgemeld in een ander tabblad): niet
+        // eindeloos blijven laden.
+        console.error("useSessionsList", err);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [uid]);
 

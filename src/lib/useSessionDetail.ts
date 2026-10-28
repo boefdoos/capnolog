@@ -32,12 +32,21 @@ export function useSessionDetail(uid: string | null, sessionId: string | null) {
       collection(db, "users", uid, "sessions", sessionId, "entries"),
       orderBy("tSec", "asc")
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setRawEntries(
-        snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<StoredEntry, "id">) }))
-      );
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setRawEntries(
+          snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<StoredEntry, "id">) }))
+        );
+        setLoading(false);
+      },
+      (err) => {
+        // Geweigerd of afgebroken (bv. afgemeld in een ander tabblad): niet
+        // eindeloos blijven laden.
+        console.error("useSessionDetail", err);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [uid, sessionId]);
 

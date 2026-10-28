@@ -51,14 +51,23 @@ export function useCartProtocol(uid: string | null) {
     }
     const db = getFirebaseDb();
     const ref = doc(db, "users", uid, "settings", "protocol");
-    const unsub = onSnapshot(ref, (snap) => {
-      const data = snap.data() as
-        | { cartProtocolStartDate?: number; nulmetingBaseline?: NulmetingBaseline }
-        | undefined;
-      setStartDate(data?.cartProtocolStartDate ?? null);
-      setNulmetingBaseline(data?.nulmetingBaseline ?? null);
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.data() as
+          | { cartProtocolStartDate?: number; nulmetingBaseline?: NulmetingBaseline }
+          | undefined;
+        setStartDate(data?.cartProtocolStartDate ?? null);
+        setNulmetingBaseline(data?.nulmetingBaseline ?? null);
+        setLoading(false);
+      },
+      (err) => {
+        // Geweigerd of afgebroken (bv. afgemeld in een ander tabblad): niet
+        // eindeloos blijven laden.
+        console.error("useCartProtocol", err);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [uid]);
 

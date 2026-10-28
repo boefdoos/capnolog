@@ -66,11 +66,15 @@ export function useActiveSession(
       collection(db, "users", uid, "sessions", sessionId, "entries"),
       orderBy("tSec", "asc")
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setRawEntries(
-        snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<StoredEntry, "id">) }))
-      );
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setRawEntries(
+          snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<StoredEntry, "id">) }))
+        );
+      },
+      (err) => console.error("useActiveSession", err)
+    );
     return () => unsub();
   }, [uid, sessionId]);
 
