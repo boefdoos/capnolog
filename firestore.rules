@@ -161,15 +161,16 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (resource.data.coachUid == request.auth.uid || resource.data.clientUid == request.auth.uid);
       // Ook update: een cliënt die opnieuw koppelt met een nieuwe uitnodiging
-      // van dezelfde begeleider, terwijl de oude koppeling nog bestaat.
+      // van dezelfde begeleider, terwijl de oude koppeling nog bestaat. De
+      // laatste voorwaarde (getAfter): de uitnodiging wordt in dezelfde batch
+      // verbruikt, op naam van deze cliënt, zodat één uitnodiging maar één
+      // koppeling oplevert.
       allow create, update: if request.auth != null
         && request.resource.data.clientUid == request.auth.uid
         && linkId == request.resource.data.coachUid + '_' + request.auth.uid
         && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.coachUid
           == request.resource.data.coachUid
         && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == null
-        // In dezelfde batch verbruikt, op naam van deze cliënt: zo levert één
-        // uitnodiging maar één koppeling op.
         && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == request.auth.uid;
       allow delete: if request.auth != null
         && (resource.data.coachUid == request.auth.uid || resource.data.clientUid == request.auth.uid);
