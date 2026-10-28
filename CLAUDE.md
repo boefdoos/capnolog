@@ -13,7 +13,7 @@ PWA, geoptimaliseerd voor telefoon en tablet.
 npm run dev      # lokaal draaien
 npx next build   # buildcheck, moet slagen voor een push
 npm run lint
-npm run test:rules   # regeltests tegen de Firestore-emulator, vraagt Java (P14)
+npm run test:rules   # regeltests tegen de Firestore-emulator (P14), Java in ~/.capnolog-tools
 ```
 
 Twee validatie-gates: `npx next build`, en `npm run test:rules` bij elke wijziging aan

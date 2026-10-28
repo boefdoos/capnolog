@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-capnolog \"node --test tests/rules/\""
+    "test:rules": "sh scripts/test-rules.sh"
   },
   "dependencies": {
     "chart.js": "^4.4.4",

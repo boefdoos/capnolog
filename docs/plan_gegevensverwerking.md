@@ -31,6 +31,8 @@ Leesrecht op `users/{uid}/**` voor iemand anders dan de eigenaar vereist voortaa
 
 De regels worden met dit plan te complex om enkel met de hand in de console te testen. Voeg `@firebase/rules-unit-testing` toe met een testscript tegen de emulator (vraagt Java en `firebase-tools` als dev-dependency, en een minimale `firebase.json` enkel voor de emulator). Elke latere regelwijziging krijgt tests: wie mag lezen, wie niet, wat er gebeurt na intrekken. Dat wordt naast `npx next build` de tweede validatie-gate.
 
+**Gebouwd (28/10).** `npm run test:rules` (`scripts/test-rules.sh`): 22 tests voor de regels zoals ze nu zijn, in `tests/rules/firestore.test.mjs`. Java (Temurin 21) staat in `~/.capnolog-tools`, het script vindt het daar. De Firebase CLI krijgt een eigen instellingenmap in `.cache/`, omdat `~/.config` op Thomas' Mac van root is. Gecontroleerd dat een fout opengezette regel een test laat falen.
+
 ### P15. Rol vereist voor leesrecht, beheer door de admin
 
 **Regels.** `isCoachOf` vereist ook `exists(coaches/{auth.uid})`. Een admin zonder `coaches`-document is geen begeleider van cliënten. `coachInvites` mag de admin oplijsten.
