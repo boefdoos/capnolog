@@ -63,23 +63,14 @@ export default function InvitePage() {
     try {
       if (mode === "new") await signUp(email, password);
       else await signIn(email, password);
-      // De koppeling volgt in de effect hieronder, zodra `user` bekend is.
+      // Daarna toont de pagina het toestemmingsscherm: koppelen gebeurt pas
+      // na een tik op "Akkoord", nooit automatisch.
     } catch {
       // foutmelding zit al in de hook
     } finally {
       setBusy(false);
     }
   }
-
-  // Net aangemeld of geregistreerd via dit formulier: meteen koppelen.
-  const [autoAccept, setAutoAccept] = useState(false);
-  useEffect(() => {
-    if (autoAccept && user && invite && !expired && !used && !ownInvite && !alreadyMine) {
-      setAutoAccept(false);
-      void accept(user.uid);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoAccept, user, invite]);
 
   let body: React.ReactNode;
   if (!configured || invite === undefined || authLoading) {
@@ -129,13 +120,7 @@ export default function InvitePage() {
     );
   } else {
     body = (
-      <form
-        onSubmit={(e) => {
-          setAutoAccept(true);
-          void submit(e);
-        }}
-        className="space-y-3"
-      >
+      <form onSubmit={submit} className="space-y-3">
         {mode === "new" && (
           <label className="block space-y-1.5">
             <span className="text-xs text-muted">Je naam</span>
@@ -168,7 +153,7 @@ export default function InvitePage() {
         {error && <p className="text-xs text-danger">{error}</p>}
         {acceptError && <p className="text-xs text-danger">Koppelen mislukt ({acceptError}), probeer opnieuw.</p>}
         <button type="submit" disabled={busy} className={primaryClass}>
-          {busy ? "..." : mode === "new" ? "Account aanmaken" : "Aanmelden en koppelen"}
+          {busy ? "..." : mode === "new" ? "Account aanmaken" : "Aanmelden"}
         </button>
         <button
           type="button"
