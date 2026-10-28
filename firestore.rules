@@ -51,10 +51,39 @@ service cloud.firestore {
         && coachUid in get(ownDoc).data.get('coachUids', []);
     }
 
-    // {document=**} matcht in rules v2 ook users/{uid} zelf.
-    match /users/{uid}/{document=**} {
+    // Het gebruikersdocument zelf.
+    match /users/{uid} {
       allow read: if isOwner(uid) || isCoachOf(uid);
       allow write: if isOwner(uid);
+    }
+
+    // Alles eronder (sessies, entries, instellingen), behalve de
+    // toestemmingsrecords, die hieronder hun eigen, strengere regels hebben.
+    match /users/{uid}/{coll}/{document=**} {
+      allow read: if coll != 'consents' && (isOwner(uid) || isCoachOf(uid));
+      allow write: if coll != 'consents' && isOwner(uid);
+    }
+
+    // Toestemmingsrecords (P16): bewijs van wie waarmee akkoord ging, met de
+    // tekst zoals ze er toen stond. Aanmaken door de eigenaar, één keer
+    // intrekken, nooit wijzigen of wissen vanuit de app. Enkel de eigenaar
+    // leest ze. Wissen gebeurt enkel bij het verwijderen van het account
+    // (P18, Admin SDK, buiten deze regels).
+    match /users/{uid}/consents/{consentId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['kind', 'targetUid', 'textVersion', 'text', 'grantedAt', 'withdrawnAt'])
+        && request.resource.data.kind in ['begeleiding', 'analyse']
+        && request.resource.data.targetUid is string
+        && request.resource.data.textVersion is string
+        && request.resource.data.text is string
+        && request.resource.data.grantedAt == request.time
+        && request.resource.data.withdrawnAt == null;
+      allow update: if isOwner(uid)
+        && resource.data.withdrawnAt == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['withdrawnAt'])
+        && request.resource.data.withdrawnAt == request.time;
+      allow delete: if false;
     }
 
     match /admins/{uid} {

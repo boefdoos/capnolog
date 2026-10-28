@@ -2,6 +2,8 @@
 
 import { arrayUnion, doc, getDoc, serverTimestamp, setDoc, Timestamp, writeBatch } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
+import { begeleidingText } from "./consentTexts";
+import { addConsent } from "./consents";
 
 const INVITE_DAYS = 14;
 // Zonder verwarrende tekens (0/O, 1/I/L).
@@ -64,8 +66,9 @@ export async function getInvite(code: string): Promise<Invite | null> {
 
 /**
  * De cliënt aanvaardt: in één batch krijgt de begeleider leesrecht
- * (`coachUids`, gecontroleerd door de regels), komt de koppeling in `links`
- * zodat ze in de lijst van de begeleider verschijnt, en is de code verbruikt.
+ * (`coachUids`, gecontroleerd door de regels), komt er een toestemmingsrecord
+ * met de aanvaarde tekst (P16), komt de koppeling in `links` zodat ze in de
+ * lijst van de begeleider verschijnt, en is de code verbruikt.
  */
 export async function acceptInvite(clientUid: string, invite: Invite, clientName: string) {
   const db = getFirebaseDb();
@@ -79,6 +82,7 @@ export async function acceptInvite(clientUid: string, invite: Invite, clientName
     },
     { merge: true }
   );
+  addConsent(batch, db, clientUid, "begeleiding", invite.coachUid, begeleidingText(invite.coachName));
   batch.set(doc(db, "links", `${invite.coachUid}_${clientUid}`), {
     coachUid: invite.coachUid,
     clientUid,

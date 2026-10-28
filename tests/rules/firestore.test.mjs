@@ -82,9 +82,18 @@ function acceptCoachInviteBatch(db, uid, code, name = "Nieuwe kine") {
   return batch.commit();
 }
 
-/** Zelfde batch als acceptInvite in src/lib/invites.ts. */
+/** Zelfde batch als acceptInvite in src/lib/invites.ts, met het
+ * toestemmingsrecord uit addConsent (src/lib/consents.ts). */
 function acceptClientInviteBatch(db, uid, code, coachUid = "kine") {
   const batch = writeBatch(db);
+  batch.set(doc(collection(db, "users", uid, "consents")), {
+    kind: "begeleiding",
+    targetUid: coachUid,
+    textVersion: "2026-10-28",
+    text: "Kine kan je metingen lezen.",
+    grantedAt: serverTimestamp(),
+    withdrawnAt: null,
+  });
   batch.set(
     doc(db, "users", uid),
     { displayName: "Nieuwe cliënt", coachUids: arrayUnion(coachUid), coachNames: { [coachUid]: "Kine" } },
@@ -121,6 +130,57 @@ describe("gebruikersgegevens", () => {
   it("na intrekken door de cliënt leest de begeleider niets meer", async () => {
     await assertSucceeds(updateDoc(doc(as("client"), "users/client"), { coachUids: [] }));
     await assertFails(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+  });
+});
+
+describe("toestemmingsrecords (P16)", () => {
+  const consent = (overrides = {}) => ({
+    kind: "begeleiding",
+    targetUid: "kine",
+    textVersion: "2026-10-28",
+    text: "Kine kan je metingen lezen.",
+    grantedAt: serverTimestamp(),
+    withdrawnAt: null,
+    ...overrides,
+  });
+
+  it("de eigenaar maakt een record aan en leest het", async () => {
+    await assertSucceeds(setDoc(doc(as("client"), "users/client/consents/c1"), consent()));
+    await assertSucceeds(getDoc(doc(as("client"), "users/client/consents/c1")));
+  });
+
+  it("een begeleider leest de records van de cliënt niet", async () => {
+    await assertSucceeds(setDoc(doc(as("client"), "users/client/consents/c1"), consent()));
+    await assertFails(getDoc(doc(as("kine"), "users/client/consents/c1")));
+  });
+
+  it("een record dat al ingetrokken is, of een onbekend soort, kan niet aangemaakt worden", async () => {
+    await assertFails(setDoc(doc(as("client"), "users/client/consents/c2"), consent({ withdrawnAt: serverTimestamp() })));
+    await assertFails(setDoc(doc(as("client"), "users/client/consents/c3"), consent({ kind: "onderzoek" })));
+    await assertFails(setDoc(doc(as("client"), "users/client/consents/c4"), consent({ extra: 1 })));
+  });
+
+  it("intrekken kan één keer, de tekst wijzigen of het record wissen nooit", async () => {
+    const ref = doc(as("client"), "users/client/consents/c1");
+    await assertSucceeds(setDoc(ref, consent()));
+    await assertFails(updateDoc(ref, { text: "Andere tekst" }));
+    await assertFails(deleteDoc(ref));
+    await assertSucceeds(updateDoc(ref, { withdrawnAt: serverTimestamp() }));
+    await assertFails(updateDoc(ref, { withdrawnAt: serverTimestamp() }));
+  });
+
+  it("toegang intrekken en de toestemming intrekken gaan samen in één batch", async () => {
+    await assertSucceeds(setDoc(doc(as("client"), "users/client/consents/c1"), consent()));
+    const db = as("client");
+    const batch = writeBatch(db);
+    batch.update(doc(db, "users/client"), { coachUids: [] });
+    batch.update(doc(db, "users/client/consents/c1"), { withdrawnAt: serverTimestamp() });
+    await assertSucceeds(batch.commit());
+    await assertFails(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+  });
+
+  it("niemand anders maakt een record aan voor de cliënt", async () => {
+    await assertFails(setDoc(doc(as("kine"), "users/client/consents/c1"), consent()));
   });
 });
 

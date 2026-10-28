@@ -15,7 +15,7 @@ import Loading from "@/components/Loading";
  * tweede cliënt), en uitloggen.
  */
 function AccountInner({ user }: { user: User }) {
-  const { coaches, loading, revoke } = useOwnAccess(user.uid);
+  const { coaches, loading, revoke, confirm } = useOwnAccess(user.uid);
   const { logOut } = useAuth();
   const { isAdmin } = useRole(user.uid);
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -53,11 +53,35 @@ function AccountInner({ user }: { user: User }) {
               {coaches.map((c) => (
                 <div key={c.uid} className="border-t border-panel-border py-2.5 first:border-t-0">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-text">{c.name ?? "\u00a0"}</span>
+                    <span className="text-sm text-text">
+                      {c.name ?? "\u00a0"}
+                      {c.consentedAt != null ? (
+                        <span className="block text-xs text-muted">
+                          toestemming sinds{" "}
+                          {new Date(c.consentedAt).toLocaleDateString("nl-BE", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      ) : (
+                        <span className="block text-xs text-muted">
+                          toestemming niet vastgelegd{" "}
+                          {c.name && (
+                            <button
+                              onClick={() => confirm(c.uid, c.name!)}
+                              className="underline decoration-panel-border underline-offset-2 hover:text-text"
+                            >
+                              bevestigen
+                            </button>
+                          )}
+                        </span>
+                      )}
+                    </span>
                     {confirming !== c.uid && (
                       <button
                         onClick={() => setConfirming(c.uid)}
-                        className="text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+                        className="shrink-0 text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
                       >
                         Toegang intrekken
                       </button>

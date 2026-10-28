@@ -31,7 +31,8 @@ Deployment via Vercel op elke push naar `main`. Firebase-config staat in `.env.l
 (`src/lib/format.ts`) en worden nooit opgeslagen. Aggregaten (`readingCount`, `kpaSum`,
 `kpaSumSq`) worden incrementeel bijgewerkt bij elke log.
 
-Protocolinstellingen: `users/{uid}/settings/protocol`.
+Protocolinstellingen: `users/{uid}/settings/protocol`. Toestemmingsrecords:
+`users/{uid}/consents/{id}`, onveranderlijk behalve één keer intrekken (P16).
 
 Meetbereik: 0,0 tot 9,9 kPa, het effectieve displaybereik van de EMMA (kPa-versie).
 Dat is een toestelgrens, geen klinische drempel.

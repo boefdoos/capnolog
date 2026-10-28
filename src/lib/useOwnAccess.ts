@@ -1,7 +1,21 @@
 "use client";
 
-import { arrayRemove, deleteDoc, doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import {
+  arrayRemove,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
+  writeBatch,
+} from "firebase/firestore";
+import { useEffect, useMemo, useState } from "react";
+import { begeleidingText } from "./consentTexts";
+import { addConsent, withdrawConsents } from "./consents";
 import { getFirebaseDb } from "./firebase";
 
 export const UNNAMED_COACH = "Begeleider zonder naam";
@@ -10,6 +24,9 @@ export interface CoachAccess {
   uid: string;
   // null zolang de naam nog opgezocht wordt.
   name: string | null;
+  // Wanneer de cliënt toestemde (P16). null: toegang zonder record, van een
+  // koppeling van voor de toestemmingsrecords of met de hand gemaakt.
+  consentedAt: number | null;
 }
 
 /**
@@ -20,7 +37,8 @@ export interface CoachAccess {
  * begeleiders aan wie hij zelf toegang gaf.
  */
 export function useOwnAccess(uid: string | null) {
-  const [coaches, setCoaches] = useState<CoachAccess[]>([]);
+  const [coachList, setCoaches] = useState<Omit<CoachAccess, "consentedAt">[]>([]);
+  const [consentedAt, setConsentedAt] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,19 +78,59 @@ export function useOwnAccess(uid: string | null) {
             });
         });
     });
-    return () => unsub();
+    // Geldige toestemmingen voor begeleiding, per begeleider de vroegste.
+    const unsubConsents = onSnapshot(
+      query(
+        collection(db, "users", uid, "consents"),
+        where("kind", "==", "begeleiding"),
+        where("withdrawnAt", "==", null)
+      ),
+      (snap) => {
+        const map: Record<string, number> = {};
+        snap.docs.forEach((d) => {
+          const target = d.data().targetUid as string;
+          // Net aangemaakt: grantedAt is lokaal nog leeg tot de server antwoordt.
+          const at = (d.data().grantedAt as Timestamp | null)?.toMillis() ?? Date.now();
+          map[target] = Math.min(map[target] ?? Infinity, at);
+        });
+        setConsentedAt(map);
+      },
+      () => setConsentedAt({})
+    );
+    return () => {
+      unsub();
+      unsubConsents();
+    };
   }, [uid]);
 
-  /** Trekt de leestoegang van één begeleider in. Enkel de cliënt kan dit. */
+  const coaches: CoachAccess[] = useMemo(
+    () => coachList.map((c) => ({ ...c, consentedAt: consentedAt[c.uid] ?? null })),
+    [coachList, consentedAt]
+  );
+
+  /** Trekt de leestoegang van één begeleider in, en in dezelfde batch de
+   * toestemming (P16). Enkel de cliënt kan dit. */
   async function revoke(coachUid: string) {
     if (!uid) return;
     const db = getFirebaseDb();
-    await updateDoc(doc(db, "users", uid), { coachUids: arrayRemove(coachUid) });
+    const batch = writeBatch(db);
+    batch.update(doc(db, "users", uid), { coachUids: arrayRemove(coachUid) });
+    await withdrawConsents(batch, db, uid, "begeleiding", coachUid);
+    await batch.commit();
     // Koppeling opruimen zodat de cliënt uit de lijst van de begeleider
     // verdwijnt. Leesrecht is hierboven al ingetrokken, dus een fout hier
     // (bv. handmatig gekoppeld, geen link) is onschuldig.
     await deleteDoc(doc(db, "links", `${coachUid}_${uid}`)).catch(() => {});
   }
 
-  return { coaches, loading, revoke };
+  /** Toestemming vastleggen voor een bestaande koppeling zonder record. */
+  async function confirm(coachUid: string, coachName: string) {
+    if (!uid) return;
+    const db = getFirebaseDb();
+    const batch = writeBatch(db);
+    addConsent(batch, db, uid, "begeleiding", coachUid, begeleidingText(coachName));
+    await batch.commit();
+  }
+
+  return { coaches, loading, revoke, confirm };
 }

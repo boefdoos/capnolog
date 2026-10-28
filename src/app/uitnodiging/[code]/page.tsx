@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { acceptInvite, getInvite, type Invite } from "@/lib/invites";
 import { useAuth } from "@/lib/useAuth";
+import { begeleidingText } from "@/lib/consentTexts";
 
 const inputClass =
   "w-full rounded-lg border border-panel-border bg-[#0D1210] px-3.5 py-2.5 text-sm text-text outline-none focus:border-trace";
@@ -184,8 +185,7 @@ export default function InvitePage() {
         <div className="text-lg font-semibold tracking-wide text-text">CapnoLog</div>
         {invite && !expired && !used && !ownInvite && (
           <p className="mt-2 text-sm text-text">
-            {invite.coachName} nodigt je uit. {invite.coachName} kan je metingen lezen, maar niets wijzigen. Je kunt
-            die toegang altijd intrekken onder Account.
+            {invite.coachName} nodigt je uit. {begeleidingText(invite.coachName)}
           </p>
         )}
       </div>
