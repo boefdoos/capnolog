@@ -89,7 +89,7 @@ training.
 **Firestore-rules** (`firestore.rules`, met de hand te publiceren in de console;
 `firebase.json` dient enkel voor de emulator, er wordt niets mee gedeployed). Schrijven enkel binnen het eigen `users/{uid}`-pad. Lezen ook
 door een begeleider wiens uid in `coachUids` op het document van de cliënt staat
-(P13), alleen-lezen. `invites/{code}` (uitnodigingslinks, `get` zonder account, nooit
+(P13), alleen-lezen, en enkel zolang `coaches/{uid}` bestaat (P15). `invites/{code}` (uitnodigingslinks, `get` zonder account, nooit
 `list`) en `links/{coachUid}_{clientUid}` (lijst van de begeleider, geeft zelf geen
 leesrecht). Rollen: `admins/{uid}` (Thomas, met de hand in de console), `coaches/{uid}`
 (ontstaat enkel samen met het verbruiken van een `coachInvites/{code}` van een admin;

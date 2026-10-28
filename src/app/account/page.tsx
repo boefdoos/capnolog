@@ -7,7 +7,7 @@ import TabBar from "@/components/TabBar";
 import { useAuth } from "@/lib/useAuth";
 import { useOwnAccess } from "@/lib/useOwnAccess";
 import { useRole } from "@/lib/useRole";
-import InviteCoach from "@/components/InviteCoach";
+import CoachAdmin from "@/components/CoachAdmin";
 import Loading from "@/components/Loading";
 
 /**
@@ -92,7 +92,7 @@ function AccountInner({ user }: { user: User }) {
           )}
         </div>
 
-        {isAdmin && <InviteCoach adminUid={user.uid} />}
+        {isAdmin && <CoachAdmin adminUid={user.uid} />}
 
         <button
           onClick={() => logOut()}

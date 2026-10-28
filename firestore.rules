@@ -11,11 +11,15 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // Leesrecht vereist twee dingen tegelijk (P15): de cliënt gaf toegang
+    // (`coachUids`), en de rol bestaat nog (`coaches/{uid}`). Wie de rol
+    // verliest, verliest de toegang bij elke cliënt meteen.
     function isCoachOf(uid) {
       let clientDoc = /databases/$(database)/documents/users/$(uid);
       return request.auth != null
         && exists(clientDoc)
-        && request.auth.uid in get(clientDoc).data.get('coachUids', []);
+        && request.auth.uid in get(clientDoc).data.get('coachUids', [])
+        && exists(/databases/$(database)/documents/coaches/$(request.auth.uid));
     }
 
     // Admin (Thomas): `admins/{uid}`, met de hand aangemaakt in de console.
@@ -73,11 +77,11 @@ service cloud.firestore {
     }
 
     // Begeleidersuitnodigingen: enkel de admin maakt ze. Opvragen per code
-    // zonder account, nooit een lijst. Verbruiken kan één keer, voor de
+    // zonder account, een lijst enkel voor de admin (beheer, P15). Verbruiken kan één keer, voor de
     // vervaldatum, en enkel samen met het aanmaken van `coaches/{uid}`.
     match /coachInvites/{code} {
       allow get: if true;
-      allow list: if false;
+      allow list: if isAdmin();
       allow create: if isAdmin()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.usedBy == null;

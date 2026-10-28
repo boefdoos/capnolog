@@ -8,6 +8,7 @@ import { assertFails, assertSucceeds, initializeTestEnvironment } from "@firebas
 import {
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -122,6 +123,29 @@ describe("gebruikersgegevens", () => {
   });
 });
 
+describe("rol vereist voor leesrecht (P15)", () => {
+  it("zonder rol leest een begeleider niets meer, ook met toegang van de cliënt", async () => {
+    await assertSucceeds(deleteDoc(doc(as("thomas"), "coaches/kine")));
+    await assertFails(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+  });
+
+  it("met de rol terug werkt de toegang weer, zonder dat de cliënt iets doet", async () => {
+    await assertSucceeds(deleteDoc(doc(as("thomas"), "coaches/kine")));
+    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), "coaches/kine"), { name: "Kine" }));
+    await assertSucceeds(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+  });
+
+  it("enkel de admin lijst begeleiders op en trekt een rol in", async () => {
+    await assertSucceeds(getDocs(collection(as("thomas"), "coaches")));
+    await assertFails(getDocs(collection(as("kine"), "coaches")));
+    await assertFails(deleteDoc(doc(as("kine"), "coaches/kine")));
+  });
+
+  it("de admin leest de gegevens van cliënten van een andere begeleider niet", async () => {
+    await assertFails(getDoc(doc(as("thomas"), "users/client/sessions/s1")));
+  });
+});
+
 describe("admins", () => {
   it("enkel de eigenaar leest het eigen admin-document", async () => {
     await assertSucceeds(getDoc(doc(as("thomas"), "admins/thomas")));
@@ -159,9 +183,15 @@ describe("begeleiders (coaches)", () => {
 });
 
 describe("begeleidersuitnodigingen (coachInvites)", () => {
-  it("opvragen per code kan zonder account, een lijst nooit", async () => {
+  it("opvragen per code kan zonder account, een lijst enkel voor de admin", async () => {
     await assertSucceeds(getDoc(doc(anonymous(), "coachInvites/NIEUW")));
-    await assertFails(getDocs(collection(as("thomas"), "coachInvites")));
+    await assertSucceeds(getDocs(collection(as("thomas"), "coachInvites")));
+    await assertFails(getDocs(collection(as("kine"), "coachInvites")));
+  });
+
+  it("enkel de admin trekt een uitnodiging in", async () => {
+    await assertFails(deleteDoc(doc(as("kine"), "coachInvites/NIEUW")));
+    await assertSucceeds(deleteDoc(doc(as("thomas"), "coachInvites/NIEUW")));
   });
 
   it("enkel de admin maakt een uitnodiging", async () => {

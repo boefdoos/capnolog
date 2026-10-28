@@ -44,6 +44,8 @@ De regels worden met dit plan te complex om enkel met de hand in de console te t
 
 **Bewust niet:** de admin ziet de cliënten van andere begeleiders niet.
 
+**Gebouwd (28/10).** `isCoachOf` vereist `exists(coaches/{auth.uid})`. Onder Account ziet de admin begeleiders (naam, sinds) met "Rol intrekken", en openstaande, niet verlopen uitnodigingen met "Intrekken" (`useCoachAdmin`, `CoachAdmin`). De eigen rij van de admin heeft geen knop. Een ingetrokken begeleider houdt de koppelingen, zodat een teruggegeven rol de toegang herstelt. Een uitnodiging die een ingetrokken begeleider nog had uitstaan, kan een cliënt nog aanvaarden, maar geeft zonder rol geen leesrecht. 27 regeltests slagen. De regels moeten opnieuw gepubliceerd worden.
+
 ### P16. Toestemmingsrecords
 
 Elke toestemming wordt een record in `users/{uid}/consents`, met de versie van de tekst die aanvaard werd. Teksten staan versioned in de code (`src/lib/consentTexts.ts`). Regels: de eigenaar mag aanmaken, en bij een bestaand record enkel `withdrawnAt` zetten, nooit iets anders wijzigen of verwijderen (behalve bij P18).
