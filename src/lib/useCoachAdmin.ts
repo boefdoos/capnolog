@@ -1,6 +1,17 @@
 "use client";
 
-import { collection, deleteDoc, doc, onSnapshot, query, Timestamp, where } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  deleteField,
+  doc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { getFirebaseDb } from "./firebase";
 
@@ -8,6 +19,7 @@ export interface CoachEntry {
   uid: string;
   name: string;
   since: number | null; // epoch ms; ontbreekt bij het naamdocument van de admin
+  revokedAt: number | null; // epoch ms als de rol ingetrokken is
 }
 
 export interface OpenCoachInvite {
@@ -42,6 +54,7 @@ export function useCoachAdmin(enabled: boolean) {
               uid: d.id,
               name: (d.data().name as string | undefined) || "Begeleider zonder naam",
               since: (d.data().createdAt as Timestamp | undefined)?.toMillis() ?? null,
+              revokedAt: (d.data().revokedAt as Timestamp | undefined)?.toMillis() ?? null,
             }))
             .sort((a, b) => a.name.localeCompare(b.name, "nl"))
         );
@@ -81,16 +94,21 @@ export function useCoachAdmin(enabled: boolean) {
     };
   }, [enabled]);
 
-  /** Rol intrekken: de begeleider verliest meteen de toegang bij al zijn
-   * cliënten (firestore.rules, isCoachOf). Hun koppelingen blijven staan,
-   * zodat een teruggegeven rol de toegang herstelt. */
+  /** Rol intrekken: markeren, niet wissen. De begeleider verliest meteen de
+   * toegang bij al zijn cliënten (firestore.rules, hasActiveCoachRole), en de
+   * app weet nog dat het account begeleider was. De koppelingen blijven
+   * staan, zodat een teruggegeven rol de toegang herstelt. */
   async function revokeCoach(uid: string) {
-    await deleteDoc(doc(getFirebaseDb(), "coaches", uid));
+    await updateDoc(doc(getFirebaseDb(), "coaches", uid), { revokedAt: serverTimestamp() });
+  }
+
+  async function restoreCoach(uid: string) {
+    await updateDoc(doc(getFirebaseDb(), "coaches", uid), { revokedAt: deleteField() });
   }
 
   async function revokeInvite(code: string) {
     await deleteDoc(doc(getFirebaseDb(), "coachInvites", code));
   }
 
-  return { coaches, invites, loading, revokeCoach, revokeInvite };
+  return { coaches, invites, loading, revokeCoach, restoreCoach, revokeInvite };
 }

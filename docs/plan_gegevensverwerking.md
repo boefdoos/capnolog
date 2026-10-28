@@ -44,7 +44,7 @@ De regels worden met dit plan te complex om enkel met de hand in de console te t
 
 **Bewust niet:** de admin ziet de cliënten van andere begeleiders niet.
 
-**Gebouwd (28/10).** `isCoachOf` vereist `exists(coaches/{auth.uid})`. Onder Account ziet de admin begeleiders (naam, sinds) met "Rol intrekken", en openstaande, niet verlopen uitnodigingen met "Intrekken" (`useCoachAdmin`, `CoachAdmin`). De eigen rij van de admin heeft geen knop. Een ingetrokken begeleider houdt de koppelingen, zodat een teruggegeven rol de toegang herstelt. Een uitnodiging die een ingetrokken begeleider nog had uitstaan, kan een cliënt nog aanvaarden, maar geeft zonder rol geen leesrecht. 27 regeltests slagen. De regels moeten opnieuw gepubliceerd worden.
+**Gebouwd (28/10).** `isCoachOf` vereist `exists(coaches/{auth.uid})`. Onder Account ziet de admin begeleiders (naam, sinds) met "Rol intrekken", en openstaande, niet verlopen uitnodigingen met "Intrekken" (`useCoachAdmin`, `CoachAdmin`). De eigen rij van de admin heeft geen knop. Intrekken markeert de rol (`revokedAt`) in plaats van het document te wissen (gewijzigd na een test van Thomas op 28/10: na wissen kwam een ex-begeleider in de cliëntomgeving terecht). Een ingetrokken begeleider ziet bij het aanmelden enkel dat de rol ingetrokken is (`AuthGate`), en kan de markering niet zelf weghalen. De admin ziet ingetrokken begeleiders met "Rol teruggeven". Een ingetrokken begeleider houdt de koppelingen, zodat een teruggegeven rol de toegang herstelt. Een uitnodiging die een ingetrokken begeleider nog had uitstaan, kan een cliënt nog aanvaarden, maar geeft zonder rol geen leesrecht. 30 regeltests slagen. De regels moeten opnieuw gepubliceerd worden.
 
 ### P16. Toestemmingsrecords
 

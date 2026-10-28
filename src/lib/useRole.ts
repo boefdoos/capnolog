@@ -10,6 +10,9 @@ export interface Role {
   isAdmin: boolean;
   // Begeleider: via een uitnodiging (`coaches/{uid}`), of admin.
   isCoach: boolean;
+  // Was begeleider, rol ingetrokken door de admin (`revokedAt`). Zo'n account
+  // komt niet in de cliëntomgeving terecht (AuthGate).
+  coachRevoked: boolean;
 }
 
 // Laatst gekende rol, zoals hasClients in TabBar: zonder dit verschuift de
@@ -41,7 +44,8 @@ function writeRole(uid: string, role: Role) {
  * gekend is, ook niet van een vorige keer. */
 export function useRole(uid: string | null): Role & { loading: boolean } {
   const [admin, setAdmin] = useState<boolean | null>(null);
-  const [coach, setCoach] = useState<boolean | null>(null);
+  // "active" | "revoked" | "none", null zolang onbekend.
+  const [coach, setCoach] = useState<"active" | "revoked" | "none" | null>(null);
   const cached = uid ? readRole(uid) : null;
 
   useEffect(() => {
@@ -54,8 +58,8 @@ export function useRole(uid: string | null): Role & { loading: boolean } {
     );
     const unsubCoach = onSnapshot(
       doc(db, "coaches", uid),
-      (snap) => setCoach(snap.exists()),
-      () => setCoach(false)
+      (snap) => setCoach(!snap.exists() ? "none" : snap.data().revokedAt ? "revoked" : "active"),
+      () => setCoach("none")
     );
     return () => {
       unsubAdmin();
@@ -64,11 +68,16 @@ export function useRole(uid: string | null): Role & { loading: boolean } {
   }, [uid]);
 
   const known = admin != null && coach != null;
+  const current: Role | null = known
+    ? { isAdmin: admin!, isCoach: coach === "active" || admin!, coachRevoked: coach === "revoked" && !admin }
+    : null;
   useEffect(() => {
-    if (uid && known) writeRole(uid, { isAdmin: admin!, isCoach: coach! || admin! });
+    if (uid && current) writeRole(uid, current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, known, admin, coach]);
 
-  if (known) return { isAdmin: admin!, isCoach: coach! || admin!, loading: false };
-  if (cached) return { ...cached, loading: false };
-  return { isAdmin: false, isCoach: false, loading: !!uid };
+  if (current) return { ...current, loading: false };
+  // Een cache van voor `coachRevoked` bestond, mist dat veld.
+  if (cached) return { ...cached, coachRevoked: (cached as Partial<Role>).coachRevoked ?? false, loading: false };
+  return { isAdmin: false, isCoach: false, coachRevoked: false, loading: !!uid };
 }

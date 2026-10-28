@@ -15,7 +15,7 @@ function fmtDate(ms: number): string {
  * aan de admin.
  */
 export default function CoachAdmin({ adminUid }: { adminUid: string }) {
-  const { coaches, invites, loading, revokeCoach, revokeInvite } = useCoachAdmin(true);
+  const { coaches, invites, loading, revokeCoach, restoreCoach, revokeInvite } = useCoachAdmin(true);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -44,9 +44,21 @@ export default function CoachAdmin({ adminUid }: { adminUid: string }) {
                 <span className="text-sm text-text">
                   {c.name}
                   {c.uid === adminUid && <span className="text-muted"> (jij)</span>}
-                  {c.since != null && <span className="block text-xs text-muted">sinds {fmtDate(c.since)}</span>}
+                  {c.revokedAt != null ? (
+                    <span className="block text-xs text-muted">rol ingetrokken op {fmtDate(c.revokedAt)}</span>
+                  ) : (
+                    c.since != null && <span className="block text-xs text-muted">sinds {fmtDate(c.since)}</span>
+                  )}
                 </span>
-                {c.uid !== adminUid && confirming !== c.uid && (
+                {c.revokedAt != null && (
+                  <button
+                    onClick={() => restoreCoach(c.uid)}
+                    className="shrink-0 text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
+                  >
+                    Rol teruggeven
+                  </button>
+                )}
+                {c.revokedAt == null && c.uid !== adminUid && confirming !== c.uid && (
                   <button
                     onClick={() => setConfirming(c.uid)}
                     className="shrink-0 text-xs text-muted underline decoration-panel-border underline-offset-2 hover:text-text"
@@ -59,8 +71,8 @@ export default function CoachAdmin({ adminUid }: { adminUid: string }) {
                 <div className="mt-2.5 space-y-2.5">
                   <p className="text-sm text-muted">
                     {c.name} kan daarna de gegevens van geen enkele cliënt meer lezen en geen cliënten meer
-                    uitnodigen. De koppelingen blijven bewaard: krijgt {c.name} later opnieuw de rol, dan werkt de
-                    toegang weer.
+                    uitnodigen, en ziet bij het aanmelden enkel dat de rol ingetrokken is. De koppelingen blijven
+                    bewaard: geef je de rol later terug, dan werkt de toegang weer.
                   </p>
                   <div className="flex gap-2.5">
                     <button

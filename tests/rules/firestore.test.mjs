@@ -9,6 +9,7 @@ import {
   arrayUnion,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -124,21 +125,47 @@ describe("gebruikersgegevens", () => {
 });
 
 describe("rol vereist voor leesrecht (P15)", () => {
-  it("zonder rol leest een begeleider niets meer, ook met toegang van de cliënt", async () => {
-    await assertSucceeds(deleteDoc(doc(as("thomas"), "coaches/kine")));
+  const revoke = () => updateDoc(doc(as("thomas"), "coaches/kine"), { revokedAt: serverTimestamp() });
+
+  it("met een ingetrokken rol leest een begeleider niets meer, ook met toegang van de cliënt", async () => {
+    await assertSucceeds(revoke());
     await assertFails(getDoc(doc(as("kine"), "users/client/sessions/s1")));
   });
 
-  it("met de rol terug werkt de toegang weer, zonder dat de cliënt iets doet", async () => {
-    await assertSucceeds(deleteDoc(doc(as("thomas"), "coaches/kine")));
-    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), "coaches/kine"), { name: "Kine" }));
+  it("met een ingetrokken rol nodigt een begeleider geen cliënten meer uit", async () => {
+    await assertSucceeds(revoke());
+    await assertFails(
+      setDoc(doc(as("kine"), "invites/K2"), {
+        coachUid: "kine",
+        coachName: "Kine",
+        clientName: "Y",
+        expiresAt: future(),
+        usedBy: null,
+      })
+    );
+  });
+
+  it("een ingetrokken begeleider ziet de eigen ingetrokken rol, maar kan ze niet terugzetten", async () => {
+    await assertSucceeds(revoke());
+    await assertSucceeds(getDoc(doc(as("kine"), "coaches/kine")));
+    await assertFails(updateDoc(doc(as("kine"), "coaches/kine"), { revokedAt: deleteField() }));
+  });
+
+  it("de admin geeft de rol terug, en de toegang werkt weer zonder dat de cliënt iets doet", async () => {
+    await assertSucceeds(revoke());
+    await assertSucceeds(updateDoc(doc(as("thomas"), "coaches/kine"), { revokedAt: deleteField() }));
     await assertSucceeds(getDoc(doc(as("kine"), "users/client/sessions/s1")));
+  });
+
+  it("zonder roldocument leest een begeleider ook niets", async () => {
+    await assertSucceeds(deleteDoc(doc(as("thomas"), "coaches/kine")));
+    await assertFails(getDoc(doc(as("kine"), "users/client/sessions/s1")));
   });
 
   it("enkel de admin lijst begeleiders op en trekt een rol in", async () => {
     await assertSucceeds(getDocs(collection(as("thomas"), "coaches")));
     await assertFails(getDocs(collection(as("kine"), "coaches")));
-    await assertFails(deleteDoc(doc(as("kine"), "coaches/kine")));
+    await assertFails(updateDoc(doc(as("vreemde"), "coaches/kine"), { revokedAt: serverTimestamp() }));
   });
 
   it("de admin leest de gegevens van cliënten van een andere begeleider niet", async () => {

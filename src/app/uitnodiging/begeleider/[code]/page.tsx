@@ -74,12 +74,12 @@ export default function CoachInvitePage() {
 
   // Net aangemeld of geregistreerd via dit formulier: meteen aanvaarden.
   useEffect(() => {
-    if (autoAccept && user && invite && !expired && !used && !alreadyMine && !role.loading && !role.isCoach) {
+    if (autoAccept && user && invite && !expired && !used && !alreadyMine && !role.loading && !role.isCoach && !role.coachRevoked) {
       setAutoAccept(false);
       void accept(user.uid);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoAccept, user, invite, role.loading, role.isCoach]);
+  }, [autoAccept, user, invite, role.loading, role.isCoach, role.coachRevoked]);
 
   let body: React.ReactNode;
   if (!configured || invite === undefined || authLoading || (user && role.loading)) {
@@ -100,6 +100,18 @@ export default function CoachInvitePage() {
       <p className="text-sm text-text">
         Deze uitnodiging is {expired ? "verlopen" : "al gebruikt"}. Vraag een nieuwe link.
       </p>
+    );
+  } else if (user && role.coachRevoked) {
+    body = (
+      <>
+        <p className="text-sm text-text">
+          Je bent aangemeld als {user.email}, en de rol als begeleider van dat account is ingetrokken. Een nieuwe
+          uitnodiging geeft die rol niet terug, dat kan enkel de beheerder.
+        </p>
+        <button onClick={() => logOut()} className={primaryClass}>
+          Ander account gebruiken
+        </button>
+      </>
     );
   } else if (user && role.isCoach) {
     // Al begeleider of admin: een tweede rol op hetzelfde account heeft geen

@@ -12,14 +12,14 @@ service cloud.firestore {
     }
 
     // Leesrecht vereist twee dingen tegelijk (P15): de cliënt gaf toegang
-    // (`coachUids`), en de rol bestaat nog (`coaches/{uid}`). Wie de rol
-    // verliest, verliest de toegang bij elke cliënt meteen.
+    // (`coachUids`), en de rol is actief. Wie de rol verliest, verliest de
+    // toegang bij elke cliënt meteen.
     function isCoachOf(uid) {
       let clientDoc = /databases/$(database)/documents/users/$(uid);
       return request.auth != null
         && exists(clientDoc)
         && request.auth.uid in get(clientDoc).data.get('coachUids', [])
-        && exists(/databases/$(database)/documents/coaches/$(request.auth.uid));
+        && hasActiveCoachRole(request.auth.uid);
     }
 
     // Admin (Thomas): `admins/{uid}`, met de hand aangemaakt in de console.
@@ -29,11 +29,18 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
-    // Begeleider: `coaches/{uid}` bestaat (via een begeleidersuitnodiging),
-    // of admin.
+    // Actieve begeleidersrol: `coaches/{uid}` bestaat en is niet ingetrokken
+    // (`revokedAt`, gezet door de admin). Een ingetrokken document blijft
+    // bestaan, zodat de app weet dat dit account begeleider was.
+    function hasActiveCoachRole(uid) {
+      let roleDoc = /databases/$(database)/documents/coaches/$(uid);
+      return exists(roleDoc) && !('revokedAt' in get(roleDoc).data);
+    }
+
+    // Begeleider: actieve rol (via een begeleidersuitnodiging), of admin.
     function isCoach() {
       return request.auth != null
-        && (exists(/databases/$(database)/documents/coaches/$(request.auth.uid)) || isAdmin());
+        && (hasActiveCoachRole(request.auth.uid) || isAdmin());
     }
 
     // De aangemelde gebruiker gaf deze begeleider zelf toegang.
@@ -71,8 +78,12 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/coachInvites/$(request.resource.data.inviteCode)).data.usedBy == uid
         )
       );
-      allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']);
+      // De begeleider wijzigt enkel de eigen naam, de admin enkel het
+      // intrekken en teruggeven van de rol.
+      allow update: if (isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']))
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['revokedAt']));
       allow delete: if isAdmin();
     }
 

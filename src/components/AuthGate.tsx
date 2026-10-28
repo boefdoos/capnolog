@@ -3,6 +3,7 @@
 import type { User } from "firebase/auth";
 import { useState } from "react";
 import { useAuth } from "@/lib/useAuth";
+import { useRole } from "@/lib/useRole";
 import Loading from "./Loading";
 
 export default function AuthGate({
@@ -96,5 +97,33 @@ export default function AuthGate({
     );
   }
 
+  return <RoleGate user={user}>{children}</RoleGate>;
+}
+
+/**
+ * Een begeleider wiens rol ingetrokken is, komt niet in de cliëntomgeving
+ * terecht: die zou daar zelf metingen kunnen beginnen. Enkel afmelden.
+ */
+function RoleGate({ user, children }: { user: User; children: (user: User) => React.ReactNode }) {
+  const { coachRevoked } = useRole(user.uid);
+  const { logOut } = useAuth();
+  if (coachRevoked) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-5 p-6">
+        <div className="text-lg font-semibold tracking-wide text-text">CapnoLog</div>
+        <p className="text-sm text-text">
+          Je rol als begeleider is ingetrokken. Je kunt de gegevens van cliënten niet meer lezen en geen cliënten
+          meer uitnodigen.
+        </p>
+        <p className="text-xs text-muted">Aangemeld als {user.email}.</p>
+        <button
+          onClick={() => logOut()}
+          className="w-full rounded-lg border border-panel-border py-3 text-sm font-semibold text-text active:scale-[0.99]"
+        >
+          Afmelden
+        </button>
+      </div>
+    );
+  }
   return <>{children(user)}</>;
 }
