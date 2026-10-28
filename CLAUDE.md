@@ -125,9 +125,9 @@ weekberekening anders blijft hangen wanneer de app dagenlang openstaat.
 P1 tot P13, per punt de bestandsverwijzing en de bewijsbasis. Lees dat voor je aan
 een van die punten begint, en werk het bij wanneer een punt af is.
 
-`docs/plan_gegevensverwerking.md` bevat P14 tot P21: toestemmingsrecords, rol vereist
-voor leesrecht, analist per cliënt, onderzoeksexport via een Cloud Function, account
-verwijderen, en de open juridische vragen. Lees dat voor je aan regels, toegang of
+`docs/plan_gegevensverwerking.md` bevat P14 tot P19: regeltests, rol vereist voor
+leesrecht, toestemmingsrecords, analist per cliënt, account verwijderen, privacytekst,
+en de open juridische vragen. Onderzoek over cliënten heen is bewust geschrapt. Lees dat voor je aan regels, toegang of
 toestemming werkt.
 
 `docs/plan_post_trial_rustcontroles.md` is het oorspronkelijke plan voor de
