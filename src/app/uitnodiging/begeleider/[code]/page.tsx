@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Loading from "@/components/Loading";
 import { acceptCoachInvite, getCoachInvite, type CoachInvite } from "@/lib/coachInvites";
 import { useAuth } from "@/lib/useAuth";
+import { useRole } from "@/lib/useRole";
 
 const inputClass =
   "w-full rounded-lg border border-panel-border bg-[#0D1210] px-3.5 py-2.5 text-sm text-text outline-none focus:border-trace";
@@ -26,7 +27,9 @@ export default function CoachInvitePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [acceptFailed, setAcceptFailed] = useState(false);
+  // Foutcode van Firebase bij een mislukt aanvaarden, zichtbaar op het scherm
+  // zodat een melding als "er gebeurt niets" te herleiden is.
+  const [acceptError, setAcceptError] = useState<string | null>(null);
   const [autoAccept, setAutoAccept] = useState(false);
 
   useEffect(() => {
@@ -42,15 +45,17 @@ export default function CoachInvitePage() {
   const expired = invite ? Date.now() > invite.expiresAt : false;
   const used = invite ? invite.usedBy != null && invite.usedBy !== user?.uid : false;
   const alreadyMine = invite != null && user != null && invite.usedBy === user.uid;
+  const role = useRole(user?.uid ?? null);
 
   async function accept(uid: string) {
     if (!invite) return;
-    setAcceptFailed(false);
+    setAcceptError(null);
     try {
       await acceptCoachInvite(uid, invite, name.trim() || invite.coachName);
       router.push("/begeleiding/uitleg");
-    } catch {
-      setAcceptFailed(true);
+    } catch (err) {
+      console.error("Begeleidersuitnodiging aanvaarden mislukt", err);
+      setAcceptError((err as { code?: string })?.code ?? "onbekend");
     }
   }
 
@@ -69,15 +74,15 @@ export default function CoachInvitePage() {
 
   // Net aangemeld of geregistreerd via dit formulier: meteen aanvaarden.
   useEffect(() => {
-    if (autoAccept && user && invite && !expired && !used && !alreadyMine) {
+    if (autoAccept && user && invite && !expired && !used && !alreadyMine && !role.loading && !role.isCoach) {
       setAutoAccept(false);
       void accept(user.uid);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoAccept, user, invite]);
+  }, [autoAccept, user, invite, role.loading, role.isCoach]);
 
   let body: React.ReactNode;
-  if (!configured || invite === undefined || authLoading) {
+  if (!configured || invite === undefined || authLoading || (user && role.loading)) {
     body = <Loading />;
   } else if (invite === null) {
     body = <p className="text-sm text-text">Deze uitnodiging bestaat niet. Vraag een nieuwe link.</p>;
@@ -96,6 +101,20 @@ export default function CoachInvitePage() {
         Deze uitnodiging is {expired ? "verlopen" : "al gebruikt"}. Vraag een nieuwe link.
       </p>
     );
+  } else if (user && role.isCoach) {
+    // Al begeleider of admin: een tweede rol op hetzelfde account heeft geen
+    // zin, en de regels zouden het weigeren (coaches/{uid} bestaat al).
+    body = (
+      <>
+        <p className="text-sm text-text">
+          Je bent aangemeld als {user.email}, en dat account is al begeleider. Wil je met een ander account
+          begeleider worden, meld je dan eerst af.
+        </p>
+        <button onClick={() => logOut()} className={primaryClass}>
+          Ander account gebruiken
+        </button>
+      </>
+    );
   } else if (user) {
     body = (
       <>
@@ -104,7 +123,7 @@ export default function CoachInvitePage() {
           <span className="text-xs text-muted">Je naam, zoals cliënten die zien</span>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        {acceptFailed && <p className="text-xs text-danger">Aanvaarden mislukt, probeer opnieuw.</p>}
+        {acceptError && <p className="text-xs text-danger">Aanvaarden mislukt ({acceptError}), probeer opnieuw.</p>}
         <button onClick={() => accept(user.uid)} disabled={!name.trim()} className={primaryClass}>
           Aanvaarden
         </button>
@@ -155,7 +174,7 @@ export default function CoachInvitePage() {
           />
         </label>
         {error && <p className="text-xs text-danger">{error}</p>}
-        {acceptFailed && <p className="text-xs text-danger">Aanvaarden mislukt, probeer opnieuw.</p>}
+        {acceptError && <p className="text-xs text-danger">Aanvaarden mislukt ({acceptError}), probeer opnieuw.</p>}
         <button type="submit" disabled={busy} className={primaryClass}>
           {busy ? "..." : mode === "new" ? "Account aanmaken" : "Aanmelden en aanvaarden"}
         </button>
